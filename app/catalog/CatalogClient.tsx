@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion'
+import { MessageSquare, CalendarDays, CreditCard, Glasses, ClipboardCheck, PackageCheck } from 'lucide-react'
 import LandingNavbar     from '@/app/components/landing/Navbar'
 import LandingFooter     from '@/app/components/landing/Footer'
 import GoldenSeparator   from '@/app/components/shared/GoldenSeparator'
@@ -160,6 +161,106 @@ const FABRIC_DATA: Record<string, Fabric[]> = {
     },
   ],
 }
+
+// ─── Catalog Listings Data ─────────────────────────────────────────────────
+
+const CATALOG_ITEMS = [
+  {
+    id:          1,
+    image:       '/assets/catalog1.png',
+    collection:  'The Classic',
+    name:        'Ivory Linen & Sheer Duo',
+    material:    'Blackout Linen + Voile Sheer Pair',
+    description: 'The timeless combination — a heavyweight ivory linen blackout paired with a flowing white voile sheer. Installed floor-to-ceiling, this duo gives you independent control of light and privacy across any room.',
+    price:       'From KSh 18,500',
+    priceNote:   'per window · pair included',
+    tags:        ['Dual Layer', 'Neutral', 'Blackout + Sheer'],
+    badge:       'Best Seller',
+  },
+  {
+    id:          2,
+    image:       '/assets/catalog2.png',
+    collection:  'The Bold Contrast',
+    name:        'Mustard & Charcoal Weave',
+    material:    'Woven Cotton — Mustard & Charcoal',
+    description: 'Two strong opinions sharing one window. The mustard-gold and deep charcoal pair is our most requested combination for living rooms and offices that refuse to be forgettable.',
+    price:       'From KSh 14,500',
+    priceNote:   'per panel · standard lining',
+    tags:        ['Bold', 'Contrast Weave', 'Statement'],
+    badge:       'New',
+  },
+  {
+    id:          3,
+    image:       '/assets/catalog3.png',
+    collection:  'The Coastal',
+    name:        'Teal, Ivory & Cream Trio',
+    material:    'Teal Linen Blend + Ivory Sheer + Cream',
+    description: 'Three tones, one cohesive palette. The teal panel anchors the room while ivory sheer and warm cream panels soften and filter. A complete window treatment designed as a single collection.',
+    price:       'From KSh 16,500',
+    priceNote:   'per panel · tri-layer set',
+    tags:        ['Teal', 'Tri-tone', 'Coastal'],
+    badge:       null,
+  },
+  {
+    id:          4,
+    image:       '/assets/catalog4.png',
+    collection:  'The Metropolitan',
+    name:        'Steel Textured Drape',
+    material:    'Textured Steel-Grey Poly Blend',
+    description: 'Understated at first glance, increasingly beautiful on closer look. A subtle embossed texture in cool steel grey — the fabric that gives bedrooms and offices a quiet sophistication that needs no explanation.',
+    price:       'From KSh 12,000',
+    priceNote:   'per panel · blackout lining',
+    tags:        ['Textured', 'Steel Grey', 'Premium'],
+    badge:       null,
+  },
+]
+
+// ─── Process Steps Data ────────────────────────────────────────────────────
+
+const PROCESS_STEPS = [
+  {
+    number: '01',
+    Icon:   MessageSquare,
+    title:  'Reach Out',
+    sub:    'Start the conversation',
+    desc:   'Contact us through our form, WhatsApp, or a direct call. Tell us about your space, your vision, or simply your uncertainty — we work equally well with both.',
+  },
+  {
+    number: '02',
+    Icon:   CalendarDays,
+    title:  'Discovery Session',
+    sub:    'Virtual, physical, or studio visit',
+    desc:   'We schedule a free discovery meeting — a video call, a visit to your home, or an invitation to our Nairobi studio. We look at your walls, your light, your existing palette.',
+  },
+  {
+    number: '03',
+    Icon:   CreditCard,
+    title:  'Consultation',
+    sub:    'Invest in the vision',
+    desc:   'A consultation fee unlocks our full design process. We measure every window, map your wall colors, and prepare a bespoke selection of fabrics and combinations tailored to your space.',
+  },
+  {
+    number: '04',
+    Icon:   Glasses,
+    title:  'Visualize in 3D',
+    sub:    'See it before you commit',
+    desc:   'Using our VR studio, you see exactly how each curtain looks in your room — with your wall colors, your furniture, your light. Swap fabrics, change tones, adjust lengths. Until it is perfect.',
+  },
+  {
+    number: '05',
+    Icon:   ClipboardCheck,
+    title:  'Place Your Order',
+    sub:    'Only when you are satisfied',
+    desc:   'Pleased with the visualization? Place your order. We confirm every measurement, finalize your fabric selection, and begin production. No pressure. No rush. Only when it feels right.',
+  },
+  {
+    number: '06',
+    Icon:   PackageCheck,
+    title:  'Knit, Deliver & Install',
+    sub:    'The full white-glove service',
+    desc:   'Our craftspeople custom-knit every panel to your exact measurements. We deliver to your door and install everything — so the first time you see the final result, it is already hanging perfectly.',
+  },
+]
 
 // ─── Pill ──────────────────────────────────────────────────────────────────
 
@@ -510,6 +611,402 @@ function CatalogHero({
 
 
 
+// ─── Catalog Listings ──────────────────────────────────────────────────────
+
+function CatalogListings() {
+  const [hoveredId, setHoveredId] = useState<number | null>(null)
+  const ref    = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.08 })
+
+  return (
+    <section
+      ref={ref}
+      style={{ background: '#0A0F1C', padding: '100px 8vw 80px', borderTop: '1px solid rgba(201,168,76,0.12)' }}
+    >
+      <style>{`
+        @media (max-width: 860px) { .catalog-grid { grid-template-columns: 1fr !important; } }
+        @media (min-width: 861px) and (max-width: 1200px) { .catalog-grid { grid-template-columns: 1fr 1fr !important; } }
+      `}</style>
+
+      {/* Section header */}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.8, ease }}
+        style={{ marginBottom: '64px' }}
+      >
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: '10px', color: '#C9A84C', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          Signature Collections
+        </p>
+        <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 'clamp(34px, 3.8vw, 54px)', color: '#FFFFFF', fontWeight: 400, lineHeight: 1.1, marginBottom: '16px' }}>
+          Crafted for Your Space
+        </h2>
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: '15px', color: '#506070', lineHeight: 1.8, maxWidth: '520px' }}>
+          Every panel is custom-knit to order. Pricing covers consultation, production, delivery, and installation within Nairobi.
+        </p>
+      </motion.div>
+
+      {/* Grid */}
+      <div
+        className="catalog-grid"
+        style={{
+          display:             'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap:                 '2px',
+          background:          'rgba(201,168,76,0.06)',
+        }}
+      >
+        {CATALOG_ITEMS.map((item, i) => (
+          <motion.article
+            key={item.id}
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, ease, delay: i * 0.13 }}
+            onMouseEnter={() => setHoveredId(item.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            style={{ background: '#0D1220', overflow: 'hidden', cursor: 'default' }}
+          >
+            {/* Image */}
+            <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
+              <Image
+                src={item.image}
+                alt={item.name}
+                fill
+                style={{
+                  objectFit:  'cover',
+                  objectPosition: 'center',
+                  transform:  hoveredId === item.id ? 'scale(1.06)' : 'scale(1)',
+                  transition: 'transform 0.7s ease',
+                }}
+              />
+              <div style={{
+                position:   'absolute', inset: 0,
+                background: 'linear-gradient(to top, rgba(13,18,32,0.88) 0%, rgba(13,18,32,0.15) 55%, transparent 100%)',
+              }} />
+              {item.badge && (
+                <div style={{
+                  position:      'absolute', top: '18px', left: '18px',
+                  background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
+                  color:         '#0A0F1C',
+                  fontFamily:    'var(--font-inter)',
+                  fontSize:      '9px',
+                  fontWeight:    700,
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  padding:       '5px 12px',
+                  borderRadius:  '2px',
+                }}>
+                  {item.badge}
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '26px 26px 30px' }}>
+              <p style={{ fontFamily: 'var(--font-inter)', fontSize: '10px', color: '#C9A84C', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                {item.collection}
+              </p>
+              <h3 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '20px', color: '#FFFFFF', fontWeight: 400, marginBottom: '6px', lineHeight: 1.2 }}>
+                {item.name}
+              </h3>
+              <p style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', color: '#3A4A58', marginBottom: '14px', fontStyle: 'italic' }}>
+                {item.material}
+              </p>
+              <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13.5px', color: '#6A7A88', lineHeight: 1.78, marginBottom: '20px' }}>
+                {item.description}
+              </p>
+
+              {/* Tags */}
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '22px' }}>
+                {item.tags.map(tag => (
+                  <span key={tag} style={{
+                    fontFamily:    'var(--font-inter)',
+                    fontSize:      '10px',
+                    color:         '#506070',
+                    border:        '1px solid rgba(201,168,76,0.18)',
+                    padding:       '4px 10px',
+                    borderRadius:  '20px',
+                    letterSpacing: '0.4px',
+                  }}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Price + CTA */}
+              <div style={{
+                display:        'flex',
+                alignItems:     'flex-end',
+                justifyContent: 'space-between',
+                borderTop:      '1px solid rgba(201,168,76,0.1)',
+                paddingTop:     '18px',
+                flexWrap:       'wrap',
+                gap:            '12px',
+              }}>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '18px', color: '#C9A84C', fontWeight: 400, lineHeight: 1 }}>
+                    {item.price}
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-inter)', fontSize: '11px', color: '#2E3E4E', marginTop: '4px' }}>
+                    {item.priceNote}
+                  </p>
+                </div>
+                <Link
+                  href="/contact"
+                  style={{
+                    fontFamily:     'var(--font-inter)',
+                    fontSize:       '11px',
+                    fontWeight:     600,
+                    letterSpacing:  '1.5px',
+                    textTransform:  'uppercase',
+                    color:          hoveredId === item.id ? '#0A0F1C' : '#C9A84C',
+                    background:     hoveredId === item.id
+                      ? 'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)'
+                      : 'transparent',
+                    border:         '1px solid rgba(201,168,76,0.5)',
+                    padding:        '11px 20px',
+                    borderRadius:   '2px',
+                    textDecoration: 'none',
+                    transition:     'all 0.3s ease',
+                    whiteSpace:     'nowrap',
+                  }}
+                >
+                  Enquire
+                </Link>
+              </div>
+            </div>
+          </motion.article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ─── How We Work ───────────────────────────────────────────────────────────
+
+function HowWeWork() {
+  const ref    = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.06 })
+
+  return (
+    <section
+      ref={ref}
+      style={{ background: '#080C16', padding: '110px 8vw 120px', borderTop: '1px solid rgba(201,168,76,0.1)' }}
+    >
+      <style>{`
+        @media (max-width: 760px) {
+          .process-row { flex-direction: column !important; gap: 28px !important; }
+          .process-connector { display: none !important; }
+          .process-step-num { font-size: 64px !important; }
+        }
+      `}</style>
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.8, ease }}
+        style={{ marginBottom: '80px', maxWidth: '600px' }}
+      >
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: '10px', color: '#C9A84C', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '16px' }}>
+          The Process
+        </p>
+        <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 'clamp(34px, 3.8vw, 54px)', color: '#FFFFFF', fontWeight: 400, lineHeight: 1.08, marginBottom: '18px' }}>
+          How We Work<br />
+          <em style={{ color: '#E8C96D', fontStyle: 'italic' }}>With You.</em>
+        </h2>
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: '15px', color: '#506070', lineHeight: 1.8 }}>
+          From the first message to the final install — six steps, one seamless journey.
+        </p>
+      </motion.div>
+
+      {/* Timeline */}
+      <div style={{ position: 'relative' }}>
+
+        {/* Vertical spine line that draws downward */}
+        <motion.div
+          initial={{ scaleY: 0 }}
+          animate={inView ? { scaleY: 1 } : {}}
+          transition={{ duration: 3.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
+          style={{
+            position:        'absolute',
+            left:            '36px',
+            top:             '36px',
+            bottom:          '36px',
+            width:           '1px',
+            background:      'linear-gradient(to bottom, #C9A84C 0%, rgba(201,168,76,0.4) 70%, transparent 100%)',
+            transformOrigin: 'top',
+            zIndex:          1,
+          }}
+        />
+
+        {/* Steps */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+          {PROCESS_STEPS.map((step, i) => {
+            const isLast = i === PROCESS_STEPS.length - 1
+            return (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, x: -32 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.7, ease, delay: 0.4 + i * 0.18 }}
+                style={{
+                  display:        'flex',
+                  alignItems:     'flex-start',
+                  gap:            '0px',
+                  paddingBottom:  isLast ? '0' : '56px',
+                  position:       'relative',
+                  zIndex:         2,
+                }}
+              >
+                {/* Node on the spine */}
+                <div style={{ flexShrink: 0, width: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={inView ? { scale: 1, opacity: 1 } : {}}
+                    transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1], delay: 0.5 + i * 0.18 }}
+                    style={{
+                      width:           '14px',
+                      height:          '14px',
+                      borderRadius:    '50%',
+                      background:      i % 2 === 0
+                        ? 'linear-gradient(135deg, #F0D77A, #C9A84C)'
+                        : 'rgba(201,168,76,0.15)',
+                      border:          '1px solid rgba(201,168,76,0.6)',
+                      boxShadow:       i % 2 === 0 ? '0 0 16px rgba(201,168,76,0.5)' : 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Card */}
+                <motion.div
+                  whileHover={{ x: 6 }}
+                  transition={{ duration: 0.25, ease }}
+                  style={{
+                    flex:         1,
+                    background:   'rgba(255,255,255,0.02)',
+                    border:       '1px solid rgba(201,168,76,0.08)',
+                    borderRadius: '4px',
+                    padding:      '32px 36px 32px 32px',
+                    display:      'flex',
+                    gap:          '28px',
+                    alignItems:   'flex-start',
+                    cursor:       'default',
+                    maxWidth:     '780px',
+                  }}
+                >
+                  {/* Large step number */}
+                  <div
+                    className="process-step-num"
+                    style={{
+                      fontFamily:          'var(--font-playfair, Georgia, serif)',
+                      fontSize:            '80px',
+                      fontWeight:          700,
+                      lineHeight:          0.85,
+                      background:          i % 2 === 0
+                        ? 'linear-gradient(135deg, rgba(240,215,122,0.25) 0%, rgba(201,168,76,0.08) 100%)'
+                        : 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.03) 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor:  'transparent',
+                      backgroundClip:       'text',
+                      flexShrink:           0,
+                      userSelect:           'none',
+                      marginTop:            '-8px',
+                    }}
+                  >
+                    {step.number}
+                  </div>
+
+                  {/* Text */}
+                  <div style={{ flex: 1, paddingTop: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                      <step.Icon
+                        size={18}
+                        style={{ color: '#C9A84C', flexShrink: 0, strokeWidth: 1.5 }}
+                      />
+                      <h3 style={{
+                        fontFamily: 'var(--font-playfair, Georgia, serif)',
+                        fontSize:   '22px',
+                        color:      '#FFFFFF',
+                        fontWeight: 400,
+                        lineHeight: 1,
+                        margin:     0,
+                      }}>
+                        {step.title}
+                      </h3>
+                    </div>
+                    <p style={{
+                      fontFamily:    'var(--font-inter)',
+                      fontSize:      '11px',
+                      color:         '#C9A84C',
+                      letterSpacing: '2px',
+                      textTransform: 'uppercase',
+                      marginBottom:  '14px',
+                      paddingLeft:   '30px',
+                    }}>
+                      {step.sub}
+                    </p>
+                    <p style={{
+                      fontFamily:  'var(--font-inter)',
+                      fontSize:    '14px',
+                      color:       '#6A7A88',
+                      lineHeight:  1.8,
+                      paddingLeft: '30px',
+                    }}>
+                      {step.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* CTA at bottom */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.8, ease, delay: 1.6 }}
+        style={{ marginTop: '72px', paddingLeft: '72px', display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' }}
+      >
+        <Link
+          href="/contact"
+          style={{
+            fontFamily:     'var(--font-inter)',
+            fontSize:       '14px',
+            fontWeight:     600,
+            letterSpacing:  '2px',
+            textTransform:  'uppercase',
+            color:          '#0A0F1C',
+            background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
+            padding:        '18px 48px',
+            borderRadius:   '3px',
+            textDecoration: 'none',
+            boxShadow:      '0 0 40px rgba(201,168,76,0.35)',
+            display:        'inline-block',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.filter    = 'brightness(1.1)'
+            e.currentTarget.style.transform = 'translateY(-2px)'
+            e.currentTarget.style.boxShadow = '0 8px 48px rgba(201,168,76,0.55)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.filter    = ''
+            e.currentTarget.style.transform = ''
+            e.currentTarget.style.boxShadow = '0 0 40px rgba(201,168,76,0.35)'
+          }}
+        >
+          Start Step One →
+        </Link>
+        <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: '#3A4A58' }}>
+          No commitment. No pressure. Just a conversation.
+        </p>
+      </motion.div>
+    </section>
+  )
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────
 
 export default function CatalogClient() {
@@ -536,6 +1033,9 @@ export default function CatalogClient() {
           />
         )}
       </AnimatePresence>
+
+      <CatalogListings />
+      <HowWeWork />
 
       <LandingFooter />
     </div>

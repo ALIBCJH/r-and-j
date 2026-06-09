@@ -35,7 +35,7 @@ function CountUp({ to, suffix, active }: { to: number; suffix: string; active: b
 
 export default function StatsSection() {
   const ref    = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-100px' })
+  const inView = useInView(ref, { once: true, amount: 0.1 })
 
   return (
     <section

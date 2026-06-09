@@ -52,8 +52,8 @@ export default function LandingFooter() {
 
         {/* Navigation */}
         <FooterCol heading="Navigation">
-          <FLink href="/the-experience">The Experience</FLink>
-          <FLink href="/for-showrooms">Showrooms</FLink>
+          <FLink href="/experience">The Experience</FLink>
+          <FLink href="/catalog">Catalog</FLink>
           <FLink href="/about">About</FLink>
           <FLink href="/contact">Contact</FLink>
         </FooterCol>
@@ -126,7 +126,7 @@ export default function LandingFooter() {
           justifyContent: 'space-between',
         }}>
           <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58' }}>
-            © 2025 R&amp;J Interiors. Crafting Cinematic Atmospheres.
+            © 2026 R&amp;J Interiors. Crafting Cinematic Atmospheres.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

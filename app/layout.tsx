@@ -35,6 +35,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "R&J Interiors — Visualize Before You Buy",
   description: "East Africa's first vertically integrated luxury curtain design house. See your space in immersive 3D before you spend a single shilling.",
+  icons: {
+    icon:     '/logo24.png',
+    shortcut: '/logo24.png',
+    apple:    '/logo24.png',
+  },
 };
 
 export default function RootLayout({
