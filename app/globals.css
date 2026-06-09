@@ -1,26 +1,157 @@
 @import "tailwindcss";
 
+/* ── R&J Interiors — Landing design system ────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --rj-bg-primary:   #0A0F1C;
+  --rj-bg-secondary: #0D1B2E;
+  --rj-bg-darkest:   #060D18;
+
+  /* Gold accent system */
+  --rj-gold:          #C9A84C;
+  --rj-gold-light:    #E8C96D;
+  --rj-gold-dark:     #A67C2E;
+  --rj-gold-gradient: linear-gradient(135deg, #E8C96D 0%, #C9A84C 50%, #A67C2E 100%);
+  --rj-gold-border:   rgba(201, 168, 76, 0.25);
+  --rj-gold-glow:     rgba(201, 168, 76, 0.15);
+
+  /* Text */
+  --rj-text-primary:   #FFFFFF;
+  --rj-text-secondary: #A8B2BE;
+  --rj-text-muted:     #6B7A8D;
+  --rj-text-gold:      #C9A84C;
+
+  /* Typography scale — used across all pages for consistency */
+  --rj-font-hero:  clamp(48px, 5.5vw, 84px);   /* page H1 */
+  --rj-font-h2:    clamp(40px, 4.5vw, 58px);   /* section headings */
+  --rj-font-h3:    22px;                         /* card / sub headings */
+  --rj-font-body:  16px;                         /* all body text */
+  --rj-font-small: 14px;                         /* meta / attribution */
+  --rj-font-label: 11px;                         /* gold uppercase labels */
+
+  /* Spacing */
+  --rj-section-padding: 120px;
+  --rj-content-max:     1240px;
+  --rj-navbar-height:   72px;
+
+  /* Borders */
+  --rj-border-gold:        1px solid rgba(201, 168, 76, 0.25);
+  --rj-border-gold-bright: 1px solid rgba(201, 168, 76, 0.6);
+
+  /* Shadows */
+  --rj-shadow-gold: 0 0 30px rgba(201, 168, 76, 0.2);
+  --rj-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+
+/* ── Studio (dark) theme ─────────────────────────────────────────────────── */
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8C87A;
+  --dark-bg: #111113;
+  --panel-bg: #18181A;
+  --panel-border: #1E1E21;
+  --text-primary: #F0EBE0;
+  --text-muted: #706860;
+  --surface: #1E1E21;
+  --surface-hover: #242428;
+}
+
+/* ── Marketing (light) theme ─────────────────────────────────────────────── */
+:root {
+  --navy: #1B3A6B;
+  --navy-deep: #0D1F3C;
+  --navy-mid: #2A4E8A;
+  --warm-white: #FAFAF8;
+  --warm-white-alt: #F3F0EB;
+  --body-text: #3A3530;
+  --muted-text: #8A8278;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--warm-white);
+  --color-foreground: var(--navy);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-cormorant: var(--font-cormorant);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--warm-white);
+  color: var(--body-text);
+}
+
+/* Gold range slider (studio) */
+input[type='range'].gold-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: #2A2A2D;
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+input[type='range'].gold-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #C9A84C;
+  cursor: pointer;
+  border: 2px solid #18181A;
+  box-shadow: 0 0 8px rgba(201,168,76,0.45);
+}
+input[type='range'].gold-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #C9A84C;
+  cursor: pointer;
+  border: 2px solid #18181A;
+}
+
+/* Dark panel scrollbar (studio) */
+.dark-scroll::-webkit-scrollbar { width: 3px; }
+.dark-scroll::-webkit-scrollbar-track { background: transparent; }
+.dark-scroll::-webkit-scrollbar-thumb { background: #2A2A2D; border-radius: 2px; }
+
+/* Light-mode slider track override */
+html[data-theme='light'] input[type='range'].gold-slider {
+  background: #D8D0C8;
+}
+html[data-theme='light'] input[type='range'].gold-slider::-webkit-slider-thumb {
+  border-color: #FFFFFF;
+}
+html[data-theme='light'] input[type='range'].gold-slider::-moz-range-thumb {
+  border-color: #FFFFFF;
+}
+
+/* Smooth theme transition on backgrounds */
+html { transition: background-color 0.25s ease, color 0.25s ease; }
+
+/* ── Hero section — CSS pseudo-element logo watermark ───────────────────── */
+.hero-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #0F1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Subtle gold glow behind hero right side */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 55% 60% at 75% 50%,
+    rgba(201, 168, 76, 0.06) 0%,
+    transparent 70%
+  );
+  z-index: 2;
+  pointer-events: none;
 }
