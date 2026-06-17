@@ -46,7 +46,7 @@ export default function TextilesShowcase() {
   return (
     <section
       id="catalog"
-      style={{ background: '#0A0C12', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
+      style={{ background: '#0D1B2E', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
     >
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 

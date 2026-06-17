@@ -18,7 +18,7 @@ export default function EnvironmentsCarousel() {
   const next = () => setActive(a => (a + 1) % ROOMS.length)
 
   return (
-    <section style={{ background: '#0F1117', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}>
+    <section style={{ background: '#0D1B2E', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 
         {/* Header */}

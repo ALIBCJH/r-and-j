@@ -13,7 +13,7 @@ export default function LandingFooter() {
   const [email, setEmail] = useState('')
 
   return (
-    <footer style={{ background: '#090B10', borderTop: '1px solid rgba(201,168,76,0.15)' }}>
+    <footer style={{ background: '#0D1B2E', borderTop: '1px solid rgba(201,168,76,0.15)' }}>
       <style>{`
         @media (max-width: 768px) {
           .footer-grid { grid-template-columns: 1fr !important; }

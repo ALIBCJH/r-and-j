@@ -50,12 +50,15 @@ function SkillTag({ label, delay }: { label: string; delay: number }) {
   )
 }
 
-export default function FoundersSection() {
+export default function FoundersSection({ firstSection }: { firstSection?: boolean }) {
   return (
     <section style={{
-      background: '#0D1B2E',
-      padding:    '120px 6vw',
-      borderTop:  '1px solid rgba(201,168,76,0.12)',
+      background:     '#0D1B2E',
+      paddingTop:     firstSection ? 'calc(var(--rj-navbar-height) + 24px)' : '120px',
+      paddingBottom:  '120px',
+      paddingLeft:    '6vw',
+      paddingRight:   '6vw',
+      borderTop:      firstSection ? 'none' : '1px solid rgba(201,168,76,0.12)',
     }}>
       <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
 
@@ -65,7 +68,7 @@ export default function FoundersSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.8, ease }}
-          style={{ textAlign: 'center', marginBottom: '64px' }}
+          style={{ textAlign: 'center', marginBottom: '40px' }}
         >
           <p style={{
             fontFamily:    'var(--font-inter, sans-serif)',
@@ -73,14 +76,14 @@ export default function FoundersSection() {
             color:         '#C9A84C',
             letterSpacing: '4px',
             textTransform: 'uppercase',
-            marginBottom:  '16px',
+            marginBottom:  '12px',
           }}>
             The People Behind R&amp;J
           </p>
 
           <h2 style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     '52px',
+            fontSize:     'clamp(32px, 5vw, 52px)',
             color:        '#FFFFFF',
             fontWeight:   400,
             lineHeight:   1.1,
@@ -90,26 +93,6 @@ export default function FoundersSection() {
           </h2>
 
           <GoldLine width={48} />
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.8, ease, delay: 0.2 }}
-            style={{
-              fontFamily:  'var(--font-inter, sans-serif)',
-              fontSize:    '18px',
-              color:       '#A8B2BE',
-              fontStyle:   'italic',
-              textAlign:   'center',
-              maxWidth:    '560px',
-              margin:      '20px auto 0',
-              lineHeight:  1.7,
-            }}
-          >
-            Two disciplines. One vision.<br />
-            Every curtain a collaboration.
-          </motion.p>
         </motion.div>
 
         {/* Two-column card grid */}
@@ -125,10 +108,10 @@ export default function FoundersSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.9, ease, delay: 0.3 }}
             style={{
-              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A0F1C',
+              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A1525',
               border:       '1px solid rgba(201,168,76,0.2)',
               borderRadius: '8px',
-              padding:      '48px',
+              padding:      'clamp(24px, 4vw, 48px)',
               position:     'relative',
               overflow:     'hidden',
               transition:   'all 0.35s ease',
@@ -151,11 +134,11 @@ export default function FoundersSection() {
               position:     'relative',
             }}>
               <Image
-                src="/assets/founderjuma.png"
+                src="/assets/jumafounder.jpeg"
                 alt="Engineer Juma — Co-Founder, R&J Interiors"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                style={{ objectFit: 'cover', objectPosition: 'center top' }}
               />
               <div style={{
                 position:      'absolute',
@@ -263,10 +246,10 @@ export default function FoundersSection() {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.9, ease, delay: 0.5 }}
             style={{
-              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A0F1C',
+              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A1525',
               border:       '1px solid rgba(201,168,76,0.2)',
               borderRadius: '8px',
-              padding:      '48px',
+              padding:      'clamp(24px, 4vw, 48px)',
               position:     'relative',
               overflow:     'hidden',
               transition:   'all 0.35s ease',
@@ -289,7 +272,7 @@ export default function FoundersSection() {
               position:     'relative',
             }}>
               <Image
-                src="/assets/founderrose.png"
+                src="/assets/rosedesigner.jpeg"
                 alt="Rose — Co-Founder, R&J Interiors"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -331,7 +314,7 @@ export default function FoundersSection() {
               textAlign:    'center',
               marginBottom: '6px',
             }}>
-              Designer Rachael
+              Designer Rose
             </h3>
 
             {/* Role */}

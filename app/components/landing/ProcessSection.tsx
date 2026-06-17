@@ -78,7 +78,7 @@ function CardImage({
             <div style={{
               position:   'absolute',
               inset:      0,
-              background: 'linear-gradient(160deg, rgba(201,168,76,0.1) 0%, #0a0d14 60%, #0D1018 100%)',
+              background: 'linear-gradient(160deg, rgba(201,168,76,0.1) 0%, #091524 60%, #0C1A28 100%)',
             }} />
             {/* Subtle grid */}
             <div style={{
@@ -146,7 +146,7 @@ export default function ProcessSection() {
     <>
       {/* ── Process Section ── */}
       <section style={{
-        background: '#0F1117',
+        background: '#0D1B2E',
         padding:    '120px 6vw',
         borderTop:  '1px solid rgba(201,168,76,0.12)',
       }}>
@@ -201,8 +201,15 @@ export default function ProcessSection() {
             />
           </div>
 
+          <style>{`
+            @media (max-width: 900px) { .process-grid { grid-template-columns: 1fr 1fr !important; } }
+            @media (max-width: 560px) { .process-grid { grid-template-columns: 1fr !important; } }
+            @media (max-width: 560px) { .process-card-body { padding: 28px 24px 32px !important; } }
+          `}</style>
+
           {/* Cards */}
           <div
+            className="process-grid"
             onMouseLeave={() => setHoveredIndex(null)}
             style={{
               display:             'grid',
@@ -295,7 +302,7 @@ export default function ProcessSection() {
                     />
 
                     {/* Content zone */}
-                    <div style={{ padding: '40px 44px 48px', position: 'relative', flex: 1 }}>
+                    <div className="process-card-body" style={{ padding: '40px 44px 48px', position: 'relative', flex: 1 }}>
 
                       {/* Step badge */}
                       <div style={{
@@ -352,7 +359,7 @@ export default function ProcessSection() {
 
       {/* ── Bridge Quote ── */}
       <section style={{
-        background: '#0F1117',
+        background: '#0D1B2E',
         padding:    '72px 6vw',
         borderTop:  '1px solid rgba(201,168,76,0.08)',
       }}>

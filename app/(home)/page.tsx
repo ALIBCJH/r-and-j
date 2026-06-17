@@ -16,10 +16,10 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div style={{ background: '#0F1117' }}>
+    <div style={{ background: '#0D1B2E' }}>
       <LandingNavbar />
       <HeroSection />
-      <SectionDivider from="#0F1117" to="#0F1117" />
+      <SectionDivider from="#0D1B2E" to="#0F1117" />
       <ProcessSection />
       <SectionDivider from="#0F1117" to="#0F1117" />
       <StatsSection />

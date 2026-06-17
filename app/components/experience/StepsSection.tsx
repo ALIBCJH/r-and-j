@@ -58,7 +58,7 @@ const STEPS = [
 
 export default function StepsSection() {
   return (
-    <section id="how-it-works" style={{ background: '#0A0F1C' }}>
+    <section id="how-it-works" style={{ background: '#0D1B2E' }}>
 
       {/* Section header */}
       <motion.div

@@ -6,7 +6,7 @@ const ease = [0.25, 0.1, 0.25, 1] as const
 
 export default function TestimonialSection() {
   return (
-    <section style={{ background: '#0F1117', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}>
+    <section style={{ background: '#0D1B2E', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}

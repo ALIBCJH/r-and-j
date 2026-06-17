@@ -96,7 +96,7 @@ export default function ContactForm() {
 
   if (submitted) {
     return (
-      <section style={{ background: '#0A0F1C', padding: 'clamp(64px, 8vw, 100px) 6vw' }}>
+      <section style={{ background: '#0D1B2E', padding: 'clamp(64px, 8vw, 100px) 6vw' }}>
         <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -147,7 +147,32 @@ export default function ContactForm() {
   }
 
   return (
-    <section style={{ background: '#0A0F1C', padding: 'clamp(64px, 8vw, 100px) 6vw' }}>
+    <section style={{ background: '#0D1B2E', paddingTop: 'calc(var(--rj-navbar-height) + clamp(40px, 5vw, 64px))', paddingBottom: 'clamp(64px, 8vw, 100px)', paddingLeft: '6vw', paddingRight: '6vw' }}>
+      {/* Page title */}
+      <div style={{ maxWidth: '1240px', margin: '0 auto 48px' }}>
+        <p style={{
+          fontFamily:    'var(--font-inter, sans-serif)',
+          fontSize:      '11px',
+          color:         '#C9A84C',
+          letterSpacing: '4px',
+          textTransform: 'uppercase',
+          marginBottom:  '16px',
+        }}>
+          Begin Your Journey
+        </p>
+        <h1 style={{
+          fontFamily:  'var(--font-playfair, Georgia, serif)',
+          fontSize:    'clamp(32px, 4vw, 52px)',
+          color:       '#FFFFFF',
+          fontWeight:  400,
+          lineHeight:  1.1,
+          marginBottom: 0,
+        }}>
+          Let&apos;s Build Something{' '}
+          <span style={{ color: '#C9A84C', fontStyle: 'italic' }}>Beautiful.</span>
+        </h1>
+      </div>
+
       <div
         className="contact-grid"
         style={{

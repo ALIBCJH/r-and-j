@@ -77,8 +77,9 @@
 }
 
 body {
-  background: var(--warm-white);
+  background: #0D1B2E;
   color: var(--body-text);
+  overflow-x: hidden;
 }
 
 /* Gold range slider (studio) */
@@ -135,23 +136,21 @@ html { transition: background-color 0.25s ease, color 0.25s ease; }
   position: relative;
   width: 100%;
   min-height: 100vh;
-  background: #0F1117;
+  background: #0D1B2E !important;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-/* Subtle gold glow behind hero right side */
+/* Gold glow behind hero right side */
 .hero-section::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 55% 60% at 75% 50%,
-    rgba(201, 168, 76, 0.06) 0%,
-    transparent 70%
-  );
+  background:
+    radial-gradient(ellipse 55% 60% at 75% 50%, rgba(201, 168, 76, 0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 25% 60%, rgba(201, 168, 76, 0.04) 0%, transparent 60%);
   z-index: 2;
   pointer-events: none;
 }

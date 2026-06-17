@@ -16,7 +16,7 @@ export default function ExperienceHero() {
         flexDirection:  'column',
         justifyContent: 'center',
         overflow:       'hidden',
-        background:     '#0F1117',
+        background:     '#0D1B2E',
       }}
     >
       {/* ── Ghost logo — the sole background visual ── */}

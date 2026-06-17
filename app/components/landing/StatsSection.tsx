@@ -40,7 +40,7 @@ export default function StatsSection() {
   return (
     <section
       ref={ref}
-      style={{ background: '#0F1117', padding: '100px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
+      style={{ background: '#0D1B2E', padding: '100px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
     >
       <style>{`@media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr !important; } }`}</style>
       <div
@@ -61,7 +61,7 @@ export default function StatsSection() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, ease, delay: i * 0.12 }}
             style={{
-              background: '#0F1117',
+              background: '#0A1525',
               padding:    '60px 40px',
               textAlign:  'center',
             }}

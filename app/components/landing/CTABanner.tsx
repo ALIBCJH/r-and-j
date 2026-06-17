@@ -9,7 +9,7 @@ export default function CTABanner() {
   return (
     <section
       className="relative overflow-hidden"
-      style={{ background: '#0F1117', padding: '140px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
+      style={{ background: '#0D1B2E', padding: '140px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
     >
       {/* Centered gold glow */}
       <div className="absolute inset-0 pointer-events-none" style={{

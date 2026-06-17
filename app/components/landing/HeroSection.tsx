@@ -18,6 +18,22 @@ function fadeUp(delay: number) {
 export default function HeroSection() {
   return (
     <section className="hero-section" style={{ flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .hero-cols {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center;
+            padding-top: calc(var(--rj-navbar-height) + 24px) !important;
+            gap: 20px !important;
+          }
+          .hero-text-col { flex: 0 0 auto !important; width: 100% !important; }
+          .hero-text-col p { max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; }
+          .hero-text-col > div { justify-content: center !important; }
+          .hero-logo-col { flex: 0 0 auto !important; width: 180px !important; height: 180px !important; }
+          .hero-cta-link { padding: 16px 36px !important; font-size: 13px !important; letter-spacing: 2px !important; }
+        }
+      `}</style>
 
       {/* SVG filter — makes white pixels transparent, gold/dark stay opaque */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
@@ -36,7 +52,7 @@ export default function HeroSection() {
 
       {/* Full-width two-column layout — grows to fill remaining space above scroll indicator */}
       <div
-        className="relative w-full flex items-center"
+        className="relative w-full flex items-center hero-cols"
         style={{
           flex:       '1 1 auto',
           padding:    '0 6vw',
@@ -47,7 +63,7 @@ export default function HeroSection() {
       >
 
         {/* ── Left: text — 50% of viewport ── */}
-        <div style={{ flex: '0 0 50%', minWidth: 0 }}>
+        <div className="hero-text-col" style={{ flex: '0 0 50%', minWidth: 0 }}>
 
           <motion.h1 {...fadeUp(0.25)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
@@ -102,7 +118,7 @@ export default function HeroSection() {
           >
             <Link
               href="/studio"
-              className="inline-flex items-center rounded-sm font-semibold"
+              className="inline-flex items-center rounded-sm font-semibold hero-cta-link"
               style={{
                 background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
                 color:         '#0A0F1C',
@@ -129,6 +145,7 @@ export default function HeroSection() {
 
         {/* ── Right: logo — 44% of viewport ── */}
         <motion.div
+          className="hero-logo-col"
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease, delay: 0.25 }}
