@@ -72,7 +72,7 @@ export default function HeroSection() {
             lineHeight:   1.1,
             marginBottom: 0,
           }}>
-            Your Room.
+            The room you have always
           </motion.h1>
 
           <motion.h1 {...fadeUp(0.4)} style={{
@@ -82,7 +82,7 @@ export default function HeroSection() {
             lineHeight:   1.1,
             marginBottom: 0,
           }}>
-            Your Curtains.
+            imagined is closer than
           </motion.h1>
 
           <motion.h1 {...fadeUp(0.55)} style={{
@@ -96,7 +96,7 @@ export default function HeroSection() {
               fontStyle:  'italic',
               textShadow: '0 0 48px rgba(232,201,109,0.3)',
             }}>
-              Before They Exist.
+              you think.
             </em>
           </motion.h1>
 
@@ -106,10 +106,10 @@ export default function HeroSection() {
             color:        '#9BAAB8',
             lineHeight:   1.85,
             marginBottom: '44px',
-            maxWidth:     '380px',
+            maxWidth:     '420px',
           }}>
-            Experience your curtains at full scale in your actual room —
-            before a single thread is cut.
+            Step inside your redesigned space in immersive 3D — see every
+            detail, feel every decision, before a single thread is cut.
           </motion.p>
 
           <motion.div
