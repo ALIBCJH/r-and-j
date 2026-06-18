@@ -67,7 +67,7 @@ export default function HeroSection() {
 
           <motion.h1 {...fadeUp(0.25)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(52px, 6vw, 92px)',
+            fontSize:     'clamp(28px, 2.8vw, 46px)',
             color:        '#FFFFFF',
             lineHeight:   1.1,
             marginBottom: 0,
@@ -77,7 +77,7 @@ export default function HeroSection() {
 
           <motion.h1 {...fadeUp(0.4)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(52px, 6vw, 92px)',
+            fontSize:     'clamp(28px, 2.8vw, 46px)',
             color:        '#FFFFFF',
             lineHeight:   1.1,
             marginBottom: 0,
@@ -87,7 +87,7 @@ export default function HeroSection() {
 
           <motion.h1 {...fadeUp(0.55)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(52px, 6vw, 92px)',
+            fontSize:     'clamp(28px, 2.8vw, 46px)',
             lineHeight:   1.1,
             marginBottom: '36px',
           }}>
