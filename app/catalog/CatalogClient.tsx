@@ -185,43 +185,34 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       transition={{ duration: 0.5, ease, delay: index * 0.07 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        background:   '#0A1525',
-        border:       `1px solid ${hovered ? 'rgba(201,168,76,0.4)' : 'rgba(201,168,76,0.12)'}`,
-        borderRadius: '8px',
-        overflow:     'hidden',
-        transition:   'border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease',
-        transform:    hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow:    hovered ? '0 16px 48px rgba(0,0,0,0.4)' : 'none',
-        display:      'flex',
-        flexDirection:'column',
-      }}
+      style={{ background: 'transparent', cursor: 'pointer' }}
     >
       {/* Image */}
-      <div style={{ position: 'relative', height: '280px', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{
+        position:     'relative',
+        aspectRatio:  '2/3',
+        overflow:     'hidden',
+        borderRadius: '4px',
+        marginBottom: '18px',
+      }}>
         <Image
           src={product.image}
           alt={product.name}
           fill
           style={{
-            objectFit:  'cover',
+            objectFit:      'cover',
             objectPosition: 'center',
-            transform:  hovered ? 'scale(1.05)' : 'scale(1)',
-            transition: 'transform 0.6s ease',
+            transform:      hovered ? 'scale(1.06)' : 'scale(1)',
+            transition:     'transform 0.7s ease',
           }}
         />
-        {/* Gradient overlay */}
-        <div style={{
-          position:   'absolute',
-          inset:      0,
-          background: 'linear-gradient(to top, rgba(10,21,37,0.85) 0%, rgba(10,21,37,0.1) 55%, transparent 100%)',
-        }} />
+
         {/* Badge */}
         {product.badge && (
           <div style={{
             position:      'absolute',
-            top:           '16px',
-            left:          '16px',
+            top:           '14px',
+            left:          '14px',
             background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
             color:         '#0A0F1C',
             fontFamily:    'var(--font-inter, sans-serif)',
@@ -231,154 +222,97 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             textTransform: 'uppercase',
             padding:       '5px 12px',
             borderRadius:  '2px',
+            zIndex:        2,
           }}>
             {product.badge}
           </div>
         )}
-        {/* Collection label on image */}
+
+        {/* Hover overlay — enquire CTA */}
         <div style={{
-          position:      'absolute',
-          bottom:        '16px',
-          left:          '16px',
+          position:       'absolute',
+          inset:          0,
+          background:     'rgba(8,16,30,0.52)',
+          display:        'flex',
+          flexDirection:  'column',
+          alignItems:     'center',
+          justifyContent: 'center',
+          gap:            '12px',
+          opacity:        hovered ? 1 : 0,
+          transition:     'opacity 0.35s ease',
+          zIndex:         1,
+        }}>
+          <Link
+            href="/contact"
+            style={{
+              fontFamily:     'var(--font-inter, sans-serif)',
+              fontSize:       '11px',
+              fontWeight:     600,
+              letterSpacing:  '2.5px',
+              textTransform:  'uppercase',
+              color:          '#0A0F1C',
+              background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
+              padding:        '13px 36px',
+              textDecoration: 'none',
+              borderRadius:   '2px',
+              whiteSpace:     'nowrap',
+            }}
+          >
+            Enquire
+          </Link>
+          <Link
+            href="/studio"
+            style={{
+              fontFamily:     'var(--font-inter, sans-serif)',
+              fontSize:       '10px',
+              letterSpacing:  '1.5px',
+              textTransform:  'uppercase',
+              color:          'rgba(232,201,109,0.85)',
+              border:         '1px solid rgba(232,201,109,0.4)',
+              padding:        '10px 28px',
+              textDecoration: 'none',
+              borderRadius:   '2px',
+              whiteSpace:     'nowrap',
+            }}
+          >
+            View in Studio
+          </Link>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div>
+        <p style={{
           fontFamily:    'var(--font-inter, sans-serif)',
           fontSize:      '9px',
           color:         '#C9A84C',
           letterSpacing: '3px',
           textTransform: 'uppercase',
+          marginBottom:  '8px',
         }}>
           {product.collection}
-        </div>
-      </div>
+        </p>
 
-      {/* Content */}
-      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
         <h3 style={{
           fontFamily:   'var(--font-playfair, Georgia, serif)',
-          fontSize:     '20px',
-          color:        '#FFFFFF',
+          fontSize:     '18px',
+          color:        '#F0EBE0',
           fontWeight:   400,
-          marginBottom: '4px',
-          lineHeight:   1.2,
+          lineHeight:   1.25,
+          marginBottom: '10px',
         }}>
           {product.name}
         </h3>
 
         <p style={{
-          fontFamily:   'var(--font-inter, sans-serif)',
-          fontSize:     '12px',
-          color:        '#C9A84C',
-          fontStyle:    'italic',
-          marginBottom: '12px',
+          fontFamily: 'var(--font-playfair, Georgia, serif)',
+          fontSize:   '16px',
+          color:      '#C9A84C',
+          fontWeight: 400,
+          fontStyle:  'italic',
         }}>
-          {product.material}
+          {product.price}
         </p>
-
-        <p style={{
-          fontFamily:   'var(--font-inter, sans-serif)',
-          fontSize:     '13px',
-          color:        '#6A7A88',
-          lineHeight:   1.75,
-          marginBottom: '16px',
-          flex:         1,
-        }}>
-          {product.description}
-        </p>
-
-        {/* Tags */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          {product.tags.map(tag => (
-            <span key={tag} style={{
-              fontFamily:    'var(--font-inter, sans-serif)',
-              fontSize:      '10px',
-              color:         '#506070',
-              border:        '1px solid rgba(201,168,76,0.15)',
-              padding:       '3px 10px',
-              borderRadius:  '20px',
-              letterSpacing: '0.3px',
-            }}>
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        {/* Price + CTAs */}
-        <div style={{
-          borderTop:  '1px solid rgba(201,168,76,0.1)',
-          paddingTop: '16px',
-        }}>
-          <div style={{ marginBottom: '14px' }}>
-            <p style={{
-              fontFamily: 'var(--font-playfair, Georgia, serif)',
-              fontSize:   '20px',
-              color:      '#C9A84C',
-              fontWeight: 400,
-              lineHeight: 1,
-            }}>
-              {product.price}
-            </p>
-            <p style={{
-              fontFamily: 'var(--font-inter, sans-serif)',
-              fontSize:   '11px',
-              color:      '#3A4A58',
-              marginTop:  '4px',
-            }}>
-              {product.priceNote}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Link
-              href="/contact"
-              style={{
-                flex:           1,
-                fontFamily:     'var(--font-inter, sans-serif)',
-                fontSize:       '12px',
-                fontWeight:     600,
-                letterSpacing:  '1.5px',
-                textTransform:  'uppercase',
-                textAlign:      'center',
-                color:          '#0A0F1C',
-                background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
-                padding:        '12px 16px',
-                borderRadius:   '4px',
-                textDecoration: 'none',
-                transition:     'filter 0.2s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.filter = 'brightness(1.1)')}
-              onMouseLeave={e => (e.currentTarget.style.filter = '')}
-            >
-              Enquire
-            </Link>
-            <Link
-              href="/studio"
-              style={{
-                fontFamily:     'var(--font-inter, sans-serif)',
-                fontSize:       '12px',
-                fontWeight:     500,
-                letterSpacing:  '0.5px',
-                textAlign:      'center',
-                color:          '#A8B2BE',
-                background:     'transparent',
-                border:         '1px solid rgba(201,168,76,0.25)',
-                padding:        '12px 14px',
-                borderRadius:   '4px',
-                textDecoration: 'none',
-                transition:     'border-color 0.2s ease, color 0.2s ease',
-                whiteSpace:     'nowrap',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.6)'
-                e.currentTarget.style.color = '#C9A84C'
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'rgba(201,168,76,0.25)'
-                e.currentTarget.style.color = '#A8B2BE'
-              }}
-            >
-              View in Studio
-            </Link>
-          </div>
-        </div>
       </div>
     </motion.article>
   )
@@ -498,8 +432,8 @@ export default function CatalogClient() {
               key={activePalette}
               style={{
                 display:             'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap:                 '28px',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap:                 '36px 28px',
               }}
               className="catalog-product-grid"
             >
@@ -513,10 +447,9 @@ export default function CatalogClient() {
 
       {/* ── Bottom CTA ── */}
       <section style={{
-        background:   '#0A1525',
-        padding:      '80px 6vw',
-        borderTop:    '1px solid rgba(201,168,76,0.1)',
-        textAlign:    'center',
+        padding:   '80px 6vw',
+        borderTop: '1px solid rgba(201,168,76,0.1)',
+        textAlign: 'center',
       }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <p style={{
@@ -581,8 +514,9 @@ export default function CatalogClient() {
       </section>
 
       <style>{`
-        @media (max-width: 900px) { .catalog-product-grid { grid-template-columns: 1fr 1fr !important; } }
-        @media (max-width: 560px) { .catalog-product-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 1100px) { .catalog-product-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+        @media (max-width: 760px)  { .catalog-product-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 480px)  { .catalog-product-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <LandingFooter />

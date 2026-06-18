@@ -30,10 +30,11 @@ export default function LandingNavbar() {
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10"
         style={{
           height:         'var(--rj-navbar-height)',
-          borderBottom:   '1px solid rgba(201,168,76,0.15)',
-          background:     scrolled ? 'rgba(8,12,24,0.97)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(24px)' : 'none',
-          transition:     'background 0.4s ease, backdrop-filter 0.4s ease',
+          borderBottom:   scrolled ? '1px solid rgba(201,168,76,0.18)' : '1px solid rgba(201,168,76,0.15)',
+          background:     scrolled ? 'rgba(10,18,36,0.6)' : 'transparent',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          transition:     'background 0.4s ease, border-color 0.4s ease',
         }}
       >
         {/* Logo */}

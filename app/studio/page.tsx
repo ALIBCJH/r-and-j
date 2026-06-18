@@ -2,15 +2,13 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import ConfigPanel, { type FabricType, type RoomPreset } from '../components/ConfigPanel'
-import { useTheme, useThemeColors } from '../components/ThemeProvider'
+import ConfigPanel, { type FabricType, type RoomPreset, ROOM_PRESETS } from '../components/ConfigPanel'
 
 // ─── Loading fallback — standalone component so hooks are legal ───────────────
 
 function StudioLoadingFallback() {
-  const c = useThemeColors()
   return (
-    <div className="flex-1 flex items-center justify-center" style={{ background: c.studioBg }}>
+    <div className="flex-1 flex items-center justify-center" style={{ background: '#0D1B2E' }}>
       <div className="flex flex-col items-center gap-5">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 rounded-full border border-[#C9A84C]/20" />
@@ -82,21 +80,6 @@ function RotateIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
-    </svg>
-  )
-}
-function SunToggleIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="5" />
-      <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-    </svg>
-  )
-}
-function MoonToggleIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   )
 }
@@ -301,11 +284,388 @@ function ConsultationModal({ curtainColor, fabric, activeRoom, onClose }: ModalP
   )
 }
 
+// ─── Entry Gate ──────────────────────────────────────────────────────────────
+
+type StudioIntent = 'windows' | 'doors' | 'rooms'
+
+function WindowIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="5" width="30" height="30" rx="2" />
+      <line x1="20" y1="5" x2="20" y2="35" />
+      <line x1="5" y1="20" x2="35" y2="20" />
+      <line x1="8" y1="5" x2="8" y2="35" strokeDasharray="2 3" strokeWidth="0.8" stroke="currentColor" opacity="0.5" />
+      <line x1="32" y1="5" x2="32" y2="35" strokeDasharray="2 3" strokeWidth="0.8" stroke="currentColor" opacity="0.5" />
+    </svg>
+  )
+}
+
+function DoorIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="3" width="24" height="34" rx="1.5" />
+      <circle cx="26" cy="20" r="1.5" fill="currentColor" stroke="none" />
+      <line x1="14" y1="3" x2="14" y2="37" strokeDasharray="2 3" strokeWidth="0.9" opacity="0.5" />
+      <line x1="26" y1="3" x2="26" y2="37" strokeDasharray="2 3" strokeWidth="0.9" opacity="0.5" />
+    </svg>
+  )
+}
+
+function RoomsIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4"  y="4"  width="14" height="14" rx="1.5" />
+      <rect x="22" y="4"  width="14" height="14" rx="1.5" />
+      <rect x="4"  y="22" width="14" height="14" rx="1.5" />
+      <rect x="22" y="22" width="14" height="14" rx="1.5" />
+    </svg>
+  )
+}
+
+const INTENT_CARDS: Array<{
+  id: StudioIntent
+  icon: React.ReactNode
+  title: string
+  sub: string
+  desc: string
+}> = [
+  {
+    id: 'windows',
+    icon: <WindowIcon />,
+    title: 'Windows',
+    sub: 'Curtains & Draping',
+    desc: 'Visualise floor-to-ceiling curtains, sheers, and drapes on your windows in full 3D.',
+  },
+  {
+    id: 'doors',
+    icon: <DoorIcon />,
+    title: 'Doors',
+    sub: 'Door Treatments',
+    desc: 'Design elegant door panels and passage curtains — a fixture in every well-dressed room.',
+  },
+  {
+    id: 'rooms',
+    icon: <RoomsIcon />,
+    title: 'Full Room',
+    sub: 'Room by Room',
+    desc: 'Take a complete design journey — style each room of your home with its own palette.',
+  },
+]
+
+function EntryGate({ onSelect }: { onSelect: (intent: StudioIntent) => void }) {
+  const [leaving, setLeaving] = useState(false)
+  const [hovered, setHovered] = useState<StudioIntent | null>(null)
+
+  const pick = (intent: StudioIntent) => {
+    setLeaving(true)
+    setTimeout(() => onSelect(intent), 380)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex flex-col items-center justify-center px-6"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 30%, #0D1F38 0%, #030B18 60%)',
+        opacity: leaving ? 0 : 1,
+        transform: leaving ? 'scale(1.015)' : 'scale(1)',
+        transition: 'opacity 0.38s ease, transform 0.38s ease',
+      }}
+    >
+      {/* Subtle grid lines */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {/* Logo */}
+      <div className="flex flex-col items-center mb-12 relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/r_j_interiors_final_premium_logo.png"
+          alt=""
+          style={{ width: 56, height: 56, borderRadius: '50%', outline: '1px solid rgba(201,168,76,0.35)', outlineOffset: 3, marginBottom: 18 }}
+        />
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: 26, color: '#E8E0D0', fontWeight: 400, marginBottom: 8, letterSpacing: '-0.01em' }}>
+          What would you like to design?
+        </p>
+        <p style={{ fontSize: 13, color: '#4A6078', letterSpacing: '0.04em', textAlign: 'center', maxWidth: 340 }}>
+          Choose your focus — you can switch at any time inside the studio.
+        </p>
+      </div>
+
+      {/* Cards */}
+      <div
+        className="relative flex gap-5 w-full"
+        style={{ maxWidth: 860, flexWrap: 'wrap', justifyContent: 'center' }}
+      >
+        {INTENT_CARDS.map((card) => {
+          const isHov = hovered === card.id
+          return (
+            <button
+              key={card.id}
+              onClick={() => pick(card.id)}
+              onMouseEnter={() => setHovered(card.id)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                flex: '1 1 240px',
+                maxWidth: 260,
+                minWidth: 220,
+                padding: '36px 28px 32px',
+                background: isHov ? 'rgba(201,168,76,0.07)' : 'rgba(255,255,255,0.025)',
+                border: `1px solid ${isHov ? 'rgba(201,168,76,0.45)' : 'rgba(201,168,76,0.12)'}`,
+                borderRadius: 6,
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
+                transform: isHov ? 'translateY(-4px)' : 'translateY(0)',
+                boxShadow: isHov ? '0 16px 48px rgba(0,0,0,0.45)' : '0 4px 16px rgba(0,0,0,0.25)',
+              }}
+            >
+              {/* Icon */}
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 4,
+                  background: isHov ? 'rgba(201,168,76,0.12)' : 'rgba(201,168,76,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isHov ? '#C9A84C' : '#5A7088',
+                  marginBottom: 22,
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+              >
+                {card.icon}
+              </div>
+
+              {/* Label */}
+              <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 8 }}>
+                {card.sub}
+              </p>
+
+              {/* Title */}
+              <h3
+                style={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: 22,
+                  color: '#E8E0D0',
+                  fontWeight: 400,
+                  marginBottom: 12,
+                  lineHeight: 1.15,
+                }}
+              >
+                {card.title}
+              </h3>
+
+              {/* Desc */}
+              <p style={{ fontSize: 12, color: '#4A6078', lineHeight: 1.7, marginBottom: 24 }}>
+                {card.desc}
+              </p>
+
+              {/* CTA */}
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: isHov ? '#C9A84C' : '#3A5068',
+                  transition: 'color 0.2s',
+                }}
+              >
+                Begin →
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Footer hint */}
+      <p style={{ fontSize: 10, color: '#243040', marginTop: 40, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+        R&amp;J Interiors · Design Studio
+      </p>
+    </div>
+  )
+}
+
+// ─── Room Picker (second step for "rooms" intent) ─────────────────────────────
+
+function RoomPicker({ onSelect, onBack }: { onSelect: (preset: RoomPreset) => void; onBack: () => void }) {
+  const [leaving, setLeaving] = useState(false)
+  const [hovered, setHovered] = useState<string | null>(null)
+
+  const pick = (preset: RoomPreset) => {
+    setLeaving(true)
+    setTimeout(() => onSelect(preset), 350)
+  }
+
+  const ROOM_ICONS: Record<string, React.ReactNode> = {
+    'Sitting Room': (
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <rect x="4" y="16" width="32" height="16" rx="3" />
+        <rect x="8" y="12" width="24" height="6" rx="2" />
+        <line x1="10" y1="32" x2="10" y2="37" />
+        <line x1="30" y1="32" x2="30" y2="37" />
+      </svg>
+    ),
+    'Bedroom': (
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <rect x="4" y="18" width="32" height="14" rx="2" />
+        <rect x="4" y="14" width="32" height="5" rx="1" />
+        <rect x="6" y="18" width="10" height="6" rx="1" opacity="0.6" />
+        <rect x="24" y="18" width="10" height="6" rx="1" opacity="0.6" />
+        <line x1="6" y1="32" x2="6" y2="37" />
+        <line x1="34" y1="32" x2="34" y2="37" />
+      </svg>
+    ),
+    'Dining Room': (
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <ellipse cx="20" cy="20" rx="14" ry="8" />
+        <line x1="20" y1="12" x2="20" y2="6" />
+        <line x1="12" y1="16" x2="8" y2="11" />
+        <line x1="28" y1="16" x2="32" y2="11" />
+        <line x1="20" y1="28" x2="20" y2="34" />
+        <line x1="12" y1="24" x2="8" y2="29" />
+        <line x1="28" y1="24" x2="32" y2="29" />
+      </svg>
+    ),
+    'Home Office': (
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <rect x="6" y="10" width="28" height="20" rx="2" />
+        <rect x="10" y="14" width="20" height="12" rx="1" opacity="0.6" />
+        <line x1="14" y1="30" x2="14" y2="36" />
+        <line x1="26" y1="30" x2="26" y2="36" />
+        <line x1="10" y1="36" x2="30" y2="36" />
+      </svg>
+    ),
+  }
+
+  const ROOM_COLORS: Record<string, string> = {
+    'Sitting Room': '#D4B896',
+    'Bedroom': '#E0B8B4',
+    'Dining Room': '#4A7A5C',
+    'Home Office': '#1E3A5F',
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex flex-col items-center justify-center px-6"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 30%, #0D1F38 0%, #030B18 60%)',
+        opacity: leaving ? 0 : 1,
+        transform: leaving ? 'scale(1.015)' : 'scale(1)',
+        transition: 'opacity 0.35s ease, transform 0.35s ease',
+      }}
+    >
+      {/* Subtle grid */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {/* Back */}
+      <button
+        onClick={onBack}
+        className="absolute top-6 left-6 flex items-center gap-1.5 transition-opacity opacity-50 hover:opacity-100"
+        style={{ color: '#A09080', fontSize: 10, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        Back
+      </button>
+
+      {/* Heading */}
+      <div className="flex flex-col items-center mb-12 relative">
+        <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase', color: '#C9A84C', marginBottom: 14 }}>
+          Full Room Design
+        </p>
+        <p style={{ fontFamily: 'Georgia, serif', fontSize: 26, color: '#E8E0D0', fontWeight: 400, marginBottom: 8 }}>
+          Choose a room to begin
+        </p>
+        <p style={{ fontSize: 13, color: '#4A6078', letterSpacing: '0.04em' }}>
+          Each room loads its signature palette and fabric.
+        </p>
+      </div>
+
+      {/* Room cards */}
+      <div className="relative flex gap-4 flex-wrap justify-center" style={{ maxWidth: 780 }}>
+        {ROOM_PRESETS.map((preset) => {
+          const isHov = hovered === preset.label
+          const accentColor = ROOM_COLORS[preset.label] ?? '#C9A84C'
+          return (
+            <button
+              key={preset.label}
+              onClick={() => pick(preset)}
+              onMouseEnter={() => setHovered(preset.label)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                flex: '1 1 160px',
+                maxWidth: 180,
+                minWidth: 150,
+                padding: '28px 20px 24px',
+                background: isHov ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${isHov ? 'rgba(201,168,76,0.4)' : 'rgba(201,168,76,0.1)'}`,
+                borderTop: `2px solid ${isHov ? accentColor : 'transparent'}`,
+                borderRadius: 4,
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all 0.2s',
+                transform: isHov ? 'translateY(-3px)' : 'translateY(0)',
+              }}
+            >
+              {/* Colour swatch */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 3,
+                    background: accentColor,
+                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
+                    flexShrink: 0,
+                  }}
+                />
+                <div style={{ color: isHov ? '#C9A84C' : '#4A6078', transition: 'color 0.2s' }}>
+                  {ROOM_ICONS[preset.label]}
+                </div>
+              </div>
+
+              <p style={{ fontFamily: 'Georgia, serif', fontSize: 17, color: '#E8E0D0', fontWeight: 400, marginBottom: 6 }}>
+                {preset.label}
+              </p>
+              <p style={{ fontSize: 10, color: '#3A5068', textTransform: 'capitalize', letterSpacing: '0.05em' }}>
+                {preset.fabric} · {preset.wallColor === '#C8D8E4' ? 'Cool Blue' : preset.wallColor === '#B2BAC2' ? 'Cool Gray' : preset.wallColor === '#D4C0A0' ? 'Sandy Beige' : 'Soft White'}
+              </p>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { theme, toggle } = useTheme()
-  const c = useThemeColors()
+  const c = {
+    studioMuted:   '#5A7088',
+    studioText:    '#E8E0D0',
+    studioDivider: 'rgba(201,168,76,0.1)',
+    border:        'rgba(255,255,255,0.07)',
+    panelBg:       '#0A1525',
+    panelBorder:   'rgba(201,168,76,0.1)',
+  }
+
+  const [intent, setIntent]             = useState<StudioIntent | null>(null)
+  const [showRoomPicker, setShowRoomPicker] = useState(false)
 
   const [curtainColor, setCurtainColor] = useState('#C8A070')
   const [wallColor, setWallColor]       = useState('#F8F4EF')
@@ -318,6 +678,27 @@ export default function Home() {
   const [activeRoom, setActiveRoom]     = useState('')
   const [showModal, setShowModal]       = useState(false)
   const [panelOpen, setPanelOpen]       = useState(true)
+
+  const handleIntentSelect = (chosen: StudioIntent) => {
+    if (chosen === 'rooms') {
+      setShowRoomPicker(true)
+    } else if (chosen === 'doors') {
+      setActiveRoom('Door Treatment')
+      setIntent(chosen)
+    } else {
+      setIntent(chosen)
+    }
+  }
+
+  const handleRoomPickerSelect = (preset: RoomPreset) => {
+    setCurtainColor(preset.curtainColor)
+    setWallColor(preset.wallColor)
+    setFloorColor(preset.floorColor)
+    setFabric(preset.fabric)
+    setActiveRoom(preset.label)
+    setShowRoomPicker(false)
+    setIntent('rooms')
+  }
 
   const handleRoomPreset = (preset: RoomPreset) => {
     setCurtainColor(preset.curtainColor)
@@ -333,10 +714,23 @@ export default function Home() {
     desc: 'A unique selection from your personal palette. Tailored for your vision.',
   }
 
-  const sceneToolbarBg = c.isDark ? 'rgba(14,14,16,0.75)' : 'rgba(250,250,248,0.88)'
+  const sceneToolbarBg = 'rgba(14,14,16,0.75)'
+
+  if (intent === null && !showRoomPicker) {
+    return <EntryGate onSelect={handleIntentSelect} />
+  }
+
+  if (showRoomPicker) {
+    return (
+      <RoomPicker
+        onSelect={handleRoomPickerSelect}
+        onBack={() => setShowRoomPicker(false)}
+      />
+    )
+  }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: c.studioBg }}>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0D1B2E' }}>
 
       {/* ── Mobile notice — only shows below md breakpoint ── */}
       <div className="md:hidden fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-8 py-12" style={{ background: '#0D1B2E' }}>
@@ -364,7 +758,7 @@ export default function Home() {
       {/* ── Navbar ── */}
       <nav
         className="h-[52px] shrink-0 flex items-center px-5 gap-4"
-        style={{ background: c.studioNav, borderBottom: `1px solid ${c.studioNavBorder}` }}
+        style={{ background: '#0D1B2E', borderBottom: '1px solid rgba(201,168,76,0.18)' }}
       >
         {/* Back link */}
         <a
@@ -405,15 +799,26 @@ export default function Home() {
 
         {/* Actions */}
         <div className="flex items-center gap-2.5">
+          {/* Intent badge — click to return to entry gate */}
           <button
-            onClick={toggle}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="w-7 h-7 flex items-center justify-center transition-colors"
-            style={{ color: c.studioMuted }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
-            onMouseLeave={e => (e.currentTarget.style.color = c.studioMuted)}
+            onClick={() => setIntent(null)}
+            className="h-6 px-3 flex items-center gap-1.5 transition-opacity opacity-60 hover:opacity-100"
+            style={{
+              background: 'rgba(201,168,76,0.08)',
+              border: '1px solid rgba(201,168,76,0.2)',
+              borderRadius: 999,
+              color: '#C9A84C',
+              fontSize: 9,
+              fontWeight: 600,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
           >
-            {theme === 'dark' ? <SunToggleIcon /> : <MoonToggleIcon />}
+            {intent === 'windows' ? 'Windows' : intent === 'doors' ? 'Doors' : activeRoom || 'Room'}
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
           </button>
 
           <button
@@ -431,6 +836,8 @@ export default function Home() {
 
         {/* 3D Scene */}
         <div className="flex-1 relative min-w-0">
+          {/* Vignette overlay */}
+          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%)' }} />
           <RoomScene
             curtainColor={curtainColor}
             wallColor={wallColor}

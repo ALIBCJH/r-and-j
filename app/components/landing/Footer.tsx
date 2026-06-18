@@ -2,16 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
-import { ArrowRight } from 'lucide-react'
 
 function IgIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect width="20" height="20" x="2" y="2" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg> }
 function LiIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg> }
 function XIcon()  { return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4l16 16M4 20 20 4"/></svg> }
 
 export default function LandingFooter() {
-  const [email, setEmail] = useState('')
-
   return (
     <footer style={{ background: '#0D1B2E', borderTop: '1px solid rgba(201,168,76,0.15)' }}>
       <style>{`
@@ -29,7 +25,7 @@ export default function LandingFooter() {
           margin:              '0 auto',
           padding:             '80px 6vw 60px',
           display:             'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1.4fr',
+          gridTemplateColumns: '2fr 1fr 1fr',
           gap:                 '48px',
         }}
       >
@@ -65,53 +61,6 @@ export default function LandingFooter() {
           <FLink href="#">Privacy Policy</FLink>
         </FooterCol>
 
-        {/* Newsletter */}
-        <div>
-          <p style={{
-            fontFamily:    'var(--font-inter, sans-serif)',
-            fontSize:      '11px',
-            letterSpacing: '3px',
-            textTransform: 'uppercase',
-            color:         '#506070',
-            marginBottom:  '20px',
-          }}>
-            Newsletter
-          </p>
-          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '14px', color: '#506070', marginBottom: '16px', lineHeight: 1.6 }}>
-            Stay ahead of the curve.
-          </p>
-          <div style={{ display: 'flex', border: '1px solid rgba(201,168,76,0.25)', overflow: 'hidden', height: '46px' }}>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              style={{
-                flex:       1,
-                background: 'transparent',
-                border:     'none',
-                outline:    'none',
-                padding:    '0 16px',
-                fontFamily: 'var(--font-inter, sans-serif)',
-                fontSize:   '14px',
-                color:      '#C9A84C',
-              }}
-            />
-            <button style={{
-              width:          '46px',
-              background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
-              border:         'none',
-              cursor:         'pointer',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-              color:          '#0F1117',
-              flexShrink:     0,
-            }}>
-              <ArrowRight size={15} />
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Lower */}

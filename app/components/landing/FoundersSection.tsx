@@ -108,7 +108,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.9, ease, delay: 0.3 }}
             style={{
-              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A1525',
+              background:   'transparent',
               border:       '1px solid rgba(201,168,76,0.2)',
               borderRadius: '8px',
               padding:      'clamp(24px, 4vw, 48px)',
@@ -132,21 +132,15 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               border:       '1px solid rgba(201,168,76,0.2)',
               marginBottom: '32px',
               position:     'relative',
+              background:   'transparent',
             }}>
               <Image
                 src="/assets/jumafounder.jpeg"
-                alt="Engineer Juma — Co-Founder, R&J Interiors"
+                alt="Engineer Juma — Founder, R&J Interiors"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 style={{ objectFit: 'cover', objectPosition: 'center top' }}
               />
-              <div style={{
-                position:      'absolute',
-                inset:         0,
-                background:    'linear-gradient(135deg, rgba(10,15,28,0.15) 0%, transparent 60%)',
-                pointerEvents: 'none',
-                zIndex:        1,
-              }} />
             </div>
 
             {/* Badge */}
@@ -188,7 +182,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               letterSpacing: '1px',
               marginBottom:  0,
             }}>
-              Co-Founder · Creative Technologist
+              Founder · Creative Technologist
             </p>
 
             {/* Tagline */}
@@ -246,7 +240,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.9, ease, delay: 0.5 }}
             style={{
-              background:   'linear-gradient(135deg, rgba(201,168,76,0.05) 0%, transparent 40%), #0A1525',
+              background:   'transparent',
               border:       '1px solid rgba(201,168,76,0.2)',
               borderRadius: '8px',
               padding:      'clamp(24px, 4vw, 48px)',
@@ -270,21 +264,15 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               border:       '1px solid rgba(201,168,76,0.2)',
               marginBottom: '32px',
               position:     'relative',
+              background:   'transparent',
             }}>
               <Image
                 src="/assets/rosedesigner.jpeg"
-                alt="Rose — Co-Founder, R&J Interiors"
+                alt="Rose — Designer, R&J Interiors"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 style={{ objectFit: 'cover', objectPosition: 'center' }}
               />
-              <div style={{
-                position:      'absolute',
-                inset:         0,
-                background:    'linear-gradient(135deg, rgba(10,15,28,0.15) 0%, transparent 60%)',
-                pointerEvents: 'none',
-                zIndex:        1,
-              }} />
             </div>
 
             {/* Badge */}
@@ -326,7 +314,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               letterSpacing: '1px',
               marginBottom:  0,
             }}>
-              Co-Founder · Fashion &amp; Interior Designer
+              Fashion &amp; Interior Designer
             </p>
 
             {/* Tagline */}
@@ -354,7 +342,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
                 color:      '#A8B2BE',
                 lineHeight: 1.8,
               }}>
-                Rachael walks into a room and sees what it could be. Her fashion
+                Rose walks into a room and sees what it could be. Her fashion
                 background gave her a rare fluency in fabric — how it moves, how it
                 catches light, how the right textile transforms a space entirely.
                 At R&amp;J she is the instinct behind every curation decision.

@@ -72,32 +72,32 @@ export default function HeroSection() {
             lineHeight:   1.1,
             marginBottom: 0,
           }}>
-            See It.
+            Your Room.
           </motion.h1>
 
           <motion.h1 {...fadeUp(0.4)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
             fontSize:     'clamp(52px, 6vw, 92px)',
+            color:        '#FFFFFF',
             lineHeight:   1.1,
             marginBottom: 0,
+          }}>
+            Your Curtains.
+          </motion.h1>
+
+          <motion.h1 {...fadeUp(0.55)} style={{
+            fontFamily:   'var(--font-playfair, Georgia, serif)',
+            fontSize:     'clamp(52px, 6vw, 92px)',
+            lineHeight:   1.1,
+            marginBottom: '36px',
           }}>
             <em style={{
               color:      '#E8C96D',
               fontStyle:  'italic',
               textShadow: '0 0 48px rgba(232,201,109,0.3)',
             }}>
-              Love It.
+              Before They Exist.
             </em>
-          </motion.h1>
-
-          <motion.h1 {...fadeUp(0.55)} style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(52px, 6vw, 92px)',
-            color:        '#FFFFFF',
-            lineHeight:   1.1,
-            marginBottom: '36px',
-          }}>
-            Then Buy It.
           </motion.h1>
 
           <motion.p {...fadeUp(0.7)} style={{

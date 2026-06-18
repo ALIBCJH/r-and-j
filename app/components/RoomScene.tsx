@@ -1,9 +1,12 @@
 'use client'
 
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei'
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js'
 import * as THREE from 'three'
+
+RectAreaLightUniformsLib.init()
 
 type FabricType = 'sheer' | 'linen' | 'velvet' | 'cotton'
 
@@ -108,12 +111,37 @@ function CurtainMesh({ color, fabric, targetX }: { color: string; fabric: Fabric
   }, [])
 
   const material = useMemo(() => {
-    const c = new THREE.Color(color)
+    const col      = new THREE.Color(color)
+    const sheenCol = new THREE.Color(color).multiplyScalar(0.8)
     switch (fabric) {
-      case 'sheer':  return new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, transparent: true, opacity: 0.38, roughness: 0.05, metalness: 0 })
-      case 'velvet': return new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.97, metalness: 0.02 })
-      case 'linen':  return new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.88, metalness: 0 })
-      default:       return new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.72, metalness: 0 })
+      case 'sheer':
+        return new THREE.MeshPhysicalMaterial({
+          color: col, side: THREE.DoubleSide,
+          transparent: true, opacity: 0.38,
+          roughness: 0.05, metalness: 0,
+          envMapIntensity: 0.2,
+        })
+      case 'velvet':
+        return new THREE.MeshPhysicalMaterial({
+          color: col, side: THREE.DoubleSide,
+          roughness: 0.88, metalness: 0,
+          sheen: 0.9, sheenRoughness: 0.6, sheenColor: sheenCol,
+          envMapIntensity: 0.3,
+        })
+      case 'linen':
+        return new THREE.MeshPhysicalMaterial({
+          color: col, side: THREE.DoubleSide,
+          roughness: 0.88, metalness: 0,
+          sheen: 0.9, sheenRoughness: 0.6, sheenColor: sheenCol,
+          envMapIntensity: 0.3,
+        })
+      default: // cotton
+        return new THREE.MeshPhysicalMaterial({
+          color: col, side: THREE.DoubleSide,
+          roughness: 0.88, metalness: 0,
+          sheen: 0.7, sheenRoughness: 0.7, sheenColor: sheenCol,
+          envMapIntensity: 0.3,
+        })
     }
   }, [color, fabric])
 
@@ -184,7 +212,7 @@ function Window({ wallMat, isNight }: { wallMat: THREE.Material; isNight: boolea
   const frameMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#EDEDE8', roughness: 0.55, metalness: 0.05 }), [])
   const sillMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: '#E8E4DC', roughness: 0.45, metalness: 0.02 }), [])
   const glassMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#C8E0F4', transparent: true, opacity: 0.18, roughness: 0, metalness: 0.12 }), [])
-  const rodMat   = useMemo(() => new THREE.MeshStandardMaterial({ color: '#B89E88', roughness: 0.18, metalness: 0.82 }), [])
+  const rodMat   = useMemo(() => new THREE.MeshStandardMaterial({ color: '#C9A84C', roughness: 0.35, metalness: 0.85, envMapIntensity: 1.2 }), [])
   useEffect(() => () => { frameMat.dispose(); sillMat.dispose(); glassMat.dispose(); rodMat.dispose() }, [frameMat, sillMat, glassMat, rodMat])
 
   return (
@@ -241,11 +269,11 @@ function Window({ wallMat, isNight }: { wallMat: THREE.Material; isNight: boolea
 // ─── Room shell ──────────────────────────────────────────────────────────────
 
 function Room({ wallColor, floorColor, isNight }: { wallColor: string; floorColor: string; isNight: boolean }) {
-  const wallMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: new THREE.Color(wallColor), roughness: 0.85 }), [wallColor])
+  const wallMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: new THREE.Color(wallColor), roughness: 0.95, metalness: 0, envMapIntensity: 0.1 }), [wallColor])
   const floorTex = useMemo(() => createWoodTexture(), [])
   // Color tints the grayscale texture — changing floorColor gives different wood species
-  const floorMat = useMemo(() => new THREE.MeshStandardMaterial({ map: floorTex, color: new THREE.Color(floorColor), roughness: 0.55, metalness: 0.04 }), [floorTex, floorColor])
-  const ceilMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: '#F5F0EA', roughness: 0.92 }), [])
+  const floorMat = useMemo(() => new THREE.MeshStandardMaterial({ map: floorTex, color: new THREE.Color(floorColor), roughness: 0.7, metalness: 0.0, envMapIntensity: 0.15 }), [floorTex, floorColor])
+  const ceilMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: '#E8E4DF', roughness: 0.98, metalness: 0, envMapIntensity: 0.05 }), [])
   const trimMat  = useMemo(() => new THREE.MeshStandardMaterial({ color: '#EAE6DE', roughness: 0.55, metalness: 0.02 }), [])
   useEffect(() => () => { floorTex.dispose() }, [floorTex])
 
@@ -290,6 +318,8 @@ function LightRig({ isNight, lightMult }: { isNight: boolean; lightMult: number 
   const ceilRef     = useRef<THREE.PointLight>(null)
   const warmLRef    = useRef<THREE.PointLight>(null)
   const warmRRef    = useRef<THREE.PointLight>(null)
+  const warmFillRef = useRef<THREE.PointLight>(null)
+  const rectRef     = useRef<THREE.RectAreaLight>(null)
   const fixtureMat  = useRef<THREE.MeshStandardMaterial>(null)
 
   useFrame(() => {
@@ -297,12 +327,14 @@ function LightRig({ isNight, lightMult }: { isNight: boolean; lightMult: number 
     const lerp = THREE.MathUtils.lerp
 
     const m = lightMult
-    if (ambientRef.current)  ambientRef.current.intensity  = lerp(ambientRef.current.intensity,  (isNight ? 0.04 : 0.75) * m, F)
+    if (ambientRef.current)  ambientRef.current.intensity  = lerp(ambientRef.current.intensity,  (isNight ? 0.04 : 0.55) * m, F)
     if (dirRef.current)      dirRef.current.intensity      = lerp(dirRef.current.intensity,      (isNight ? 0.0  : 0.9)  * m, F)
-    if (frontRef.current)    frontRef.current.intensity    = lerp(frontRef.current.intensity,    (isNight ? 0.0  : 0.45) * m, F)
-    if (leftRef.current)     leftRef.current.intensity     = lerp(leftRef.current.intensity,     (isNight ? 0.0  : 0.22) * m, F)
-    if (rightRef.current)    rightRef.current.intensity    = lerp(rightRef.current.intensity,    (isNight ? 0.0  : 0.22) * m, F)
-    if (winRef.current)      winRef.current.intensity      = lerp(winRef.current.intensity,      (isNight ? 0.0  : 0.35) * m, F)
+    if (frontRef.current)    frontRef.current.intensity    = lerp(frontRef.current.intensity,    (isNight ? 0.0  : 0.35) * m, F)
+    if (leftRef.current)     leftRef.current.intensity     = lerp(leftRef.current.intensity,     (isNight ? 0.0  : 0.18) * m, F)
+    if (rightRef.current)    rightRef.current.intensity    = lerp(rightRef.current.intensity,    (isNight ? 0.0  : 0.18) * m, F)
+    if (winRef.current)      winRef.current.intensity      = lerp(winRef.current.intensity,      (isNight ? 0.0  : 0.28) * m, F)
+    if (warmFillRef.current) warmFillRef.current.intensity = lerp(warmFillRef.current.intensity, (isNight ? 0.3  : 0.8)  * m, F)
+    if (rectRef.current)     rectRef.current.intensity     = lerp(rectRef.current.intensity,     (isNight ? 0.5  : 8.0)  * m, F)
     // Night: overhead warm ceiling + two low side fills simulate floor lamps
     if (ceilRef.current)     ceilRef.current.intensity     = lerp(ceilRef.current.intensity,     (isNight ? 1.8  : 0.0)  * m, F)
     if (warmLRef.current)    warmLRef.current.intensity    = lerp(warmLRef.current.intensity,    (isNight ? 0.55 : 0.0)  * m, F)
@@ -312,12 +344,16 @@ function LightRig({ isNight, lightMult }: { isNight: boolean; lightMult: number 
 
   return (
     <>
-      <ambientLight   ref={ambientRef} intensity={0.75} color="#FFFAF5" />
+      <ambientLight   ref={ambientRef} intensity={0.55} color="#FFFAF5" />
       <directionalLight ref={dirRef}   position={[0.5, 4, -8]} intensity={0.9} color="#E8F0FF" />
-      <pointLight ref={frontRef}  position={[0, 2.6, 2.0]}    intensity={0.45} color="#FFF4EC" distance={7} decay={2} />
-      <pointLight ref={leftRef}   position={[-2.4, 1.8, 0]}   intensity={0.22} color="#FFF8F0" distance={5} decay={2} />
-      <pointLight ref={rightRef}  position={[2.4, 1.8, 0]}    intensity={0.22} color="#FFF8F0" distance={5} decay={2} />
-      <pointLight ref={winRef}    position={[0, 2.0, -2.0]}   intensity={0.35} color="#D0E8FF" distance={4} decay={2} />
+      <pointLight ref={frontRef}  position={[0, 2.6, 2.0]}    intensity={0.35} color="#FFF4EC" distance={7} decay={2} />
+      <pointLight ref={leftRef}   position={[-2.4, 1.8, 0]}   intensity={0.18} color="#FFF8F0" distance={5} decay={2} />
+      <pointLight ref={rightRef}  position={[2.4, 1.8, 0]}    intensity={0.18} color="#FFF8F0" distance={5} decay={2} />
+      <pointLight ref={winRef}    position={[0, 2.0, -2.0]}   intensity={0.28} color="#D0E8FF" distance={4} decay={2} />
+      {/* Warm indoor fill — simulates ceiling fixture glow, present day + night */}
+      <pointLight ref={warmFillRef} position={[0, 2.5, 0]}    intensity={0.8}  color="#FFD4A0" distance={8} decay={2} />
+      {/* RectAreaLight from window direction — warm light falloff across walls */}
+      <rectAreaLight ref={rectRef} position={[0, 2, -3]} rotation={[0, 0, 0]} width={2} height={2.5} color="#FFE4B5" intensity={8} />
       {/* Night ceiling overhead */}
       <pointLight ref={ceilRef}   position={[0, 2.75, 0]}     intensity={0}    color="#FFD070" distance={8} decay={1.5} />
       {/* Night side fills — simulate wall sconces / floor lamps */}
@@ -352,26 +388,30 @@ function Scene({ curtainColor, wallColor, floorColor, fabric, curtainsOpen, isNi
         enableZoom minDistance={1.2} maxDistance={4.5} enablePan={false}
       />
 
+      <Suspense fallback={null}>
+        <Environment preset="apartment" background={false} />
+      </Suspense>
       <LightRig isNight={isNight} lightMult={lightMult} />
       <Room wallColor={wallColor} floorColor={floorColor} isNight={isNight} />
       <CurtainMesh color={curtainColor} fabric={fabric} targetX={leftX} />
       <CurtainMesh color={curtainColor} fabric={fabric} targetX={rightX} />
+      <ContactShadows position={[0, 0.01, 0]} opacity={0.35} scale={8} blur={2.5} far={3} color="#1a0f05" />
     </>
   )
 }
 
 export default function RoomScene(props: RoomSceneProps) {
-  // expose isNight so Canvas tone exposure can also shift
   return (
     <Canvas
-      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05, powerPreference: 'high-performance' }}
+      gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9, powerPreference: 'high-performance' }}
       style={{ width: '100%', height: '100%' }}
       onCreated={({ gl }) => {
-        // Tell the browser to restore the context rather than leave it lost
         gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
       }}
     >
-      <Scene {...props} />
+      <Suspense fallback={null}>
+        <Scene {...props} />
+      </Suspense>
     </Canvas>
   )
 }

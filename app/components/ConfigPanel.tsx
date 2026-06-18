@@ -1,6 +1,18 @@
 'use client'
 
-import { useThemeColors } from './ThemeProvider'
+const DARK = {
+  panelBg:        '#0A1525',
+  panelBorder:    'rgba(201,168,76,0.1)',
+  panelText:      '#E8E0D0',
+  panelMuted:     '#6A8098',
+  panelSubtle:    '#3A5068',
+  panelDivider:   'rgba(201,168,76,0.08)',
+  panelItemBg:    'rgba(255,255,255,0.03)',
+  panelItemHover: 'rgba(255,255,255,0.06)',
+  panelIconBg:    'rgba(201,168,76,0.08)',
+  panelItemText:  '#E8E0D0',
+  panelItemSub:   '#4A6278',
+}
 
 export type FabricType = 'sheer' | 'linen' | 'velvet' | 'cotton'
 
@@ -129,20 +141,18 @@ function ChevronRightIcon() {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function SectionLabel({ children, count }: { children: React.ReactNode; count?: string }) {
-  const c = useThemeColors()
   return (
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-[11px] font-semibold tracking-[0.25em] uppercase" style={{ color: c.panelMuted }}>
+      <h2 className="text-[11px] font-semibold tracking-[0.25em] uppercase" style={{ color: DARK.panelMuted }}>
         {children}
       </h2>
-      {count && <span className="text-[11px]" style={{ color: c.panelSubtle }}>{count}</span>}
+      {count && <span className="text-[11px]" style={{ color: DARK.panelSubtle }}>{count}</span>}
     </div>
   )
 }
 
 function Divider() {
-  const c = useThemeColors()
-  return <div className="h-px" style={{ background: c.panelDivider }} />
+  return <div className="h-px" style={{ background: DARK.panelDivider }} />
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -178,7 +188,7 @@ export default function ConfigPanel({
   onRoomPreset, onViewInRoom, onCollapse,
 }: ConfigPanelProps) {
 
-  const c = useThemeColors()
+  const c = DARK
 
   const cycleFabric = () => {
     const i = FABRIC_ORDER.indexOf(fabric)

@@ -160,7 +160,7 @@ function TextileCard({ textile, index }: { textile: typeof TEXTILES[number]; ind
       transition={{ duration: 0.7, ease, delay: index * 0.08 }}
       className="group"
       style={{
-        background:  '#111318',
+        background:  'transparent',
         border:      '1px solid rgba(201,168,76,0.1)',
         overflow:    'hidden',
         cursor:      'pointer',
@@ -178,16 +178,6 @@ function TextileCard({ textile, index }: { textile: typeof TEXTILES[number]; ind
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           style={{ objectFit: 'cover', transition: 'transform 0.6s ease' }}
           className="group-hover:scale-105"
-        />
-        {/* Dark overlay — lifts on hover to reveal the image */}
-        <div
-          className="transition-opacity duration-500 group-hover:opacity-0"
-          style={{
-            position:   'absolute',
-            inset:      0,
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)',
-            zIndex:     1,
-          }}
         />
         {/* Tag */}
         <div style={{

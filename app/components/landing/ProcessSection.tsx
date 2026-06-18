@@ -117,24 +117,6 @@ function CardImage({
         )}
       </div>
 
-      {/* Bottom fade — merges image into card content */}
-      <div style={{
-        position:   'absolute',
-        bottom:     0,
-        left:       0,
-        right:      0,
-        height:     '100px',
-        background: 'linear-gradient(to bottom, transparent, #13161F)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* Side vignette */}
-      <div style={{
-        position:   'absolute',
-        inset:      0,
-        background: 'linear-gradient(to right, rgba(19,22,31,0.35), transparent 30%, transparent 70%, rgba(19,22,31,0.35))',
-        pointerEvents: 'none',
-      }} />
     </div>
   )
 }
@@ -239,8 +221,8 @@ export default function ProcessSection() {
                       flexDirection: 'column',
                       overflow:      'hidden',
                       background:    isHovered
-                        ? 'linear-gradient(180deg, #13161F 0%, rgba(201,168,76,0.03) 100%)'
-                        : '#13161F',
+                        ? 'linear-gradient(180deg, rgba(201,168,76,0.04) 0%, transparent 100%)'
+                        : 'transparent',
                       border:        `1px solid ${isHovered ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.12)'}`,
                       boxShadow:     isHovered
                         ? '0 40px 100px rgba(0,0,0,0.55), 0 0 50px rgba(201,168,76,0.08), inset 0 1px 0 rgba(201,168,76,0.12)'

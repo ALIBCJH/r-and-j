@@ -37,8 +37,7 @@ function GoldLine({ width = 48 }: { width?: number }) {
 export default function ValuesSection() {
   return (
     <section style={{
-      background: '#0A0F1C',
-      padding:    'clamp(80px, 10vw, 120px) 6vw',
+      padding: 'clamp(80px, 10vw, 120px) 6vw',
     }}>
       <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
 
@@ -92,7 +91,7 @@ export default function ValuesSection() {
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.65, ease, delay: i * 0.15 }}
                 style={{
-                  background:   'linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 40%), #0D1B2E',
+                  background:   'transparent',
                   border:       '1px solid rgba(201,168,76,0.2)',
                   borderRadius: '8px',
                   padding:      'clamp(32px, 4vw, 48px) clamp(24px, 3vw, 40px)',

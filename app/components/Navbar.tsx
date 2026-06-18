@@ -145,13 +145,13 @@ export default function Navbar() {
             className="md:hidden overflow-hidden"
             style={{ background: c.navSolid, borderTop: `1px solid ${c.navBorder}` }}
           >
-            <div className="px-6 py-4 flex flex-col gap-1">
+            <div className="px-6 py-3 flex flex-col gap-0.5">
               {NAV_LINKS.map(({ label, href }) => (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setMenuOpen(false)}
-                  className="py-3 text-sm font-medium border-b"
+                  className="py-2 text-xs font-medium tracking-wide border-b"
                   style={{ color: c.navText, borderColor: c.navBorder }}
                 >
                   {label}
@@ -161,7 +161,7 @@ export default function Navbar() {
               {/* Mobile theme toggle */}
               <button
                 onClick={() => { toggle(); setMenuOpen(false) }}
-                className="flex items-center gap-3 py-3 text-sm font-medium"
+                className="flex items-center gap-2 py-2 text-xs font-medium tracking-wide"
                 style={{ color: c.navText }}
               >
                 {theme === 'dark' ? <SunIcon /> : <MoonIcon />}

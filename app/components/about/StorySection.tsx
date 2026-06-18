@@ -14,9 +14,8 @@ const PARAGRAPHS = [
 export default function StorySection() {
   return (
     <section style={{
-      background: '#0A0F1C',
-      padding:    'clamp(80px, 10vw, 120px) 6vw',
-      borderTop:  '1px solid rgba(201,168,76,0.12)',
+      padding:   'clamp(80px, 10vw, 120px) 6vw',
+      borderTop: '1px solid rgba(201,168,76,0.12)',
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
 
