@@ -538,7 +538,7 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
                     width:       '100%',
                     height:      '100%',
                     objectFit:   'fill',
-                    clipPath:    `inset(0 ${(100 - sliderPct).toFixed(1)}% 0 0)`,
+                    clipPath:    `inset(0 ${Math.max(20, 100 - sliderPct).toFixed(1)}% 0 20%)`,
                     pointerEvents: 'none',
                     userSelect:  'none',
                     zIndex:      3,
