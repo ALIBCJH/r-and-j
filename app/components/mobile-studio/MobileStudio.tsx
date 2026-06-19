@@ -259,9 +259,10 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         style={{ display: 'none' }}
         onChange={handleFileInput}
-        aria-label="Choose or take a photo"
+        aria-label="Take a photo with your camera"
       />
 
       {/* ── Navbar ─────────────────────────────────────────────────────────── */}
@@ -318,79 +319,105 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
 
       {/* ── Phase: idle ──────────────────────────────────────────────────────── */}
       {phase === 'idle' && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px 60px' }}>
-          <motion.div {...fadeUp} style={{ textAlign: 'center', maxWidth: '380px' }}>
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
 
-            {/* Icon illustration */}
-            <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
-              <div style={{
-                width: '80px', height: '80px', borderRadius: '50%',
-                background: 'rgba(201,168,76,0.08)',
-                border: `1px solid rgba(201,168,76,0.20)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+          {/* Background — same morning light illustration used on the experience page */}
+          <Image
+            src="/assets/morning_light_sheer.png"
+            alt=""
+            fill
+            sizes="100vw"
+            style={{ objectFit: 'cover', objectPosition: 'center 20%', opacity: 0.22 }}
+            priority
+          />
+          {/* Dark gradient that fades to the app's solid background at the bottom */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, rgba(14,14,16,0.50) 0%, rgba(17,17,19,0.82) 55%, #111113 100%)',
+          }} />
+          {/* Subtle gold bloom from the window area */}
+          <div style={{
+            position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
+            width: '320px', height: '320px',
+            background: 'radial-gradient(ellipse, rgba(201,168,76,0.07) 0%, transparent 68%)',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Content — sits above the background layers */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            minHeight: '100%', padding: '52px 28px 68px',
+          }}>
+            <motion.div {...fadeUp} style={{ textAlign: 'center', maxWidth: '340px', width: '100%' }}>
+
+              {/* Eyebrow label */}
+              <p style={{
+                fontSize: '9px', letterSpacing: '0.42em', textTransform: 'uppercase',
+                color: C.gold, marginBottom: '32px',
+                fontFamily: 'var(--font-inter, sans-serif)',
               }}>
-                <svg width="36" height="36" viewBox="0 0 48 48" fill="none" stroke={C.gold} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  {/* Camera body */}
-                  <rect x="4" y="13" width="40" height="28" rx="4" />
-                  {/* Lens */}
-                  <circle cx="24" cy="27" r="8" />
-                  <circle cx="24" cy="27" r="3.5" />
-                  {/* Flash bump */}
-                  <path d="M16 13v-4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" />
-                  {/* Curtain lines on left/right of lens — subtle motif */}
-                  <line x1="8" y1="16" x2="8" y2="38" strokeDasharray="2 3" opacity=".5" />
-                  <line x1="40" y1="16" x2="40" y2="38" strokeDasharray="2 3" opacity=".5" />
-                </svg>
-              </div>
-            </div>
+                R&amp;J Interiors &nbsp;·&nbsp; Photo Match
+              </p>
 
-            <h1 style={{
-              fontFamily:   'var(--font-playfair, Georgia, serif)',
-              fontSize:     'clamp(28px, 8vw, 38px)',
-              color:        C.text,
-              fontWeight:   400,
-              lineHeight:   1.1,
-              marginBottom: '16px',
-            }}>
-              See it in<br />
-              <em style={{ color: C.gold }}>your room.</em>
-            </h1>
+              <h1 style={{
+                fontFamily:   'var(--font-playfair, Georgia, serif)',
+                fontSize:     'clamp(34px, 9vw, 46px)',
+                color:        C.text,
+                fontWeight:   400,
+                lineHeight:   1.08,
+                marginBottom: '20px',
+              }}>
+                See it in<br />
+                <em style={{ color: C.gold }}>your room.</em>
+              </h1>
 
-            <div style={{ width: '36px', height: '1px', background: `linear-gradient(to right, ${C.gold}, ${C.goldLight})`, margin: '0 auto 20px' }} />
+              <div style={{
+                width: '32px', height: '1px',
+                background: `linear-gradient(to right, ${C.gold}, ${C.goldLight})`,
+                margin: '0 auto 22px',
+              }} />
 
-            <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: C.muted, lineHeight: 1.75, marginBottom: '36px' }}>
-              Take a photo of your window wall. We&apos;ll show you how curtains look
-              draped in your actual space — then point you to the exact fabric.
-            </p>
+              <p style={{
+                fontFamily: 'var(--font-inter, sans-serif)',
+                fontSize: '14px', color: C.muted, lineHeight: 1.78, marginBottom: '40px',
+              }}>
+                Point your camera at your window wall.
+                We&apos;ll show you how curtains look draped in your actual space — then name the exact fabric.
+              </p>
 
-            {/* Primary CTA */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                width:          '100%',
-                padding:        '16px 24px',
-                background:     `linear-gradient(135deg, ${C.goldLight} 0%, ${C.gold} 50%, #A67C2E 100%)`,
-                color:          '#0A0F1C',
-                fontFamily:     'var(--font-inter, sans-serif)',
-                fontSize:       '14px',
-                fontWeight:     700,
-                letterSpacing:  '0.18em',
-                textTransform:  'uppercase',
-                border:         'none',
-                borderRadius:   '3px',
-                cursor:         'pointer',
-                marginBottom:   '12px',
-                boxShadow:      '0 4px 20px rgba(201,168,76,0.25)',
-              }}
-            >
-              Take a photo / Choose image
-            </button>
+              {/* Primary CTA — sized to match the rest of the app */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  display:       'block',
+                  width:         '100%',
+                  padding:       '13px 24px',
+                  background:    `linear-gradient(135deg, ${C.goldLight} 0%, ${C.gold} 50%, #A67C2E 100%)`,
+                  color:         '#0A0F1C',
+                  fontFamily:    'var(--font-inter, sans-serif)',
+                  fontSize:      '11px',
+                  fontWeight:    700,
+                  letterSpacing: '0.28em',
+                  textTransform: 'uppercase',
+                  border:        'none',
+                  borderRadius:  '2px',
+                  cursor:        'pointer',
+                  boxShadow:     '0 4px 24px rgba(201,168,76,0.20)',
+                }}
+              >
+                Take a Photo
+              </button>
 
-            <p style={{ fontSize: '11px', color: C.veryMuted, lineHeight: 1.6, marginTop: '24px' }}>
-              On-screen colour is a guide only. We confirm the exact fabric
-              with you in your space before we make anything.
-            </p>
-          </motion.div>
+              <p style={{
+                fontSize: '10px', color: C.veryMuted, lineHeight: 1.7, marginTop: '28px',
+              }}>
+                On-screen colour is a guide only. We confirm the exact fabric
+                with you in your space before we make anything.
+              </p>
+            </motion.div>
+          </div>
         </div>
       )}
 
@@ -622,15 +649,15 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
                     style={{
                       display:        'block',
                       width:          '100%',
-                      padding:        '15px 24px',
+                      padding:        '13px 24px',
                       background:     `linear-gradient(135deg, ${C.goldLight} 0%, ${C.gold} 50%, #A67C2E 100%)`,
                       color:          '#0A0F1C',
                       fontFamily:     'var(--font-inter, sans-serif)',
-                      fontSize:       '13px',
+                      fontSize:       '11px',
                       fontWeight:     700,
-                      letterSpacing:  '0.18em',
+                      letterSpacing:  '0.28em',
                       textTransform:  'uppercase',
-                      borderRadius:   '3px',
+                      borderRadius:   '2px',
                       textDecoration: 'none',
                       textAlign:      'center',
                       boxShadow:      '0 4px 16px rgba(201,168,76,0.22)',
