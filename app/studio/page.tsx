@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import ConfigPanel, { type FabricType, type RoomPreset, ROOM_PRESETS } from '../components/ConfigPanel'
+import { canRunStudio, getStoredOverride, setStoredOverride } from '@/app/lib/studioCapability'
 
 // ─── Loading fallback — standalone component so hooks are legal ───────────────
 
 function StudioLoadingFallback() {
   return (
-    <div className="flex-1 flex items-center justify-center" style={{ background: '#0D1B2E' }}>
+    <div className="flex-1 flex items-center justify-center" style={{ background: '#111113' }}>
       <div className="flex flex-col items-center gap-5">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 rounded-full border border-[#C9A84C]/20" />
@@ -23,6 +24,11 @@ function StudioLoadingFallback() {
 }
 
 const RoomScene = dynamic(() => import('../components/RoomScene'), {
+  ssr: false,
+  loading: () => <StudioLoadingFallback />,
+})
+
+const MobileStudio = dynamic(() => import('../components/mobile-studio/MobileStudio'), {
   ssr: false,
   loading: () => <StudioLoadingFallback />,
 })
@@ -153,7 +159,7 @@ function ConsultationModal({ curtainColor, fabric, activeRoom, onClose }: ModalP
       <div
         className="w-full max-w-[480px] relative"
         style={{
-          background: '#0A1525',
+          background: '#181818',
           border: '1px solid rgba(201,168,76,0.25)',
           borderRadius: '4px',
           boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
@@ -660,9 +666,19 @@ export default function Home() {
     studioText:    '#E8E0D0',
     studioDivider: 'rgba(201,168,76,0.1)',
     border:        'rgba(255,255,255,0.07)',
-    panelBg:       '#0A1525',
+    panelBg:       '#181818',
     panelBorder:   'rgba(201,168,76,0.1)',
   }
+
+  // ── Capability routing — runs client-side after mount only ──────────────
+  // 'detecting' is the initial SSR-safe state; we resolve it in the effect.
+  const [studioMode, setStudioMode] = useState<'detecting' | 'mobile' | '3d'>('detecting')
+  useEffect(() => {
+    const override = getStoredOverride()
+    if (override === '3d')     { setStudioMode('3d');     return }
+    if (override === 'mobile') { setStudioMode('mobile'); return }
+    setStudioMode(canRunStudio() ? '3d' : 'mobile')
+  }, [])
 
   const [intent, setIntent]             = useState<StudioIntent | null>(null)
   const [showRoomPicker, setShowRoomPicker] = useState(false)
@@ -716,6 +732,14 @@ export default function Home() {
 
   const sceneToolbarBg = 'rgba(14,14,16,0.75)'
 
+  // Route based on detected capability (or stored override)
+  if (studioMode === 'detecting') return <StudioLoadingFallback />
+  if (studioMode === 'mobile') return (
+    <MobileStudio
+      onSwitchTo3D={() => { setStoredOverride('3d'); setStudioMode('3d') }}
+    />
+  )
+
   if (intent === null && !showRoomPicker) {
     return <EntryGate onSelect={handleIntentSelect} />
   }
@@ -730,35 +754,12 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#0D1B2E' }}>
-
-      {/* ── Mobile notice — only shows below md breakpoint ── */}
-      <div className="md:hidden fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-8 py-12" style={{ background: '#0D1B2E' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/r_j_interiors_final_premium_logo.png" alt="" style={{ width: 72, height: 72, borderRadius: '50%', marginBottom: 28, outline: '1px solid rgba(201,168,76,0.4)', outlineOffset: 2 }} />
-        <p style={{ fontFamily: 'Georgia, serif', fontSize: 28, color: '#E8E0D0', fontWeight: 400, lineHeight: 1.2, marginBottom: 12 }}>
-          Best on Desktop
-        </p>
-        <p style={{ fontFamily: 'sans-serif', fontSize: 14, color: '#5A7088', lineHeight: 1.75, maxWidth: 300, marginBottom: 36 }}>
-          The 3D Design Studio is built for larger screens. Open it on a laptop or desktop for the full experience.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 280 }}>
-          <a href="/catalog" style={{ display: 'block', padding: '14px 24px', background: 'linear-gradient(135deg, #B8922A, #E8C87A, #C9A84C)', color: '#0E0E10', fontFamily: 'sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', borderRadius: 2, textDecoration: 'none', textAlign: 'center' }}>
-            Browse Catalog
-          </a>
-          <a href="/contact" style={{ display: 'block', padding: '14px 24px', background: 'transparent', color: '#C9A84C', fontFamily: 'sans-serif', fontSize: 13, fontWeight: 500, letterSpacing: '0.15em', textTransform: 'uppercase', border: '1px solid rgba(201,168,76,0.35)', borderRadius: 2, textDecoration: 'none', textAlign: 'center' }}>
-            Book Consultation
-          </a>
-          <a href="/" style={{ display: 'block', padding: '10px', color: '#3A5068', fontFamily: 'sans-serif', fontSize: 12, textDecoration: 'none', textAlign: 'center' }}>
-            ← Back to Home
-          </a>
-        </div>
-      </div>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#111113' }}>
 
       {/* ── Navbar ── */}
       <nav
         className="h-[52px] shrink-0 flex items-center px-5 gap-4"
-        style={{ background: '#0D1B2E', borderBottom: '1px solid rgba(201,168,76,0.18)' }}
+        style={{ background: '#111113', borderBottom: '1px solid rgba(201,168,76,0.18)' }}
       >
         {/* Back link */}
         <a
@@ -828,6 +829,16 @@ export default function Home() {
           >
             {saved ? 'Saved ✓' : 'Save Design'}
           </button>
+
+          {/* Escape hatch → mobile photo tool */}
+          <button
+            onClick={() => { setStoredOverride('mobile'); setStudioMode('mobile') }}
+            className="h-7 px-3 text-[9px] font-medium tracking-[0.15em] uppercase rounded-sm opacity-50 hover:opacity-80 transition-opacity"
+            style={{ background: 'transparent', border: '1px solid rgba(201,168,76,0.25)', color: '#C9A84C', cursor: 'pointer' }}
+            title="Switch to the photo matching tool"
+          >
+            Photo tool
+          </button>
         </div>
       </nav>
 
@@ -846,6 +857,7 @@ export default function Home() {
             curtainsOpen={curtainsOpen}
             isNight={isNight}
             lightIntensity={lightIntensity}
+            mode={intent === 'doors' ? 'doors' : 'windows'}
           />
 
           {/* Scene toolbar — right edge */}
