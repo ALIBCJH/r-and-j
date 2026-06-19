@@ -8,7 +8,7 @@ import ExperienceCTA      from '@/app/components/experience/ExperienceCTA'
 
 export default function ExperienceClient() {
   return (
-    <main style={{ background: '#0D1B2E' }}>
+    <main style={{ background: '#111113' }}>
       <LandingNavbar />
       <ExperienceHero />
       <StepsSection />

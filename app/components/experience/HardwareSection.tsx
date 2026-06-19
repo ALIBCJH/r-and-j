@@ -17,7 +17,7 @@ const SPECS = [
 export default function HardwareSection() {
   return (
     <section style={{
-      background: '#0D1B2E',
+      background: '#111113',
       padding:    '120px 6vw',
       borderTop:  '1px solid rgba(201,168,76,0.12)',
     }}>
@@ -41,7 +41,7 @@ export default function HardwareSection() {
             border:       '1px solid rgba(201,168,76,0.2)',
             boxShadow:    '0 8px 40px rgba(0,0,0,0.5)',
             position:     'relative',
-            background:   'linear-gradient(135deg, #0D1B2E 0%, #1a2030 100%)',
+            background:   'linear-gradient(135deg, #111113 0%, #1a1a1d 100%)',
           }}>
             <Image
               src="/assets/metaquest3.png"

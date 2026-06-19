@@ -27,7 +27,7 @@ function GoldRule() {
 export default function ExperienceCTA() {
   return (
     <section style={{
-      background: '#0D1B2E',
+      background: '#111113',
       position:   'relative',
       overflow:   'hidden',
     }}>

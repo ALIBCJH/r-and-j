@@ -16,37 +16,45 @@ export default function ExperienceHero() {
         flexDirection:  'column',
         justifyContent: 'center',
         overflow:       'hidden',
-        background:     '#0D1B2E',
+        background:     '#111113',
       }}
     >
-      {/* ── Ghost logo — the sole background visual ── */}
-      <div style={{
-        position:      'absolute',
-        left:          '50%',
-        top:           '50%',
-        transform:     'translate(-50%, -50%)',
-        width:         'clamp(420px, 70vw, 900px)',
-        aspectRatio:   '1 / 1',
-        zIndex:        0,
-        pointerEvents: 'none',
-        userSelect:    'none',
-      }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 0.07, scale: 1 }}
-          transition={{ duration: 1.8, ease }}
-          style={{ position: 'relative', width: '100%', height: '100%' }}
-        >
-          <Image
-            src="/logo24.png"
-            alt=""
-            fill
-            sizes="70vw"
-            style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
-            priority
-          />
-        </motion.div>
-      </div>
+      {/* ── Morning light hero image — full-bleed background ── */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2.2, ease }}
+        style={{
+          position:      'absolute',
+          inset:         0,
+          zIndex:        0,
+          pointerEvents: 'none',
+        }}
+      >
+        <Image
+          src="/assets/morning_light_sheer.png"
+          alt=""
+          fill
+          sizes="100vw"
+          style={{ objectFit: 'cover', objectPosition: 'center center' }}
+          priority
+        />
+        {/* Dark overlay so text stays legible */}
+        <div style={{
+          position:   'absolute',
+          inset:      0,
+          background: 'linear-gradient(to right, rgba(17,17,19,0.90) 40%, rgba(17,17,19,0.50) 75%, rgba(17,17,19,0.20) 100%)',
+        }} />
+        {/* Bottom fade into next section */}
+        <div style={{
+          position:   'absolute',
+          bottom:     0,
+          left:       0,
+          right:      0,
+          height:     '220px',
+          background: 'linear-gradient(to bottom, transparent, #111113)',
+        }} />
+      </motion.div>
 
       {/* ── GoldenSeparator below navbar ── */}
       <div style={{ position: 'absolute', top: 'var(--rj-navbar-height)', left: 0, right: 0, zIndex: 2 }}>
