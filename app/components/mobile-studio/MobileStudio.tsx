@@ -72,14 +72,17 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
   const [recs,         setRecs]         = useState<Recommendation[] | null>(null)
   const [selectedRec,  setSelectedRec]  = useState<Recommendation | null>(null)
   const [tapMarker,    setTapMarker]    = useState<TapMarker | null>(null)
-  const [samplingHint, setSamplingHint] = useState(false)  // pulse after photo loads
+  const [samplingHint, setSamplingHint] = useState(false)
+  const [sliderPct,    setSliderPct]    = useState(50)  // before/after slider 0-100%
 
   // ── Refs ────────────────────────────────────────────────────────────────────
-  const fileInputRef  = useRef<HTMLInputElement>(null)
-  const imgRef        = useRef<HTMLImageElement | null>(null)
-  const canvasRef     = useRef<HTMLCanvasElement>(null)
-  const offscreenRef  = useRef<HTMLCanvasElement | null>(null)
-  const containerRef  = useRef<HTMLDivElement>(null)
+  const fileInputRef    = useRef<HTMLInputElement>(null)
+  const imgRef          = useRef<HTMLImageElement | null>(null)
+  const canvasRef       = useRef<HTMLCanvasElement>(null)
+  const canvasDivRef    = useRef<HTMLDivElement>(null)  // canvas container, used for slider drag
+  const offscreenRef    = useRef<HTMLCanvasElement | null>(null)
+  const containerRef    = useRef<HTMLDivElement>(null)
+  const isDraggingSlider = useRef(false)
 
   // ── Resize canvas when container changes ────────────────────────────────────
   const resizeAndRedraw = useCallback(() => {
@@ -102,9 +105,8 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
     canvas.style.width  = `${displayW}px`
     canvas.style.height = `${displayH}px`
 
-    const ctx = canvas.getContext('2d')!
-    ctx.scale(dpr, dpr)
-
+    // drawScene resets the transform internally — no ctx.scale needed here.
+    // canvas.width = displayW * dpr already gives retina sharpness.
     drawScene(canvas, img, selectedRec?.hex ?? null)
   }, [selectedRec])
 
@@ -154,8 +156,6 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
         canvas.style.width  = `${displayW}px`
         canvas.style.height = `${displayH}px`
 
-        const ctx = canvas.getContext('2d')!
-        ctx.scale(dpr, dpr)
         drawScene(canvas, img, null)
         setSamplingHint(true)
       })
@@ -171,7 +171,8 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
 
   // ── Canvas tap → sample wall colour ─────────────────────────────────────────
   const handleCanvasTap = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (phase === 'idle') return
+    // Only sample colour in 'loaded' phase. In 'rendered' phase the slider handles touch.
+    if (phase !== 'loaded') return
     const canvas    = canvasRef.current
     const offscreen = offscreenRef.current
     const img       = imgRef.current
@@ -219,6 +220,35 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
     })
   }, [phase])
 
+  // ── Before/after slider drag ─────────────────────────────────────────────────
+  const handleSliderDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation()
+    isDraggingSlider.current = true
+
+    const onMove = (ev: MouseEvent | TouchEvent) => {
+      if (!isDraggingSlider.current) return
+      const div = canvasDivRef.current
+      if (!div) return
+      const rect    = div.getBoundingClientRect()
+      const clientX = 'touches' in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX
+      const raw     = ((clientX - rect.left) / rect.width) * 100
+      setSliderPct(Math.min(96, Math.max(4, raw)))
+    }
+
+    const onUp = () => {
+      isDraggingSlider.current = false
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('touchend', onUp)
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('touchmove', onMove, { passive: true })
+    window.addEventListener('mouseup', onUp)
+    window.addEventListener('touchend', onUp)
+  }, [])
+
   // ── Swatch selection ─────────────────────────────────────────────────────────
   const selectRec = useCallback((rec: Recommendation) => {
     setSelectedRec(rec)
@@ -238,6 +268,7 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
     setSelectedRec(null)
     setTapMarker(null)
     setSamplingHint(false)
+    setSliderPct(50)
     imgRef.current = null
     if (photoUrl) URL.revokeObjectURL(photoUrl)
   }
@@ -426,7 +457,7 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
         <div ref={containerRef} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
           {/* Canvas area */}
-          <div style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
+          <div ref={canvasDivRef} style={{ position: 'relative', width: '100%', flexShrink: 0 }}>
             <canvas
               ref={canvasRef}
               onClick={handleCanvasTap}
@@ -491,6 +522,98 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* ── Before / After comparison slider (rendered phase only) ── */}
+            {phase === 'rendered' && photoUrl && (
+              <>
+                {/* "Before" overlay — original photo, clipped to left of slider */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoUrl}
+                  alt=""
+                  draggable={false}
+                  style={{
+                    position:    'absolute',
+                    inset:       0,
+                    width:       '100%',
+                    height:      '100%',
+                    objectFit:   'fill',
+                    clipPath:    `inset(0 ${(100 - sliderPct).toFixed(1)}% 0 0)`,
+                    pointerEvents: 'none',
+                    userSelect:  'none',
+                    zIndex:      3,
+                  }}
+                />
+
+                {/* Divider line + draggable handle */}
+                <div
+                  role="slider"
+                  aria-label="Compare before and after"
+                  aria-valuenow={Math.round(sliderPct)}
+                  style={{
+                    position:  'absolute',
+                    left:      `${sliderPct}%`,
+                    top:       0,
+                    bottom:    0,
+                    width:     '2px',
+                    background: 'rgba(255,255,255,0.88)',
+                    boxShadow: '0 0 6px rgba(0,0,0,0.5)',
+                    zIndex:    5,
+                    cursor:    'col-resize',
+                    transform: 'translateX(-1px)',
+                    touchAction: 'none',
+                  }}
+                  onMouseDown={handleSliderDown}
+                  onTouchStart={handleSliderDown}
+                >
+                  {/* Grip circle */}
+                  <div style={{
+                    position:  'absolute',
+                    top:       '50%',
+                    left:      '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width:     '38px',
+                    height:    '38px',
+                    borderRadius: '50%',
+                    background: '#0E0E10',
+                    border:    '2px solid rgba(255,255,255,0.88)',
+                    display:   'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 14px rgba(0,0,0,0.65)',
+                    pointerEvents: 'none',
+                  }}>
+                    <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M6 4 2 10l4 6" />
+                      <path d="M14 4l4 6-4 6" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* BEFORE / AFTER corner labels */}
+                <div style={{
+                  position:   'absolute', left: '10px', top: '10px', zIndex: 6,
+                  padding:    '3px 8px',
+                  background: 'rgba(0,0,0,0.52)',
+                  borderRadius: '2px',
+                  fontSize:   '8px', letterSpacing: '0.22em', textTransform: 'uppercase',
+                  color:      'rgba(255,255,255,0.75)',
+                  fontFamily: 'var(--font-inter, sans-serif)',
+                  pointerEvents: 'none',
+                }}>Before</div>
+
+                <div style={{
+                  position:   'absolute', right: '10px', top: '10px', zIndex: 6,
+                  padding:    '3px 8px',
+                  background: 'rgba(0,0,0,0.52)',
+                  borderRadius: '2px',
+                  fontSize:   '8px', letterSpacing: '0.22em', textTransform: 'uppercase',
+                  color:      C.gold,
+                  fontFamily: 'var(--font-inter, sans-serif)',
+                  pointerEvents: 'none',
+                }}>After</div>
+              </>
+            )}
           </div>
 
           {/* ── Bottom panel ─────────────────────────────────────────────────── */}
@@ -542,53 +665,77 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
                     Fabrics that work
                   </p>
 
-                  {/* Swatch row */}
-                  <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
-                    {recs.map(rec => (
-                      <button
-                        key={rec.id}
-                        onClick={() => selectRec(rec)}
-                        title={rec.label}
-                        style={{
-                          flexShrink:   0,
-                          width:        '48px',
-                          height:       '64px',
-                          borderRadius: '4px',
-                          background:   rec.hex,
-                          border:       selectedRec?.id === rec.id
-                            ? `2.5px solid ${C.gold}`
-                            : '2.5px solid transparent',
-                          cursor:       'pointer',
-                          boxShadow:    selectedRec?.id === rec.id
-                            ? `0 0 0 1px ${C.gold}60, 0 4px 12px rgba(0,0,0,0.4)`
-                            : '0 2px 6px rgba(0,0,0,0.3)',
-                          outline:      'none',
-                          position:     'relative',
-                          transition:   'border-color 0.2s, box-shadow 0.2s',
-                        }}
-                        aria-pressed={selectedRec?.id === rec.id}
-                        aria-label={`${rec.label} — ${rec.reason}`}
-                      >
-                        {rec.isBold && (
-                          <span style={{
-                            position:   'absolute',
-                            top:        '3px',
-                            right:      '3px',
-                            width:      '6px',
-                            height:     '6px',
-                            borderRadius: '50%',
-                            background: C.gold,
-                          }} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Swatch row — each swatch has the fabric name below it */}
+                  <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '6px' }}>
+                    {recs.map(rec => {
+                      const isSelected = selectedRec?.id === rec.id
+                      // First two words of catalog name, or the rec label
+                      const shortName = (rec.catalogMatch?.name ?? rec.label)
+                        .split(' ').slice(0, 2).join(' ')
+                      return (
+                        <button
+                          key={rec.id}
+                          onClick={() => selectRec(rec)}
+                          style={{
+                            flexShrink:  0,
+                            display:     'flex',
+                            flexDirection: 'column',
+                            alignItems:  'center',
+                            gap:         '6px',
+                            background:  'none',
+                            border:      'none',
+                            padding:     '0',
+                            cursor:      'pointer',
+                          }}
+                          aria-pressed={isSelected}
+                          aria-label={`${rec.label} — ${rec.reason}`}
+                        >
+                          {/* Colour chip */}
+                          <div style={{
+                            width:        '52px',
+                            height:       '76px',
+                            borderRadius: '3px',
+                            background:   rec.hex,
+                            border:       isSelected
+                              ? `2.5px solid ${C.gold}`
+                              : '2.5px solid rgba(255,255,255,0.08)',
+                            boxShadow:    isSelected
+                              ? `0 0 0 1px ${C.gold}55, 0 4px 14px rgba(0,0,0,0.45)`
+                              : '0 2px 8px rgba(0,0,0,0.35)',
+                            position:     'relative',
+                            transition:   'border-color 0.18s, box-shadow 0.18s',
+                            flexShrink:   0,
+                          }}>
+                            {rec.isBold && (
+                              <span style={{
+                                position: 'absolute', top: '4px', right: '4px',
+                                width: '5px', height: '5px',
+                                borderRadius: '50%', background: C.gold,
+                              }} />
+                            )}
+                          </div>
 
-                  {/* Legend */}
-                  <p style={{ fontSize: '10px', color: C.veryMuted, marginTop: '8px' }}>
-                    <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', background: C.gold, marginRight: '5px', verticalAlign: 'middle' }} />
-                    Bold pick
-                  </p>
+                          {/* Fabric name label */}
+                          <span style={{
+                            fontSize:   '8px',
+                            letterSpacing: '0.04em',
+                            textTransform: 'none',
+                            color:      isSelected ? C.gold : C.veryMuted,
+                            textAlign:  'center',
+                            maxWidth:   '52px',
+                            lineHeight: 1.25,
+                            fontFamily: 'var(--font-inter, sans-serif)',
+                            whiteSpace: 'nowrap',
+                            overflow:   'hidden',
+                            textOverflow: 'ellipsis',
+                            transition: 'color 0.18s',
+                          }}>
+                            {shortName}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 {/* Selected rec card */}
@@ -690,6 +837,7 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
                       setSelectedRec(null)
                       setTapMarker(null)
                       setSamplingHint(true)
+                      setSliderPct(50)
                       if (canvasRef.current && imgRef.current)
                         drawScene(canvasRef.current, imgRef.current, null)
                     }}

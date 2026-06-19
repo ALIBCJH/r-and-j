@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import ConfigPanel, { type FabricType, type RoomPreset, ROOM_PRESETS } from '../components/ConfigPanel'
-import { canRunStudio, getStoredOverride, setStoredOverride } from '@/app/lib/studioCapability'
+import { resolveStudioMode, setStoredOverride } from '@/app/lib/studioCapability'
 
 // ─── Loading fallback — standalone component so hooks are legal ───────────────
 
@@ -674,10 +674,7 @@ export default function Home() {
   // 'detecting' is the initial SSR-safe state; we resolve it in the effect.
   const [studioMode, setStudioMode] = useState<'detecting' | 'mobile' | '3d'>('detecting')
   useEffect(() => {
-    const override = getStoredOverride()
-    if (override === '3d')     { setStudioMode('3d');     return }
-    if (override === 'mobile') { setStudioMode('mobile'); return }
-    setStudioMode(canRunStudio() ? '3d' : 'mobile')
+    setStudioMode(resolveStudioMode())
   }, [])
 
   const [intent, setIntent]             = useState<StudioIntent | null>(null)

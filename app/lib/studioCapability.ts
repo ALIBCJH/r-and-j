@@ -1,19 +1,22 @@
 /**
  * Studio capability detection for R&J Interiors.
  *
- * Decides whether this device can run the WebGL 3D studio well.
- * Call canRunStudio() ONLY after mount — it uses browser APIs unavailable in SSR.
+ * Routing hierarchy (evaluated in page.tsx useEffect after mount):
  *
- * Decision criteria (in order):
- *  1. WebGL2 absent → false (hard block; Three.js r9+ requires it)
- *  2. Coarse pointer + multi-touch → phone-like device → false
- *     (Even if the phone has WebGL2, it's better served by the photo tool.
- *      The escape hatch lets power users opt into 3D anyway.)
- *  3. Very low memory (≤2 GB) AND very few cores (≤2) on a non-touch device → false
- *  4. Otherwise → true (desktop / capable tablet)
+ *  1. Screen width < 768 px  →  mobile tool, always.
+ *     Exception: user explicitly tapped "Open 3D Studio anyway" on this device
+ *     (setStoredOverride('3d') stores that choice — we respect it).
  *
- * The override persists in localStorage so a user who explicitly chose
- * one experience is not re-routed on their next visit.
+ *  2. Stored override = 'mobile'  →  mobile tool (user opted in on desktop).
+ *
+ *  3. canRunStudio() = false  →  mobile tool (no WebGL2, or other hard block).
+ *
+ *  4. Otherwise  →  3D studio.
+ *
+ * Override key: 'rj-studio-override'
+ * Values:  '3d'  (user explicitly chose 3D on this device — respect even on mobile)
+ *          'mobile' (user opted into photo tool on a capable desktop)
+ *          absent  (auto-detect each visit)
  */
 
 export type StudioMode     = '3d' | 'mobile'
@@ -29,7 +32,6 @@ export function getStoredOverride(): StudioOverride {
     if (v === '3d' || v === 'mobile') return v
     return null
   } catch {
-    // Private browsing / storage blocked
     return null
   }
 }
@@ -38,38 +40,46 @@ export function setStoredOverride(mode: StudioMode | null): void {
   try {
     if (mode === null) localStorage.removeItem(OVERRIDE_KEY)
     else               localStorage.setItem(OVERRIDE_KEY, mode)
-  } catch {
-    // Silently ignore storage errors
-  }
+  } catch {}
 }
 
-// ─── Capability check ────────────────────────────────────────────────────────
+// ─── Capability check ─────────────────────────────────────────────────────────
+// Only called when there is no stored override and the screen is ≥ 768 px.
 
 export function canRunStudio(): boolean {
-  // 1. WebGL2 — hard requirement for Three.js r144+
+  // WebGL2 — required by Three.js r144+
   try {
     const probe = document.createElement('canvas')
     const gl    = probe.getContext('webgl2')
     if (!gl) return false
-    // Immediately release the context so the browser doesn't warn
     gl.getExtension('WEBGL_lose_context')?.loseContext()
   } catch {
     return false
   }
-
-  // 2. Coarse pointer + multi-touch = phone-like device
-  //    maxTouchPoints > 1 to exclude Mac trackpads (they report 1)
-  const coarsePointer = window.matchMedia('(pointer: coarse)').matches
-  const hasTouch      = navigator.maxTouchPoints > 1
-  if (coarsePointer && hasTouch) return false
-
-  // 3. Low-resource non-touch device (e.g. old netbook)
-  //    navigator.deviceMemory is in GB; hardwareConcurrency is logical cores
-  const mem   = (navigator as { deviceMemory?: number }).deviceMemory
-  const cores = navigator.hardwareConcurrency
-  const lowMem   = typeof mem   === 'number' && mem   <= 2
-  const lowCores = typeof cores === 'number' && cores <= 2
-  if (lowMem && lowCores) return false
-
   return true
+}
+
+// ─── Routing decision (single call site in page.tsx) ─────────────────────────
+
+/**
+ * Resolve which experience to show on this device/visit.
+ *
+ * Call ONLY after mount (uses window, localStorage, navigator).
+ *
+ * Returns '3d' or 'mobile'.
+ */
+export function resolveStudioMode(): StudioMode {
+  const isMobileViewport = window.innerWidth < 768
+  const override         = getStoredOverride()
+
+  // Mobile viewport — always photo tool UNLESS the user explicitly said
+  // "Open 3D Studio anyway" on this very device (override === '3d').
+  if (isMobileViewport) {
+    return override === '3d' ? '3d' : 'mobile'
+  }
+
+  // Desktop viewport — respect stored preference, then auto-detect.
+  if (override === 'mobile') return 'mobile'
+  if (override === '3d')     return '3d'
+  return canRunStudio() ? '3d' : 'mobile'
 }
