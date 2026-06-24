@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import LandingNavbar      from '../components/landing/Navbar'
-import HeroSection        from '../components/landing/HeroSection'
-import ProcessSection     from '../components/landing/ProcessSection'
+import LandingNavbar        from '../components/landing/Navbar'
+import HeroSection          from '../components/landing/HeroSection'
+import CurtainConfigurator  from '../components/landing/CurtainConfigurator'
+import ProcessSection       from '../components/landing/ProcessSection'
 import StatsSection       from '../components/landing/StatsSection'
 import TextilesShowcase   from '../components/landing/TextilesShowcase'
 import TestimonialSection from '../components/landing/TestimonialSection'
@@ -19,6 +20,8 @@ export default function LandingPage() {
     <div style={{ background: '#0D1B2E' }}>
       <LandingNavbar />
       <HeroSection />
+      <SectionDivider from="#0D1B2E" to="#0D1B2E" />
+      <CurtainConfigurator />
       <SectionDivider from="#0D1B2E" to="#0F1117" />
       <ProcessSection />
       <SectionDivider from="#0F1117" to="#0F1117" />
