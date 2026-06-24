@@ -21,100 +21,99 @@ export default function HeroSection() {
       <style>{`
         @media (max-width: 768px) {
           .hero-cols {
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center;
             padding-top: calc(var(--rj-navbar-height) + 24px) !important;
-            gap: 20px !important;
+            text-align: center;
           }
-          .hero-text-col { flex: 0 0 auto !important; width: 100% !important; }
+          .hero-text-col { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; }
           .hero-text-col p { max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; }
           .hero-text-col > div { justify-content: center !important; }
-          .hero-logo-col { flex: 0 0 auto !important; width: 180px !important; height: 180px !important; }
           .hero-cta-link { padding: 16px 36px !important; font-size: 13px !important; letter-spacing: 2px !important; }
         }
       `}</style>
 
-      {/* SVG filter — makes white pixels transparent, gold/dark stay opaque */}
-      <svg width="0" height="0" style={{ position: 'absolute' }}>
-        <defs>
-          <filter id="remove-white" colorInterpolationFilters="sRGB">
-            <feColorMatrix
-              type="matrix"
-              values="1 0 0 0 0
-                      0 1 0 0 0
-                      0 0 1 0 0
-                      -1 -1 -1 3 0"
-            />
-          </filter>
-        </defs>
-      </svg>
+      {/* ── Background image — hero3 (VR curtain styling experience) ── */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <Image
+          src="/assets/hero3.png"
+          alt="A client previewing curtain styles in immersive VR inside a luxury living room"
+          fill
+          priority
+          quality={90}
+          sizes="100vw"
+          style={{ objectFit: 'cover', objectPosition: 'center right' }}
+        />
+      </div>
 
-      {/* Full-width two-column layout — grows to fill remaining space above scroll indicator */}
+      {/* ── Scrim — darkens the left for text legibility, keeps the VR panel on the right visible ── */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 1,
+          background:
+            'linear-gradient(90deg, rgba(8,12,22,0.94) 0%, rgba(8,12,22,0.82) 30%, rgba(8,12,22,0.40) 52%, rgba(8,12,22,0.12) 70%, rgba(8,12,22,0.35) 100%), ' +
+            'linear-gradient(180deg, rgba(8,12,22,0.55) 0%, transparent 22%, transparent 60%, rgba(8,12,22,0.70) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Full-width layout — text overlaid on the left, grows to fill space above scroll indicator */}
       <div
         className="relative w-full flex items-center hero-cols"
         style={{
           flex:       '1 1 auto',
           padding:    '0 6vw',
           paddingTop: 'calc(var(--rj-navbar-height) + 24px)',
-          gap:        '4vw',
           zIndex:     10,
         }}
       >
 
-        {/* ── Left: text — 50% of viewport ── */}
-        <div className="hero-text-col" style={{ flex: '0 0 50%', minWidth: 0 }}>
+        {/* ── Text + CTA ── */}
+        <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '560px', minWidth: 0 }}>
 
-          <motion.h1 {...fadeUp(0.25)} style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(28px, 2.8vw, 46px)',
-            color:        '#FFFFFF',
-            lineHeight:   1.1,
-            marginBottom: 0,
+          <motion.span {...fadeUp(0.2)} style={{
+            display:       'block',
+            fontFamily:    'var(--font-inter, sans-serif)',
+            fontSize:      'clamp(11px, 0.9vw, 13px)',
+            color:         '#E8C96D',
+            letterSpacing: '4px',
+            textTransform: 'uppercase',
+            marginBottom:  '22px',
+            textShadow:    '0 1px 16px rgba(0,0,0,0.6)',
           }}>
-            The room you have always
+            Immersive Interior Design
+          </motion.span>
+
+          <motion.h1 {...fadeUp(0.35)} style={{
+            fontFamily:   'var(--font-playfair, Georgia, serif)',
+            fontSize:     'clamp(38px, 4.4vw, 76px)',
+            color:        '#FFFFFF',
+            lineHeight:   1.05,
+            marginBottom: 0,
+            textShadow:   '0 2px 24px rgba(0,0,0,0.55)',
+          }}>
+            See it
           </motion.h1>
 
-          <motion.h1 {...fadeUp(0.4)} style={{
+          <motion.h1 {...fadeUp(0.5)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(28px, 2.8vw, 46px)',
-            color:        '#FFFFFF',
-            lineHeight:   1.1,
-            marginBottom: 0,
-          }}>
-            imagined is closer than
-          </motion.h1>
-
-          <motion.h1 {...fadeUp(0.55)} style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(28px, 2.8vw, 46px)',
-            lineHeight:   1.1,
-            marginBottom: '36px',
+            fontSize:     'clamp(38px, 4.4vw, 76px)',
+            lineHeight:   1.05,
+            marginBottom: '40px',
           }}>
             <em style={{
               color:      '#E8C96D',
               fontStyle:  'italic',
-              textShadow: '0 0 48px rgba(232,201,109,0.3)',
+              textShadow: '0 0 48px rgba(232,201,109,0.35), 0 2px 24px rgba(0,0,0,0.55)',
             }}>
-              you think.
+              before it&rsquo;s real.
             </em>
           </motion.h1>
 
-          <motion.p {...fadeUp(0.7)} style={{
-            fontFamily:   'var(--font-inter, sans-serif)',
-            fontSize:     'clamp(14px, 1.1vw, 17px)',
-            color:        '#9BAAB8',
-            lineHeight:   1.85,
-            marginBottom: '44px',
-            maxWidth:     '420px',
-          }}>
-            Step inside your redesigned space in immersive 3D — see every
-            detail, feel every decision, before a single thread is cut.
-          </motion.p>
-
           <motion.div
-            {...fadeUp(0.8)}
-            style={{ display: 'flex', justifyContent: 'center' }}
+            {...fadeUp(0.65)}
+            style={{ display: 'flex' }}
           >
             <Link
               href="/studio"
@@ -142,32 +141,6 @@ export default function HeroSection() {
             </Link>
           </motion.div>
         </div>
-
-        {/* ── Right: logo — 44% of viewport ── */}
-        <motion.div
-          className="hero-logo-col"
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2, ease, delay: 0.25 }}
-          style={{
-            flex:     '0 0 44%',
-            minWidth: 0,
-            aspectRatio: '1 / 1',
-            position: 'relative',
-            filter:   'drop-shadow(0 0 60px rgba(201,168,76,0.15))',
-          }}
-        >
-          <Image
-            src="/assets/r_j_interiors_final_premium_logo.png"
-            alt="R&J Interiors"
-            fill
-            style={{
-              objectFit: 'contain',
-              filter:    'url(#remove-white) brightness(1.05) contrast(1.15) saturate(1.2)',
-            }}
-            priority
-          />
-        </motion.div>
       </div>
 
       {/* Scroll indicator — sits naturally below content, no dead space */}
