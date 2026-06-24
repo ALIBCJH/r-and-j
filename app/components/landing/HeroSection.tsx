@@ -19,7 +19,19 @@ export default function HeroSection() {
   return (
     <section className="hero-section" style={{ flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' }}>
       <style>{`
+        .hero-bg-mobile { display: none; }
         @media (max-width: 768px) {
+          .hero-bg-desktop { display: none; }
+          .hero-bg-mobile  { display: block; }
+          /* hero4 carries the messaging — show the button only on mobile */
+          .hero-mantra { display: none !important; }
+          .hero-scrim {
+            background: linear-gradient(180deg,
+              rgba(8,12,22,0.45) 0%,
+              transparent 24%,
+              transparent 52%,
+              rgba(8,12,22,0.88) 100%) !important;
+          }
           .hero-cols {
             padding-top: calc(var(--rj-navbar-height) + 24px) !important;
             text-align: center;
@@ -31,9 +43,12 @@ export default function HeroSection() {
         }
       `}</style>
 
-      {/* ── Background image — hero3 (VR curtain styling experience) ── */}
+      {/* ── Background image — VR curtain styling experience ──
+           Desktop gets the wide scene (hero3); phones get the portrait
+           composition (hero4) so the VR person stays in frame. ── */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <Image
+          className="hero-bg-desktop"
           src="/assets/hero3.png"
           alt="A client previewing curtain styles in immersive VR inside a luxury living room"
           fill
@@ -42,11 +57,22 @@ export default function HeroSection() {
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center right' }}
         />
+        <Image
+          className="hero-bg-mobile"
+          src="/assets/hero4.png"
+          alt="A client previewing curtain styles in immersive VR inside a luxury living room"
+          fill
+          priority
+          quality={90}
+          sizes="100vw"
+          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+        />
       </div>
 
-      {/* ── Scrim — darkens the left for text legibility, keeps the VR panel on the right visible ── */}
+      {/* ── Scrim — desktop darkens the left for text legibility; mobile darkens the bottom for the button ── */}
       <div
         aria-hidden
+        className="hero-scrim"
         style={{
           position: 'absolute',
           inset: 0,
@@ -73,7 +99,7 @@ export default function HeroSection() {
         {/* ── Text + CTA ── */}
         <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '560px', minWidth: 0 }}>
 
-          <motion.h1 {...fadeUp(0.35)} style={{
+          <motion.h1 className="hero-mantra" {...fadeUp(0.35)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
             fontSize:     'clamp(38px, 4.4vw, 76px)',
             color:        '#FFFFFF',
@@ -84,7 +110,7 @@ export default function HeroSection() {
             See it
           </motion.h1>
 
-          <motion.h1 {...fadeUp(0.5)} style={{
+          <motion.h1 className="hero-mantra" {...fadeUp(0.5)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
             fontSize:     'clamp(38px, 4.4vw, 76px)',
             lineHeight:   1.05,
