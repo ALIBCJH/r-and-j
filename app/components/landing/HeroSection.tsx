@@ -34,12 +34,18 @@ export default function HeroSection() {
           }
           .hero-cols {
             padding-top: calc(var(--rj-navbar-height) + 24px) !important;
+            padding-bottom: 3vh !important;
             text-align: center;
           }
           .hero-text-col { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; }
           .hero-text-col p { max-width: 100% !important; margin-left: auto !important; margin-right: auto !important; }
           .hero-text-col > div { justify-content: center !important; }
-          .hero-cta-link { padding: 16px 36px !important; font-size: 13px !important; letter-spacing: 2px !important; }
+          .hero-cta-link {
+            padding: 13px 30px !important;
+            font-size: 11px !important;
+            letter-spacing: 2px !important;
+            box-shadow: 0 0 16px rgba(232,201,109,0.28) !important;
+          }
         }
       `}</style>
 
@@ -139,16 +145,16 @@ export default function HeroSection() {
                 fontSize:      '15px',
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
-                boxShadow:     '0 0 40px rgba(232,201,109,0.5), 0 0 100px rgba(201,168,76,0.22)',
+                boxShadow:     '0 0 18px rgba(232,201,109,0.28), 0 0 44px rgba(201,168,76,0.12)',
                 transition:    'box-shadow 0.3s ease, filter 0.3s ease',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.filter    = 'brightness(1.12)'
-                e.currentTarget.style.boxShadow = '0 0 56px rgba(232,201,109,0.70), 0 0 120px rgba(201,168,76,0.30)'
+                e.currentTarget.style.filter    = 'brightness(1.08)'
+                e.currentTarget.style.boxShadow = '0 0 26px rgba(232,201,109,0.40), 0 0 60px rgba(201,168,76,0.16)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.filter    = ''
-                e.currentTarget.style.boxShadow = '0 0 32px rgba(232,201,109,0.45), 0 0 80px rgba(201,168,76,0.18)'
+                e.currentTarget.style.boxShadow = '0 0 18px rgba(232,201,109,0.28), 0 0 44px rgba(201,168,76,0.12)'
               }}
             >
               Experience VR Studio
