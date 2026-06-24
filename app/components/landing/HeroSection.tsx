@@ -60,30 +60,18 @@ export default function HeroSection() {
 
       {/* Full-width layout — text overlaid on the left, grows to fill space above scroll indicator */}
       <div
-        className="relative w-full flex items-center hero-cols"
+        className="relative w-full flex items-end hero-cols"
         style={{
-          flex:       '1 1 auto',
-          padding:    '0 6vw',
-          paddingTop: 'calc(var(--rj-navbar-height) + 24px)',
-          zIndex:     10,
+          flex:          '1 1 auto',
+          padding:       '0 6vw',
+          paddingTop:    'calc(var(--rj-navbar-height) + 24px)',
+          paddingBottom: '12vh',
+          zIndex:        10,
         }}
       >
 
         {/* ── Text + CTA ── */}
         <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '560px', minWidth: 0 }}>
-
-          <motion.span {...fadeUp(0.2)} style={{
-            display:       'block',
-            fontFamily:    'var(--font-inter, sans-serif)',
-            fontSize:      'clamp(11px, 0.9vw, 13px)',
-            color:         '#E8C96D',
-            letterSpacing: '4px',
-            textTransform: 'uppercase',
-            marginBottom:  '22px',
-            textShadow:    '0 1px 16px rgba(0,0,0,0.6)',
-          }}>
-            Immersive Interior Design
-          </motion.span>
 
           <motion.h1 {...fadeUp(0.35)} style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
