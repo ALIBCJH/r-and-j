@@ -128,14 +128,16 @@ export default function ProcessSection() {
               border-radius: 50%;
               display: flex; align-items: center; justify-content: center;
               flex-shrink: 0;
+              color: #E8C96D;
               background: #0D1B2E;
               border: 1px solid rgba(201,168,76,0.5);
               box-shadow: 0 0 0 7px #0D1B2E, 0 0 26px rgba(201,168,76,0.28);
               margin-bottom: 30px;
+              transition: border-color 0.35s ease, box-shadow 0.35s ease;
             }
-            .node span {
-              font-family: var(--font-playfair, Georgia, serif);
-              font-size: 18px; color: #E8C96D; letter-spacing: 1px;
+            .step:hover .node {
+              border-color: rgba(201,168,76,0.85);
+              box-shadow: 0 0 0 7px #0D1B2E, 0 0 34px rgba(201,168,76,0.45);
             }
             .step-image {
               position: relative;
@@ -146,7 +148,12 @@ export default function ProcessSection() {
             }
             .step-image img { transition: transform 0.65s cubic-bezier(0.25,0.1,0.25,1); }
             .step:hover .step-image img { transform: scale(1.06); }
-            .step-icon { color: #C9A84C; margin-bottom: 14px; }
+            .step-num {
+              display: block;
+              font-family: var(--font-inter, sans-serif);
+              font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+              color: #C9A84C; margin-bottom: 12px;
+            }
             .step h3 {
               font-family: var(--font-playfair, Georgia, serif);
               font-size: 23px; color: #FFFFFF; line-height: 1.3; margin-bottom: 12px;
@@ -204,7 +211,7 @@ export default function ProcessSection() {
                 transition={{ duration: 0.8, ease, delay: 0.3 + i * 0.45 }}
               >
                 <div className="node">
-                  <span>{step}</span>
+                  <Icon size={24} strokeWidth={1.3} />
                 </div>
 
                 <div className="step-content">
@@ -217,9 +224,7 @@ export default function ProcessSection() {
                       sizes="(max-width: 768px) 90vw, 360px"
                     />
                   </div>
-                  <div className="step-icon">
-                    <Icon size={22} strokeWidth={1.3} />
-                  </div>
+                  <span className="step-num">Step {step}</span>
                   <h3>{title}</h3>
                   <p>{body}</p>
                 </div>
