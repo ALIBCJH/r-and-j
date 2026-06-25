@@ -32,9 +32,63 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
+// Production origin — used to resolve canonical + Open Graph URLs.
+// Change this one line if the live domain differs.
+const SITE_URL = "https://rjinteriors.co.ke";
+const SITE_DESCRIPTION =
+  "East Africa's first vertically integrated luxury curtain design house. See your space in immersive 3D before you spend a single shilling.";
+
 export const metadata: Metadata = {
-  title: "R&J Interiors — Visualize Before You Buy",
-  description: "East Africa's first vertically integrated luxury curtain design house. See your space in immersive 3D before you spend a single shilling.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default:  "R&J Interiors — Visualize Before You Buy",
+    template: "%s | R&J Interiors",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "R&J Interiors",
+  keywords: [
+    "luxury curtains",
+    "curtains Kenya",
+    "curtains Nyeri",
+    "interior design Kenya",
+    "made-to-measure curtains",
+    "VR curtain visualizer",
+    "drapery",
+    "R&J Interiors",
+  ],
+  openGraph: {
+    type:        "website",
+    siteName:    "R&J Interiors",
+    title:       "R&J Interiors — Visualize Before You Buy",
+    description: SITE_DESCRIPTION,
+    url:         SITE_URL,
+    locale:      "en_KE",
+    images: [
+      {
+        url:    "/assets/hero3.png",
+        width:  1536,
+        height: 1024,
+        alt:    "A client previewing curtain styles in immersive VR inside a luxury living room",
+      },
+    ],
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "R&J Interiors — Visualize Before You Buy",
+    description: SITE_DESCRIPTION,
+    images:      ["/assets/hero3.png"],
+  },
+  robots: {
+    index:  true,
+    follow: true,
+    googleBot: {
+      index:               true,
+      follow:              true,
+      "max-image-preview": "large",
+      "max-snippet":       -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon:     '/logo24.png',
     shortcut: '/logo24.png',

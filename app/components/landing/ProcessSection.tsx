@@ -1,237 +1,251 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { LayoutDashboard, Layers, Glasses } from 'lucide-react'
-import Image from 'next/image'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion'
+import { ChevronRight } from 'lucide-react'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-const STEPS = [
+/* The R&J journey, distilled to three movements. Each word glows in turn while
+   its description cross-fades in below — the three original steps, compressed. */
+const STAGES = [
   {
-    step:          '01',
-    Icon:          LayoutDashboard,
-    title:         'Choose Your Environment',
-    body:          'Select from our library of high-fidelity architectural shells — from Nairobi penthouses to coastal villas — or import your own blueprints for a fully personalised canvas.',
-    imageSrc:      '/assets/card-environment.png',
-    imagePosition: 'center center',
+    word: 'Imagine',
+    desc: 'Step into a high-fidelity 3D shell of your space — a Nairobi penthouse, a coastal villa, or your own blueprint.',
   },
   {
-    step:          '02',
-    Icon:          Layers,
-    title:         'Tailor Your Textiles',
-    body:          'Browse hundreds of curated fabrics, textures, and gold-leaf finishes. Every swatch is rendered under real-time lighting so what you see is exactly what you receive.',
-    imageSrc:      '/assets/material.png',
-    imagePosition: 'center center',
+    word: 'Experience',
+    desc: 'Drape it in hundreds of curated fabrics and gold-leaf finishes, rendered live under real lighting — then walk through it in immersive 360° VR.',
   },
   {
-    step:          '03',
-    Icon:          Glasses,
-    title:         'Visualize & Order',
-    body:          'Walk through your completed room in immersive 360° VR before a single thread is cut. When the vision is perfect, confirm your order and our craftspeople handle the rest.',
-    imageSrc:      '/assets/hero3.png',
-    imagePosition: 'center 35%',
+    word: 'Create',
+    desc: 'When the vision is perfect, confirm — and our craftspeople bring it to life, thread by thread, exactly as you saw it.',
   },
 ]
 
+const HOLD_MS = 2800
+
 export default function ProcessSection() {
+  const reduce = useReducedMotion()
+  const ref    = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { amount: 0.4 })
+
+  const [active,  setActive]  = useState(0)
+  const [paused,  setPaused]  = useState(false)
+
+  // Auto-advance the glow — paused on hover/focus, off-screen, or reduced motion.
+  useEffect(() => {
+    if (reduce || !inView || paused) return
+    const id = window.setInterval(
+      () => setActive(a => (a + 1) % STAGES.length),
+      HOLD_MS,
+    )
+    return () => window.clearInterval(id)
+  }, [reduce, inView, paused])
+
   return (
     <>
-      {/* ── Process Section — connected journey ── */}
+      {/* ── The R&J Journey — Imagine · Experience · Create ── */}
       <section style={{
         background: '#0D1B2E',
-        padding:    '120px 6vw',
+        padding:    '130px 6vw',
         borderTop:  '1px solid rgba(201,168,76,0.12)',
+        position:   'relative',
+        overflow:   'hidden',
       }}>
-        <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
+        {/* Ambient gold glow */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 50% 55% at 50% 42%, rgba(201,168,76,0.12) 0%, transparent 70%)',
+        }} />
 
-          {/* Header */}
-          <div className="text-center" style={{ marginBottom: '80px' }}>
-            <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.8, ease }}
-              style={{
-                fontFamily:    'var(--font-inter, sans-serif)',
-                fontSize:      'var(--rj-font-label)',
-                color:         '#C9A84C',
-                letterSpacing: '5px',
-                textTransform: 'uppercase',
-                marginBottom:  '20px',
-              }}
-            >
-              How It Works
-            </motion.p>
+        <style>{`
+          .journey {
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+          }
+          .journey-eyebrow {
+            font-family: var(--font-inter, sans-serif);
+            font-size: var(--rj-font-label);
+            color: #C9A84C;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+          }
+          .journey-words {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(14px, 3vw, 44px);
+            flex-wrap: wrap;
+          }
+          .journey-cell {
+            display: flex;
+            align-items: center;
+            gap: clamp(14px, 3vw, 44px);
+          }
+          .journey-word {
+            font-family: var(--font-playfair, Georgia, serif);
+            font-style: italic;
+            font-size: clamp(40px, 6.4vw, 92px);
+            line-height: 1.04;
+            color: #E8C96D;
+            background: none;
+            border: none;
+            padding: 0 4px;
+            margin: 0;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+          }
+          .journey-word:focus-visible {
+            outline: 2px solid rgba(232,201,109,0.7);
+            outline-offset: 8px;
+            border-radius: 4px;
+          }
+          .journey-sep {
+            color: rgba(201,168,76,0.45);
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+          }
+          .journey-desc-wrap {
+            position: relative;
+            min-height: 110px;
+            max-width: 620px;
+            margin: 36px auto 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+          }
+          .journey-desc {
+            font-family: var(--font-inter, sans-serif);
+            font-size: clamp(15px, 1.35vw, 18px);
+            line-height: 1.85;
+            color: #9FB0BF;
+            margin: 0;
+          }
+          .journey-dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 28px;
+          }
+          .journey-dot {
+            width: 8px; height: 8px;
+            border-radius: 999px;
+            border: none; padding: 0;
+            cursor: pointer;
+            background: rgba(201,168,76,0.25);
+            transition: width 0.45s ease, background 0.45s ease, box-shadow 0.45s ease;
+          }
+          .journey-dot:focus-visible {
+            outline: 2px solid rgba(232,201,109,0.7);
+            outline-offset: 4px;
+          }
+          .journey-dot.is-active {
+            width: 28px;
+            background: linear-gradient(90deg, #C9A84C, #E8C96D);
+            box-shadow: 0 0 10px rgba(232,201,109,0.6);
+          }
+          .sr-only {
+            position: absolute;
+            width: 1px; height: 1px;
+            margin: -1px; padding: 0;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            border: 0;
+          }
+          @media (max-width: 768px) {
+            .journey-words { flex-direction: column; gap: 6px; }
+            .journey-cell { flex-direction: column; gap: 6px; }
+            .journey-sep { transform: rotate(90deg); }
+            .journey-desc-wrap { min-height: 150px; }
+          }
+        `}</style>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.8, ease, delay: 0.1 }}
-              style={{
-                fontFamily: 'var(--font-playfair, Georgia, serif)',
-                fontSize:   'var(--rj-font-h2)',
-                color:      '#FFFFFF',
-                lineHeight: 1.1,
-              }}
-            >
-              The R&amp;J Experience
-            </motion.h2>
+        <motion.div
+          ref={ref}
+          className="journey"
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.9, ease }}
+        >
+          <p className="journey-eyebrow">How It Works</p>
 
-            <motion.div
-              initial={{ opacity: 0, scaleX: 0 }}
-              whileInView={{ opacity: 1, scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease, delay: 0.3 }}
-              style={{
-                width:           '48px',
-                height:          '2px',
-                background:      'linear-gradient(90deg, #C9A84C, #E8C96D)',
-                margin:          '20px auto 0',
-                transformOrigin: 'center',
-              }}
-            />
+          {/* Hidden heading keeps the section's semantics & SEO intact */}
+          <h2 className="sr-only">
+            Imagine, Experience, Create — the R&amp;J journey from idea to installation.
+          </h2>
+
+          {/* The three movements */}
+          <div className="journey-words">
+            {STAGES.map(({ word }, i) => {
+              const isActive = active === i
+              return (
+                <div key={word} className="journey-cell">
+                  {i > 0 && (
+                    <span className="journey-sep" aria-hidden>
+                      <ChevronRight size={26} strokeWidth={1.4} />
+                    </span>
+                  )}
+                  <motion.button
+                    type="button"
+                    className="journey-word"
+                    onClick={() => setActive(i)}
+                    onMouseEnter={() => { setActive(i); setPaused(true) }}
+                    onMouseLeave={() => setPaused(false)}
+                    onFocus={() => { setActive(i); setPaused(true) }}
+                    onBlur={() => setPaused(false)}
+                    animate={{
+                      opacity:    isActive ? 1 : 0.22,
+                      scale:      isActive ? 1.05 : 1,
+                      textShadow: isActive
+                        ? '0 0 90px rgba(232,201,109,0.9), 0 0 42px rgba(232,201,109,0.7), 0 0 14px rgba(255,243,206,0.6)'
+                        : '0 0 0px rgba(232,201,109,0), 0 0 0px rgba(232,201,109,0), 0 0 0px rgba(255,243,206,0)',
+                    }}
+                    transition={{ duration: reduce ? 0 : 0.85, ease }}
+                  >
+                    {word}
+                  </motion.button>
+                </div>
+              )
+            })}
           </div>
 
-          <style>{`
-            .journey {
-              position: relative;
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 40px;
-              max-width: 1080px;
-              margin: 0 auto;
-            }
-            .rail { position: absolute; z-index: 0; pointer-events: none; }
-            .rail-track { position: absolute; inset: 0; background: rgba(201,168,76,0.14); }
-            .rail-fill {
-              position: absolute; inset: 0;
-              background: linear-gradient(90deg, #C9A84C, #E8C96D);
-              box-shadow: 0 0 14px rgba(232,201,109,0.55);
-            }
-            /* horizontal rail (desktop) — runs through the node centres */
-            .rail-h { top: 27px; left: 16.66%; right: 16.66%; height: 2px; }
-            .rail-fill-h { transform-origin: left center; }
-            /* vertical rail (mobile) */
-            .rail-v { display: none; }
-
-            .step {
-              position: relative;
-              z-index: 1;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              text-align: center;
-            }
-            .node {
-              width: 56px; height: 56px;
-              border-radius: 50%;
-              display: flex; align-items: center; justify-content: center;
-              flex-shrink: 0;
-              color: #E8C96D;
-              background: #0D1B2E;
-              border: 1px solid rgba(201,168,76,0.5);
-              box-shadow: 0 0 0 7px #0D1B2E, 0 0 26px rgba(201,168,76,0.28);
-              margin-bottom: 30px;
-              transition: border-color 0.35s ease, box-shadow 0.35s ease;
-            }
-            .step:hover .node {
-              border-color: rgba(201,168,76,0.85);
-              box-shadow: 0 0 0 7px #0D1B2E, 0 0 34px rgba(201,168,76,0.45);
-            }
-            .step-image {
-              position: relative;
-              width: 100%; height: 200px;
-              overflow: hidden;
-              border: 1px solid rgba(201,168,76,0.14);
-              margin-bottom: 24px;
-            }
-            .step-image img { transition: transform 0.65s cubic-bezier(0.25,0.1,0.25,1); }
-            .step:hover .step-image img { transform: scale(1.06); }
-            .step-num {
-              display: block;
-              font-family: var(--font-inter, sans-serif);
-              font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-              color: #C9A84C; margin-bottom: 12px;
-            }
-            .step h3 {
-              font-family: var(--font-playfair, Georgia, serif);
-              font-size: 23px; color: #FFFFFF; line-height: 1.3; margin-bottom: 12px;
-            }
-            .step p {
-              font-family: var(--font-inter, sans-serif);
-              font-size: 15px; color: #8294A4; line-height: 1.8; max-width: 320px;
-            }
-
-            @media (max-width: 768px) {
-              .journey { grid-template-columns: 1fr; gap: 44px; max-width: 460px; }
-              .rail-h { display: none; }
-              .rail-v { display: block; top: 12px; bottom: 12px; left: 27px; width: 2px; }
-              .rail-fill-v { transform-origin: top center; }
-              .step { flex-direction: row; align-items: flex-start; text-align: left; gap: 24px; }
-              .node { margin-bottom: 0; }
-              .step-content { flex: 1; min-width: 0; }
-              .step p { max-width: none; }
-              .step-image { height: 170px; }
-            }
-          `}</style>
-
-          {/* Connected journey */}
-          <div className="journey">
-
-            {/* Animated rails — draw themselves on scroll */}
-            <div className="rail rail-h" aria-hidden>
-              <div className="rail-track" />
-              <motion.div
-                className="rail-fill rail-fill-h"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ duration: 1.6, ease }}
-              />
-            </div>
-            <div className="rail rail-v" aria-hidden>
-              <div className="rail-track" />
-              <motion.div
-                className="rail-fill rail-fill-v"
-                initial={{ scaleY: 0 }}
-                whileInView={{ scaleY: 1 }}
-                viewport={{ once: true, margin: '-100px' }}
-                transition={{ duration: 1.6, ease }}
-              />
-            </div>
-
-            {STEPS.map(({ step, Icon, title, body, imageSrc, imagePosition }, i) => (
-              <motion.div
-                className="step"
-                key={step}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.8, ease, delay: 0.3 + i * 0.45 }}
+          {/* Synced description */}
+          <div className="journey-desc-wrap" aria-live="polite">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={active}
+                className="journey-desc"
+                initial={reduce ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
+                transition={{ duration: reduce ? 0 : 0.6, ease }}
               >
-                <div className="node">
-                  <Icon size={24} strokeWidth={1.3} />
-                </div>
+                {STAGES[active].desc}
+              </motion.p>
+            </AnimatePresence>
+          </div>
 
-                <div className="step-content">
-                  <div className="step-image">
-                    <Image
-                      src={imageSrc}
-                      alt={title}
-                      fill
-                      style={{ objectFit: 'cover', objectPosition: imagePosition }}
-                      sizes="(max-width: 768px) 90vw, 360px"
-                    />
-                  </div>
-                  <span className="step-num">Step {step}</span>
-                  <h3>{title}</h3>
-                  <p>{body}</p>
-                </div>
-              </motion.div>
+          {/* Progress / navigation */}
+          <div className="journey-dots">
+            {STAGES.map(({ word }, i) => (
+              <button
+                key={word}
+                type="button"
+                aria-label={`Show ${word}`}
+                aria-current={active === i}
+                className={`journey-dot${active === i ? ' is-active' : ''}`}
+                onClick={() => setActive(i)}
+              />
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── Bridge Quote ── */}
@@ -256,7 +270,7 @@ export default function ProcessSection() {
             lineHeight: 1.7,
             opacity:    0.85,
           }}>
-            "Every number represents a client who saw their space before they transformed it."
+            &ldquo;Every number represents a client who saw their space before they transformed it.&rdquo;
           </p>
           <div style={{ width: '48px', height: '1px', background: '#C9A84C', margin: '36px auto 0', opacity: 0.45 }} />
         </motion.div>

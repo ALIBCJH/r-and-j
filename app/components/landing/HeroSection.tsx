@@ -23,8 +23,18 @@ export default function HeroSection() {
         @media (max-width: 768px) {
           .hero-bg-desktop { display: none; }
           .hero-bg-mobile  { display: block; }
-          /* hero4 carries the messaging — show the button only on mobile */
-          .hero-mantra { display: none !important; }
+          /* hero4 image carries the visual messaging on mobile, but keep the
+             heading in the DOM (visually hidden) so it stays available to
+             search engines and screen readers — never display:none the only h1. */
+          .hero-mantra {
+            position: absolute !important;
+            width: 1px !important; height: 1px !important;
+            margin: -1px !important; padding: 0 !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+          }
           .hero-scrim {
             background: linear-gradient(180deg,
               rgba(8,12,22,0.45) 0%,
@@ -105,31 +115,31 @@ export default function HeroSection() {
         {/* ── Text + CTA ── */}
         <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '560px', minWidth: 0 }}>
 
-          <motion.h1 className="hero-mantra" {...fadeUp(0.35)} style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(38px, 4.4vw, 76px)',
-            color:        '#FFFFFF',
-            lineHeight:   1.05,
-            marginBottom: 0,
-            textShadow:   '0 2px 24px rgba(0,0,0,0.55)',
+          {/* Single page H1 — two animated lines as spans so the document keeps
+              exactly one heading (better for SEO & accessibility). */}
+          <h1 className="hero-mantra" style={{
+            fontFamily: 'var(--font-playfair, Georgia, serif)',
+            fontSize:   'clamp(38px, 4.4vw, 76px)',
+            lineHeight: 1.05,
+            margin:     '0 0 40px',
           }}>
-            See it
-          </motion.h1>
-
-          <motion.h1 className="hero-mantra" {...fadeUp(0.5)} style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(38px, 4.4vw, 76px)',
-            lineHeight:   1.05,
-            marginBottom: '40px',
-          }}>
-            <em style={{
-              color:      '#E8C96D',
-              fontStyle:  'italic',
-              textShadow: '0 0 48px rgba(232,201,109,0.35), 0 2px 24px rgba(0,0,0,0.55)',
+            <motion.span {...fadeUp(0.35)} style={{
+              display:    'block',
+              color:      '#FFFFFF',
+              textShadow: '0 2px 24px rgba(0,0,0,0.55)',
             }}>
-              before it&rsquo;s real.
-            </em>
-          </motion.h1>
+              See it
+            </motion.span>
+            <motion.span {...fadeUp(0.5)} style={{ display: 'block' }}>
+              <em style={{
+                color:      '#E8C96D',
+                fontStyle:  'italic',
+                textShadow: '0 0 48px rgba(232,201,109,0.35), 0 2px 24px rgba(0,0,0,0.55)',
+              }}>
+                before it&rsquo;s real.
+              </em>
+            </motion.span>
+          </h1>
 
           <motion.div
             {...fadeUp(0.65)}
