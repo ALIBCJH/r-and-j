@@ -92,9 +92,9 @@ function handleComplete(selections: Selections) {
 export default function StylePickerClient() {
   const isMobile = useIsMobile()
 
-  // Render nothing during SSR hydration to avoid layout flash.
-  // Both branches are static markup, so the brief blank frame is imperceptible.
-  if (typeof window === 'undefined') return null
+  // null = not yet measured (SSR + first paint). Render nothing so server and
+  // client outputs match exactly — no hydration mismatch, no flash.
+  if (isMobile === null) return null
 
   if (!isMobile) return <DesktopFallback />
 

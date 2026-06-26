@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
-export function useIsMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false)
+// Returns null until the client has measured — prevents hydration mismatches.
+export function useIsMobile(breakpoint = 768): boolean | null {
+  const [isMobile, setIsMobile] = useState<boolean | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint}px)`)
