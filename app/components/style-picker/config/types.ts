@@ -1,14 +1,21 @@
 export interface Selections {
-  photo:   File | null
-  model:   string | null
-  type:    string | null
-  pattern: string | null
-  color:   string | null
-  room:    string | null
+  // Phase 1 — picker
+  photo:        File | null
+  color:        string | null
+  // Phase 2 — booking (collected after payment)
+  bookingDate:  string | null   // 'YYYY-MM-DD'
+  bookingTime:  string | null
+  contactName:  string
+  contactPhone: string
+  contactEmail: string
+  // Payment
+  paymentRef:   string | null
 }
 
+export type WizardPhase = 'picking' | 'gate' | 'booking' | 'confirmed'
+
 export interface StepConfig {
-  id:        keyof Selections
+  id:        'photo' | 'color'
   label:     string
   heading:   string
   skippable: boolean
@@ -16,10 +23,12 @@ export interface StepConfig {
 }
 
 export const INITIAL_SELECTIONS: Selections = {
-  photo:   null,
-  model:   null,
-  type:    null,
-  pattern: null,
-  color:   null,
-  room:    null,
+  photo:        null,
+  color:        null,
+  bookingDate:  null,
+  bookingTime:  null,
+  contactName:  '',
+  contactPhone: '',
+  contactEmail: '',
+  paymentRef:   null,
 }

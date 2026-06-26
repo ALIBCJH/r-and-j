@@ -1,8 +1,8 @@
 'use client'
 
 import { motion }          from 'framer-motion'
-import type { Selections } from '../config/types'
-import { STEPS }           from '../config/steps.config'
+import type { Selections }  from '../config/types'
+import { PICKER_STEPS }    from '../config/steps.config'
 
 interface Props {
   selections: Selections
@@ -100,7 +100,7 @@ export function SummaryScreen({ selections, onReset }: Props) {
             marginBottom: 24,
           }}
         >
-          {STEPS.map((step, i) => {
+          {PICKER_STEPS.map((step, i) => {
             const val = selections[step.id]
             return (
               <div key={step.id} style={{
@@ -109,7 +109,7 @@ export function SummaryScreen({ selections, onReset }: Props) {
                 justifyContent:'space-between',
                 padding:       '14px 16px',
                 background:    i % 2 === 0 ? '#FFFFFF' : '#F7F4EF',
-                borderBottom:  i < STEPS.length - 1 ? '1px solid #EAE6DF' : 'none',
+                borderBottom:  i < PICKER_STEPS.length - 1 ? '1px solid #EAE6DF' : 'none',
               }}>
                 <span style={{
                   fontFamily: 'var(--font-inter, sans-serif)',

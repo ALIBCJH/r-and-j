@@ -8,10 +8,11 @@ interface Props {
   isLast:      boolean
   onNext:      () => void
   onSkip:      () => void
+  nextLabel?:  string
 }
 
-export function StepFooter({ canContinue, skippable, isLast, onNext, onSkip }: Props) {
-  const label = isLast ? 'See my selection' : 'Continue'
+export function StepFooter({ canContinue, skippable, isLast, onNext, onSkip, nextLabel }: Props) {
+  const label = nextLabel ?? (isLast ? 'See my selection' : 'Continue')
 
   return (
     <div style={{

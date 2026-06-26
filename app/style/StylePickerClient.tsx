@@ -1,9 +1,8 @@
 'use client'
 
-import { useIsMobile }     from '@/app/components/style-picker/hooks/useIsMobile'
-import { WizardProvider }  from '@/app/components/style-picker/wizard/WizardProvider'
-import { WizardShell }     from '@/app/components/style-picker/wizard/WizardShell'
-import type { Selections } from '@/app/components/style-picker/config/types'
+import { useIsMobile }    from '@/app/components/style-picker/hooks/useIsMobile'
+import { WizardProvider } from '@/app/components/style-picker/wizard/WizardProvider'
+import { WizardShell }    from '@/app/components/style-picker/wizard/WizardShell'
 
 const SAGE = '#4A5C44'
 
@@ -83,12 +82,6 @@ function DesktopFallback() {
   )
 }
 
-function handleComplete(selections: Selections) {
-  // COMPLETION SEAM — for now the WizardShell handles showing SummaryScreen.
-  // Phase 2: call your payment / WhatsApp API here before the summary renders.
-  void selections
-}
-
 export default function StylePickerClient() {
   const isMobile = useIsMobile()
 
@@ -100,7 +93,7 @@ export default function StylePickerClient() {
 
   return (
     <WizardProvider>
-      <WizardShell onComplete={handleComplete} />
+      <WizardShell />
     </WizardProvider>
   )
 }

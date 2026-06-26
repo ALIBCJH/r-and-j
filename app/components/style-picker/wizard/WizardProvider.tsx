@@ -1,24 +1,33 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, useCallback, type Dispatch } from 'react'
-import { INITIAL_SELECTIONS, type Selections } from '../config/types'
-import { STEPS } from '../config/steps.config'
+import {
+  createContext, useContext, useReducer, useEffect, useCallback,
+  type Dispatch,
+} from 'react'
+import { INITIAL_SELECTIONS, type Selections, type WizardPhase } from '../config/types'
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
 interface WizardState {
-  selections: Selections
-  stepIndex:  number        // 0-based index into STEPS
-  completed:  boolean
+  phase:          WizardPhase
+  stepIndex:      number          // index within PICKER_STEPS
+  selections:     Selections
+  paymentPending: boolean
+  paymentError:   string | null
 }
 
 type Action =
-  | { type: 'SET';      key: keyof Selections; value: Selections[keyof Selections] }
-  | { type: 'RESTORE';  payload: Partial<Omit<Selections, 'photo'>> }
-  | { type: 'RESET' }
+  | { type: 'SET';             key: keyof Selections; value: Selections[keyof Selections] }
+  | { type: 'RESTORE';         payload: Partial<Omit<Selections, 'photo'>> }
   | { type: 'NEXT' }
   | { type: 'BACK' }
+  | { type: 'GO_TO_GATE' }
+  | { type: 'GO_TO_BOOKING' }
+  | { type: 'PAYMENT_START' }
+  | { type: 'PAYMENT_SUCCESS'; ref: string }
+  | { type: 'PAYMENT_ERROR';   message: string }
   | { type: 'COMPLETE' }
+  | { type: 'RESET' }
 
 function reducer(state: WizardState, action: Action): WizardState {
   switch (action.type) {
@@ -27,21 +36,34 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'RESTORE':
       return { ...state, selections: { ...state.selections, ...action.payload } }
     case 'NEXT':
-      if (state.stepIndex >= STEPS.length - 1) return state
       return { ...state, stepIndex: state.stepIndex + 1 }
     case 'BACK':
-      if (state.stepIndex <= 0) return state
-      return { ...state, stepIndex: state.stepIndex - 1 }
+      return { ...state, stepIndex: Math.max(0, state.stepIndex - 1) }
+    case 'GO_TO_GATE':
+      return { ...state, phase: 'gate', paymentError: null }
+    case 'GO_TO_BOOKING':
+      return { ...state, phase: 'booking' }
+    case 'PAYMENT_START':
+      return { ...state, paymentPending: true, paymentError: null }
+    case 'PAYMENT_SUCCESS':
+      return {
+        ...state,
+        paymentPending: false,
+        phase:          'booking',
+        selections:     { ...state.selections, paymentRef: action.ref },
+      }
+    case 'PAYMENT_ERROR':
+      return { ...state, paymentPending: false, paymentError: action.message }
     case 'COMPLETE':
-      return { ...state, completed: true }
+      return { ...state, phase: 'confirmed' }
     case 'RESET':
-      return { selections: INITIAL_SELECTIONS, stepIndex: 0, completed: false }
+      return { selections: INITIAL_SELECTIONS, phase: 'picking', stepIndex: 0, paymentPending: false, paymentError: null }
     default:
       return state
   }
 }
 
-const STORAGE_KEY = 'rj-wizard-v1'
+const STORAGE_KEY = 'rj-wizard-v2'
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -55,12 +77,13 @@ const WizardContext = createContext<WizardContextValue | null>(null)
 
 export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
-    selections: INITIAL_SELECTIONS,
-    stepIndex:  0,
-    completed:  false,
+    selections:     INITIAL_SELECTIONS,
+    phase:          'picking',
+    stepIndex:      0,
+    paymentPending: false,
+    paymentError:   null,
   })
 
-  // Restore text selections from sessionStorage on mount
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY)
@@ -68,15 +91,14 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
         const saved = JSON.parse(raw) as Partial<Omit<Selections, 'photo'>>
         dispatch({ type: 'RESTORE', payload: saved })
       }
-    } catch { /* ignore parse errors */ }
+    } catch { /* ignore */ }
   }, [])
 
-  // Persist text selections on every change (photo is a File — not serializable)
   useEffect(() => {
     try {
       const { photo: _photo, ...rest } = state.selections
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(rest))
-    } catch { /* ignore quota errors */ }
+    } catch { /* ignore */ }
   }, [state.selections])
 
   const set = useCallback(
