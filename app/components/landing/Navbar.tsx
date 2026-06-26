@@ -15,6 +15,11 @@ const LINKS = [
   { label: 'Contact',    href: '/contact' },
 ]
 
+// Only shown in the mobile overlay menu
+const MOBILE_ONLY_LINKS = [
+  { label: 'Style Picker', href: '/style' },
+]
+
 export default function LandingNavbar() {
   const [scrolled,    setScrolled]    = useState(false)
   const [menuOpen,    setMenuOpen]    = useState(false)
@@ -163,14 +168,30 @@ export default function LandingNavbar() {
               })}
             </nav>
 
-            <Link
-              href="/contact"
-              onClick={() => setMenuOpen(false)}
-              className="mt-auto py-4 text-center font-semibold rounded-sm"
-              style={{ background: 'var(--rj-gold-gradient)', color: '#0A0F1C', fontSize: '16px' }}
-            >
-              Book a Consultation
-            </Link>
+            <div className="mt-auto flex flex-col gap-3">
+              <Link
+                href="/style"
+                onClick={() => setMenuOpen(false)}
+                className="py-4 text-center font-semibold rounded-sm"
+                style={{
+                  background:  'rgba(74,92,68,0.15)',
+                  border:      '1.5px solid rgba(74,92,68,0.5)',
+                  color:       '#8FBF84',
+                  fontSize:    '14px',
+                  letterSpacing: '0.1em',
+                }}
+              >
+                ✦ Style Picker — Mobile
+              </Link>
+              <Link
+                href="/contact"
+                onClick={() => setMenuOpen(false)}
+                className="py-4 text-center font-semibold rounded-sm"
+                style={{ background: 'var(--rj-gold-gradient)', color: '#0A0F1C', fontSize: '16px' }}
+              >
+                Book a Consultation
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
