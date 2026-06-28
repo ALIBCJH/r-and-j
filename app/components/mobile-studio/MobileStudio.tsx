@@ -640,6 +640,42 @@ export default function MobileStudio() {
           </motion.div>
         )}
 
+        {/* ══ WHY IT WORKS — feature strip (select phase only) ════════════════ */}
+        {phase === 'select' && (
+          <div style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid rgba(201,168,76,0.08)`, padding: '28px 20px 32px' }}>
+            <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, letterSpacing: '0.26em', textTransform: 'uppercase', color: C.gold, margin: '0 0 22px' }}>
+              What you get
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {[
+                {
+                  icon: '✦',
+                  title: 'Every fabric. Real feel.',
+                  body:  'Sheer linen that whispers light. Heavy velvet that commands a room. Each colour swatch you see is matched to a real fabric in our collection — not a guess.',
+                },
+                {
+                  icon: '◈',
+                  title: 'Your room. Before you pay for it.',
+                  body:  'Once you unlock the preview, you see your chosen curtain in an actual room — not a showroom, not a mood board. Something you can picture hanging in your home.',
+                },
+                {
+                  icon: '◇',
+                  title: 'Order with certainty.',
+                  body:  'No more hoping the swatch matches. What you confirm with us is what we make. Zero surprises. Same-day quote. Delivered and installed.',
+                },
+              ].map(f => (
+                <div key={f.title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 14, color: C.gold, flexShrink: 0, marginTop: 2, fontFamily: 'var(--font-playfair,Georgia,serif)' }}>{f.icon}</span>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 5px', letterSpacing: '0.01em' }}>{f.title}</p>
+                    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.muted, lineHeight: 1.75, margin: 0 }}>{f.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ══ REVEALED content ════════════════════════════════════════════════ */}
         {phase === 'revealed' && (
           <motion.div {...fadeUp} style={{ padding: '22px 20px' }}>
