@@ -5,8 +5,8 @@ import { motion } from 'framer-motion'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-const SIMON_TAGS = ['Creative Technology', 'VR Experience Design', '3D Visualization', 'Attention to Detail']
-const ROSE_TAGS  = ['Fashion & Fabric Design', 'Client Experience', 'Color & Texture Curation', 'Design Alchemy']
+const SIMON_TAGS = ['Digital Product Design', 'Systems Architecture', 'User Experience', 'Attention to Detail']
+const ROSE_TAGS  = ['Fashion & Fabric Design', 'Material Expertise', 'Colour & Texture', 'Design Instinct']
 
 function GoldLine({ width = 48 }: { width?: number }) {
   return (
@@ -210,9 +210,11 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
                 color:      '#A8B2BE',
                 lineHeight: 1.8,
               }}>
-                Juma builds the world you see. From immersive VR environments to
-                real-time fabric rendering, he engineered every layer of the R&amp;J
-                experience — obsessing over what&apos;s visible and what holds it together.
+                Juma builds the world you see. From the feel of the app in your hand
+                to the tool that shows your curtains in your actual room before you
+                spend a shilling — he engineered every layer of the R&amp;J experience,
+                obsessing over the details that make the difference between something
+                that works and something that genuinely delights.
               </p>
               <p style={{
                 fontFamily: 'var(--font-playfair, Georgia, serif)',
@@ -289,7 +291,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
                 letterSpacing: '3px',
                 textTransform: 'uppercase',
               }}>
-                The Curator
+                Co-Founder
               </span>
             </div>
 
@@ -314,7 +316,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               letterSpacing: '1px',
               marginBottom:  0,
             }}>
-              Fashion &amp; Interior Designer
+              Co-Founder · Fashion &amp; Design
             </p>
 
             {/* Tagline */}
@@ -326,7 +328,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
               textAlign:    'center',
               marginTop:    '8px',
             }}>
-              Where intuition becomes elegance
+              Where instinct becomes your home
             </p>
 
             {/* Divider */}
@@ -342,10 +344,13 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
                 color:      '#A8B2BE',
                 lineHeight: 1.8,
               }}>
-                Rose walks into a room and sees what it could be. Her fashion
-                background gave her a rare fluency in fabric — how it moves, how it
-                catches light, how the right textile transforms a space entirely.
-                At R&amp;J she is the instinct behind every curation decision.
+                Rose came to curtains through fashion. She spent years learning how
+                fabric lives — how silk catches morning light differently from linen,
+                how weight and weave change the entire feeling of a room, how a single
+                material choice can make a space feel either restless or at peace.
+                That trained eye is the soul of R&amp;J. When a client describes a
+                feeling they want in their home, Rose is the one who knows exactly
+                which fabric delivers it.
               </p>
               <p style={{
                 fontFamily: 'var(--font-playfair, Georgia, serif)',
@@ -354,7 +359,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
                 fontStyle:  'italic',
                 lineHeight: 1.7,
               }}>
-                Her taste is not learned. It is felt.
+                The right fabric does not just cover a window. It changes the whole room.
               </p>
             </div>
 
