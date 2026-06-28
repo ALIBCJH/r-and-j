@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence }      from 'framer-motion'
 import Image                            from 'next/image'
 import { COLOURS }                      from '../config/colors'
+import { API_URL }                      from '@/app/lib/api'
+import { drawScene }                    from '@/app/components/mobile-studio/curtainRenderer'
 
 interface Props {
   photo:      File | null
@@ -15,16 +17,8 @@ interface Props {
   error:      string | null
 }
 
-// ── PAYMENT SLOT ──────────────────────────────────────────────────────────────
-// Replace this function body with a real POST to /api/mpesa/stk-push.
-// Expected request:  { phone: string, amount: number, accountRef: string }
-// Expected response: { success: boolean, checkoutRequestId: string }
-// On success dispatch PAYMENT_SUCCESS with the checkoutRequestId as ref.
-async function initiatePayment(phone: string): Promise<{ success: boolean; ref: string }> {
-  await new Promise(r => setTimeout(r, 2800))
-  if (phone === '0700000000') return { success: false, ref: '' }  // test error case
-  return { success: true, ref: `RJ-${Date.now()}` }
-}
+const POLL_INTERVAL_MS = 3000
+const POLL_MAX_ATTEMPTS = 40   // 40 × 3s = 2 minutes
 
 function formatKenyanPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '')
@@ -41,9 +35,11 @@ function isValidPhone(raw: string): boolean {
 const SAGE = '#4A5C44'
 
 export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, pending, error }: Props) {
-  const [phone,        setPhone]        = useState('')
-  const [photoUrl,     setPhotoUrl]     = useState<string | null>(null)
-  const [canRetry,     setCanRetry]     = useState(false)
+  const [phone,          setPhone]          = useState('')
+  const [photoUrl,       setPhotoUrl]       = useState<string | null>(null)
+  const [renderedDataUrl,setRenderedDataUrl] = useState<string | null>(null)
+  const [canRetry,       setCanRetry]       = useState(false)
+  const [checkoutId,     setCheckoutId]     = useState<string | null>(null)
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const colour     = COLOURS.find(c => c.id === colorId)
@@ -58,25 +54,79 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
     return () => URL.revokeObjectURL(url)
   }, [photo])
 
+  // Render the actual curtain onto the photo so the blurred preview is real
+  useEffect(() => {
+    if (!photo || !colourHex) { setRenderedDataUrl(null); return }
+    const objectUrl = URL.createObjectURL(photo)
+    const img = document.createElement('img')
+    img.onload = () => {
+      const maxW    = 640
+      const scale   = Math.min(1, maxW / img.naturalWidth)
+      const canvas  = document.createElement('canvas')
+      canvas.width  = Math.round(img.naturalWidth  * scale)
+      canvas.height = Math.round(img.naturalHeight * scale)
+      drawScene(canvas, img, colourHex)
+      setRenderedDataUrl(canvas.toDataURL('image/jpeg', 0.85))
+      URL.revokeObjectURL(objectUrl)
+    }
+    img.onerror = () => URL.revokeObjectURL(objectUrl)
+    img.src = objectUrl
+  }, [photo, colourHex])
+
   useEffect(() => {
     if (!pending) { setCanRetry(false); return }
     retryTimer.current = setTimeout(() => setCanRetry(true), 15000)
     return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
   }, [pending])
 
+  // Poll the backend every 3s until payment is confirmed or fails
+  useEffect(() => {
+    if (!checkoutId || !pending) return
+    let attempts = 0
+
+    const interval = setInterval(async () => {
+      attempts++
+      if (attempts > POLL_MAX_ATTEMPTS) {
+        clearInterval(interval)
+        setCheckoutId(null)
+        onPayError('Payment timed out. Please try again.')
+        return
+      }
+      try {
+        const res  = await fetch(`${API_URL}/mpesa/status/${checkoutId}`)
+        const data = await res.json()
+        if (data.status === 'complete') {
+          clearInterval(interval)
+          setCheckoutId(null)
+          onSuccess(data.ref)
+        } else if (data.status === 'failed') {
+          clearInterval(interval)
+          setCheckoutId(null)
+          onPayError('Payment declined. Please check your M-Pesa balance and try again.')
+        }
+      } catch {
+        // network hiccup — keep polling
+      }
+    }, POLL_INTERVAL_MS)
+
+    return () => clearInterval(interval)
+  }, [checkoutId, pending, onSuccess, onPayError])
+
   async function handlePay() {
     if (!valid || pending) return
     onPayStart()
     const formatted = formatKenyanPhone(phone)
     try {
-      const result = await initiatePayment(formatted)
-      if (result.success) {
-        onSuccess(result.ref)
-      } else {
-        onPayError('Payment failed. Please check your M-Pesa balance and try again.')
-      }
+      const res = await fetch(`${API_URL}/mpesa/stk-push`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ phone: formatted }),
+      })
+      if (!res.ok) throw new Error('STK push failed')
+      const { checkout_request_id } = await res.json()
+      setCheckoutId(checkout_request_id)
     } catch {
-      onPayError('Something went wrong. Please try again.')
+      onPayError('Could not reach payment service. Please try again.')
     }
   }
 
@@ -92,14 +142,21 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
       {/* ── Blurred curtain preview (top 55%) ── */}
       <div style={{ flex: '0 0 55%', position: 'relative', overflow: 'hidden' }}>
 
-        {/* Blurred photo / fallback */}
+        {/* Blurred curtain render — actual drawScene output, not fake color panels */}
         <div style={{
           position:  'absolute',
           inset:     0,
-          filter:    'blur(10px) brightness(0.7)',
+          filter:    'blur(10px) brightness(0.65)',
           transform: 'scale(1.12)',
         }}>
-          {photoUrl ? (
+          {renderedDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={renderedDataUrl}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={photoUrl}
@@ -115,16 +172,6 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
               style={{ objectFit: 'cover' }}
             />
           )}
-
-          {/* Curtain colour panels — left and right thirds */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, bottom: 0, width: '32%',
-            background: colourHex, opacity: 0.62,
-          }} />
-          <div style={{
-            position: 'absolute', top: 0, right: 0, bottom: 0, width: '32%',
-            background: colourHex, opacity: 0.62,
-          }} />
         </div>
 
         {/* Lock overlay */}
@@ -286,7 +333,7 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
                 <motion.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  onClick={() => { setCanRetry(false); handlePay() }}
+                  onClick={() => { setCanRetry(false); setCheckoutId(null); handlePay() }}
                   style={{
                     background:  'transparent',
                     border:      'none',

@@ -21,10 +21,25 @@ import {
   type Recommendation,
 } from '@/app/lib/colorEngine'
 import { drawScene, initOffscreen } from './curtainRenderer'
+import { API_URL } from '@/app/lib/api'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Phase = 'idle' | 'loaded' | 'rendered'
+type Phase = 'idle' | 'loaded' | 'form' | 'gate' | 'rendered'
+
+type RoomType    = 'living' | 'bedroom' | 'dining' | 'kitchen' | 'office'
+type WindowSize  = 'small' | 'medium' | 'large'
+type LightPref   = 'airy' | 'filtered' | 'blackout'
+type DecorStyle  = 'modern' | 'classic' | 'bold'
+type ColourPref  = 'any' | 'warm' | 'cool' | 'neutral' | 'rich'
+
+interface RoomDetails {
+  roomType:   RoomType
+  windowSize: WindowSize
+  lightPref:  LightPref
+  decorStyle: DecorStyle
+  colourPref: ColourPref
+}
 
 interface WallSample {
   r: number; g: number; b: number
@@ -56,6 +71,43 @@ function GoldRule() {
   return <div style={{ width: '100%', height: '1px', background: `linear-gradient(to right, transparent, ${C.gold}, transparent)` }} />
 }
 
+// ─── Form helper atoms ────────────────────────────────────────────────────────
+
+function FormSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, margin: 0 }}>
+        {label}
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Chip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding:      '7px 12px',
+        borderRadius: 6,
+        border:       active ? `1.5px solid ${C.gold}` : '1.5px solid rgba(255,255,255,0.12)',
+        background:   active ? 'rgba(201,168,76,0.14)' : 'rgba(255,255,255,0.04)',
+        color:        active ? C.goldLight : 'rgba(255,255,255,0.55)',
+        fontFamily:   'var(--font-inter, sans-serif)',
+        fontSize:     12,
+        cursor:       'pointer',
+        transition:   'all 0.15s',
+        whiteSpace:   'nowrap',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -73,7 +125,23 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
   const [selectedRec,  setSelectedRec]  = useState<Recommendation | null>(null)
   const [tapMarker,    setTapMarker]    = useState<TapMarker | null>(null)
   const [samplingHint, setSamplingHint] = useState(false)
-  const [sliderPct,    setSliderPct]    = useState(50)  // before/after slider 0-100%
+  const [sliderPct,    setSliderPct]    = useState(50)
+
+  // Room details form
+  const [roomType,   setRoomType]   = useState<RoomType | null>(null)
+  const [windowSize, setWindowSize] = useState<WindowSize | null>(null)
+  const [lightPref,  setLightPref]  = useState<LightPref | null>(null)
+  const [decorStyle, setDecorStyle] = useState<DecorStyle | null>(null)
+  const [colourPref, setColourPref] = useState<ColourPref>('any')
+
+  // Payment gate
+  const [selectedPrice,  setSelectedPrice]  = useState<100 | 300>(100)
+  const [gatePhone,      setGatePhone]      = useState('')
+  const [gatePending,    setGatePending]    = useState(false)
+  const [gateError,      setGateError]      = useState<string | null>(null)
+  const [gateCheckoutId, setGateCheckoutId] = useState<string | null>(null)
+  const [gateCanRetry,   setGateCanRetry]   = useState(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Refs ────────────────────────────────────────────────────────────────────
   const fileInputRef    = useRef<HTMLInputElement>(null)
@@ -206,19 +274,60 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
 
     const newRecs = getRecommendations(r, g, b)
     setRecs(newRecs)
+    setSelectedRec(newRecs[0])
 
-    // Auto-select the first (safest) recommendation
-    const first = newRecs[0]
-    setSelectedRec(first)
-    setPhase('rendered')
+    // Go to form — curtain renders only after user submits room details
+    setPhase('form')
+  }, [phase])
 
-    // Redraw canvas with the first recommendation's curtain colour
+  // ── Room-details form submit ────────────────────────────────────────────────
+  const formComplete = !!(roomType && windowSize && lightPref && decorStyle)
+
+  function hexLightness(hex: string): number {
+    const n = parseInt(hex.replace('#', ''), 16)
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255
+    return (Math.max(r, g, b) + Math.min(r, g, b)) / 510  // 0–1
+  }
+  function hexHue(hex: string): number {
+    const n = parseInt(hex.replace('#', ''), 16)
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255
+    const [h] = rgbToHsl(r, g, b)
+    return h  // 0–360
+  }
+
+  function selectByPreferences(all: Recommendation[]): Recommendation {
+    if (all.length === 0) return all[0]
+    const scored = all.map(rec => {
+      let s = 0
+      const l = hexLightness(rec.hex)
+      const h = hexHue(rec.hex)
+      if (lightPref === 'airy'     && l > 0.55) s += 3
+      if (lightPref === 'filtered' && l >= 0.35 && l <= 0.65) s += 3
+      if (lightPref === 'blackout' && l < 0.45) s += 3
+      if (colourPref === 'warm'    && (h < 60 || h > 300)) s += 2
+      if (colourPref === 'cool'    && h > 160 && h < 280) s += 2
+      if (colourPref === 'neutral' && l > 0.3 && l < 0.75) s += 2
+      if (colourPref === 'rich'    && rec.isBold) s += 2
+      if (decorStyle === 'bold'    && rec.isBold) s += 1
+      if (decorStyle === 'modern'  && !rec.isBold && l > 0.4) s += 1
+      if (decorStyle === 'classic' && (h > 20 && h < 55)) s += 1  // warm earthy tones
+      return { rec, s }
+    })
+    scored.sort((a, b) => b.s - a.s)
+    return scored[0].rec
+  }
+
+  const handleFormSubmit = () => {
+    if (!formComplete || !recs || !canvasRef.current || !imgRef.current) return
+    const best = selectByPreferences(recs)
+    setSelectedRec(best)
     requestAnimationFrame(() => {
       if (canvasRef.current && imgRef.current) {
-        drawScene(canvasRef.current, imgRef.current, first.hex)
+        drawScene(canvasRef.current, imgRef.current, best.hex)
+        setPhase('gate')
       }
     })
-  }, [phase])
+  }
 
   // ── Before/after slider drag ─────────────────────────────────────────────────
   const handleSliderDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -259,6 +368,71 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
     })
   }, [])
 
+  // ── Payment gate helpers ─────────────────────────────────────────────────────
+  function formatPhone(raw: string) {
+    const d = raw.replace(/\D/g, '')
+    if (d.startsWith('254')) return `+${d}`
+    if (d.startsWith('0'))   return `+254${d.slice(1)}`
+    return `+254${d}`
+  }
+  const gatePhoneValid = gatePhone.replace(/\D/g, '').length >= 9
+
+  useEffect(() => {
+    if (!gatePending) { setGateCanRetry(false); return }
+    retryTimer.current = setTimeout(() => setGateCanRetry(true), 15000)
+    return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
+  }, [gatePending])
+
+  useEffect(() => {
+    if (!gateCheckoutId || !gatePending) return
+    let attempts = 0
+    const interval = setInterval(async () => {
+      attempts++
+      if (attempts > 40) {
+        clearInterval(interval)
+        setGateCheckoutId(null)
+        setGatePending(false)
+        setGateError('Payment timed out. Please try again.')
+        return
+      }
+      try {
+        const res  = await fetch(`${API_URL}/mpesa/status/${gateCheckoutId}`)
+        const data = await res.json()
+        if (data.status === 'complete') {
+          clearInterval(interval)
+          setGateCheckoutId(null)
+          setGatePending(false)
+          setPhase('rendered')
+        } else if (data.status === 'failed') {
+          clearInterval(interval)
+          setGateCheckoutId(null)
+          setGatePending(false)
+          setGateError('Payment declined. Please check your M-Pesa balance and try again.')
+        }
+      } catch { /* keep polling */ }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [gateCheckoutId, gatePending])
+
+  async function handleGatePay() {
+    if (!gatePhoneValid || gatePending) return
+    setGatePending(true)
+    setGateError(null)
+    try {
+      const res = await fetch(`${API_URL}/mpesa/stk-push`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ phone: formatPhone(gatePhone), amount: selectedPrice }),
+      })
+      if (!res.ok) throw new Error()
+      const { checkout_request_id } = await res.json()
+      setGateCheckoutId(checkout_request_id)
+    } catch {
+      setGatePending(false)
+      setGateError('Could not reach payment service. Please try again.')
+    }
+  }
+
   // ── Reset ────────────────────────────────────────────────────────────────────
   const reset = () => {
     setPhase('idle')
@@ -269,6 +443,16 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
     setTapMarker(null)
     setSamplingHint(false)
     setSliderPct(50)
+    setRoomType(null)
+    setWindowSize(null)
+    setLightPref(null)
+    setDecorStyle(null)
+    setColourPref('any')
+    setSelectedPrice(100)
+    setGatePhone('')
+    setGatePending(false)
+    setGateError(null)
+    setGateCheckoutId(null)
     imgRef.current = null
     if (photoUrl) URL.revokeObjectURL(photoUrl)
   }
@@ -463,13 +647,254 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
               onClick={handleCanvasTap}
               onTouchEnd={handleCanvasTap}
               style={{
-                display:  'block',
-                width:    '100%',
-                cursor:   phase === 'loaded' ? 'crosshair' : 'default',
-                touchAction: 'none',
+                display:    'block',
+                width:      '100%',
+                cursor:     phase === 'loaded' ? 'crosshair' : 'default',
+                pointerEvents: phase === 'form' || phase === 'gate' ? 'none' : 'auto',
+                touchAction:'none',
+                filter:     phase === 'gate' ? 'blur(8px) brightness(0.55)' : phase === 'form' ? 'brightness(0.45)' : 'none',
+                transition: 'filter 0.3s ease',
               }}
               aria-label={phase === 'loaded' ? 'Tap your wall to sample its colour' : 'Room with curtains overlaid'}
             />
+
+            {/* Room details form overlay */}
+            {phase === 'form' && (
+              <div style={{
+                position:      'absolute',
+                inset:         0,
+                overflowY:     'auto',
+                background:    'rgba(10,12,16,0.88)',
+                backdropFilter:'blur(2px)',
+                padding:       '20px 20px 28px',
+                display:       'flex',
+                flexDirection: 'column',
+                gap:           16,
+              }}>
+                <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 17, color: '#F0EBE0', margin: 0 }}>
+                  Tell us about your room
+                </p>
+                <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: 0, marginTop: -10 }}>
+                  We&apos;ll use this to match the right curtain for your space.
+                </p>
+
+                {/* Room type */}
+                <FormSection label="Room type">
+                  {([
+                    ['living',  'Living Room'],
+                    ['bedroom', 'Bedroom'],
+                    ['dining',  'Dining Room'],
+                    ['kitchen', 'Kitchen'],
+                    ['office',  'Office'],
+                  ] as [RoomType, string][]).map(([v, label]) => (
+                    <Chip key={v} label={label} active={roomType === v} onClick={() => setRoomType(v)} />
+                  ))}
+                </FormSection>
+
+                {/* Window size */}
+                <FormSection label="Window size">
+                  {([
+                    ['small',  'Small  < 1 m'],
+                    ['medium', 'Medium 1–2 m'],
+                    ['large',  'Large  > 2 m'],
+                  ] as [WindowSize, string][]).map(([v, label]) => (
+                    <Chip key={v} label={label} active={windowSize === v} onClick={() => setWindowSize(v)} />
+                  ))}
+                </FormSection>
+
+                {/* Light preference */}
+                <FormSection label="How much light do you want?">
+                  {([
+                    ['airy',     'Open & airy'],
+                    ['filtered', 'Some filtering'],
+                    ['blackout', 'Full blackout'],
+                  ] as [LightPref, string][]).map(([v, label]) => (
+                    <Chip key={v} label={label} active={lightPref === v} onClick={() => setLightPref(v)} />
+                  ))}
+                </FormSection>
+
+                {/* Decor style */}
+                <FormSection label="Decor style">
+                  {([
+                    ['modern',  'Modern / Minimal'],
+                    ['classic', 'Classic / Warm'],
+                    ['bold',    'Bold / Statement'],
+                  ] as [DecorStyle, string][]).map(([v, label]) => (
+                    <Chip key={v} label={label} active={decorStyle === v} onClick={() => setDecorStyle(v)} />
+                  ))}
+                </FormSection>
+
+                {/* Colour preference */}
+                <FormSection label="Colour preference (optional)">
+                  {([
+                    ['any',     'No preference'],
+                    ['warm',    'Warm tones'],
+                    ['cool',    'Cool tones'],
+                    ['neutral', 'Neutral / Earthy'],
+                    ['rich',    'Bold & rich'],
+                  ] as [ColourPref, string][]).map(([v, label]) => (
+                    <Chip key={v} label={label} active={colourPref === v} onClick={() => setColourPref(v)} />
+                  ))}
+                </FormSection>
+
+                <button
+                  onClick={handleFormSubmit}
+                  disabled={!formComplete}
+                  style={{
+                    marginTop:  4,
+                    padding:    '14px',
+                    borderRadius: 8,
+                    border:     'none',
+                    background: formComplete
+                      ? `linear-gradient(135deg, ${C.goldLight}, ${C.gold})`
+                      : 'rgba(255,255,255,0.1)',
+                    color:      formComplete ? '#0A0F1C' : 'rgba(255,255,255,0.3)',
+                    fontFamily: 'var(--font-inter, sans-serif)',
+                    fontSize:   13,
+                    fontWeight: 700,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    cursor:     formComplete ? 'pointer' : 'default',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  Generate My Preview
+                </button>
+              </div>
+            )}
+
+            {/* Payment gate overlay */}
+            {phase === 'gate' && (
+              <div style={{
+                position:       'absolute',
+                inset:          0,
+                display:        'flex',
+                flexDirection:  'column',
+                alignItems:     'center',
+                justifyContent: 'center',
+                gap:            12,
+                padding:        '0 24px',
+                background:     'rgba(10,14,20,0.45)',
+              }}>
+                {/* Lock icon */}
+                <div style={{
+                  width:          52,
+                  height:         52,
+                  borderRadius:   '50%',
+                  background:     'rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(8px)',
+                  border:         '1.5px solid rgba(255,255,255,0.2)',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="white" strokeWidth="2" strokeLinecap="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+
+                <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 20, color: '#FFFFFF', margin: 0, textAlign: 'center', lineHeight: 1.2 }}>
+                  Your room is ready.
+                </p>
+                <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'center' }}>
+                  Choose a plan to unlock your preview
+                </p>
+
+                {/* Price picker */}
+                <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 280 }}>
+                  {([100, 300] as const).map(price => {
+                    const active = selectedPrice === price
+                    return (
+                      <button
+                        key={price}
+                        onClick={() => setSelectedPrice(price)}
+                        style={{
+                          flex:          1,
+                          padding:       '10px 8px',
+                          borderRadius:  10,
+                          border:        active ? `2px solid ${C.gold}` : '1.5px solid rgba(255,255,255,0.15)',
+                          background:    active ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.05)',
+                          cursor:        'pointer',
+                          textAlign:     'center',
+                          transition:    'all 0.15s',
+                        }}
+                      >
+                        <div style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 18, color: active ? C.goldLight : '#FFFFFF', marginBottom: 3 }}>
+                          KES {price}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 10, color: active ? 'rgba(232,200,122,0.75)' : 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
+                          {price === 100 ? 'Preview\n+ Fabric match' : 'Preview\n+ Full quote'}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Phone input */}
+                {!gatePending ? (
+                  <div style={{ width: '100%', maxWidth: 280, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', borderRadius: 10, border: '1.5px solid rgba(255,255,255,0.2)', overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+                      <div style={{ padding: '0 12px', borderRight: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>🇰🇪 +254</span>
+                      </div>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="7XX XXX XXX"
+                        value={gatePhone}
+                        onChange={e => setGatePhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        style={{ flex: 1, padding: '12px', border: 'none', outline: 'none', background: 'transparent', color: '#FFFFFF', fontSize: 15, fontFamily: 'var(--font-inter, sans-serif)' }}
+                      />
+                    </div>
+
+                    {gateError && (
+                      <p style={{ margin: 0, fontSize: 12, color: '#F87171', fontFamily: 'var(--font-inter, sans-serif)', textAlign: 'center' }}>
+                        {gateError}
+                      </p>
+                    )}
+
+                    <button
+                      onClick={handleGatePay}
+                      disabled={!gatePhoneValid}
+                      style={{
+                        padding:       '13px',
+                        borderRadius:  10,
+                        border:        'none',
+                        background:    gatePhoneValid ? 'linear-gradient(135deg,#007A39,#00A84F)' : 'rgba(255,255,255,0.12)',
+                        color:         gatePhoneValid ? '#FFFFFF' : 'rgba(255,255,255,0.35)',
+                        fontFamily:    'var(--font-inter, sans-serif)',
+                        fontSize:      15,
+                        fontWeight:    700,
+                        cursor:        gatePhoneValid ? 'pointer' : 'default',
+                      }}
+                    >
+                      Pay KES {selectedPrice} with M-Pesa
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                      style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.2)', borderTop: '3px solid #FFFFFF' }}
+                    />
+                    <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
+                      Check your phone for the M-Pesa prompt…
+                    </p>
+                    {gateCanRetry && (
+                      <button
+                        onClick={() => { setGateCanRetry(false); setGateCheckoutId(null); setGatePending(false); handleGatePay() }}
+                        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-inter, sans-serif)' }}
+                      >
+                        Didn&apos;t get the prompt? Try again
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Tap marker — shows where user sampled */}
             {tapMarker && (
@@ -523,7 +948,7 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
               )}
             </AnimatePresence>
 
-            {/* ── Before / After comparison slider (rendered phase only) ── */}
+            {/* ── Before / After comparison slider (revealed phase only) ── */}
             {phase === 'rendered' && photoUrl && (
               <>
                 {/* "Before" overlay — original photo, clipped to left of slider */}
