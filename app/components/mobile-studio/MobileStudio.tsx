@@ -262,7 +262,7 @@ export default function MobileStudio() {
             Studio
           </span>
         </div>
-        <a href="/style" style={{
+        <a href="/contact" style={{
           fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase',
           color: C.gold, background: 'rgba(201,168,76,0.08)', border: `1px solid rgba(201,168,76,0.25)`,
           borderRadius: 999, padding: '5px 12px', textDecoration: 'none',
@@ -623,7 +623,7 @@ export default function MobileStudio() {
 
             {/* CTA */}
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <a href={`/style?fabric=${encodeURIComponent(swatch.name)}&color=${encodeURIComponent(swatch.hex)}`}
+              <a href="/contact"
                 style={{
                   display:        'block',
                   width:          '100%',
