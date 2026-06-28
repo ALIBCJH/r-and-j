@@ -17,7 +17,7 @@ const LINKS = [
 
 // Only shown in the mobile overlay menu
 const MOBILE_ONLY_LINKS = [
-  { label: 'Book a Consultation', href: '/style' },
+  { label: 'Book a Consultation', href: '/contact' },
 ]
 
 export default function LandingNavbar() {

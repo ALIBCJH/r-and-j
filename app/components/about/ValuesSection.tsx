@@ -1,25 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Eye, Layers, Heart } from 'lucide-react'
+import { MessageCircle, Sun, MapPin } from 'lucide-react'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 const VALUES = [
   {
-    icon:        Eye,
-    name:        'Precision',
-    description: 'Every detail matters. From how a fabric catches afternoon light to how a curtain drapes at the floor — we obsess over the details so our clients never have to.',
+    icon:        MessageCircle,
+    name:        'We listen first',
+    description: "We won't push a fabric on you. We'll ask about your room, your family, how you live in your space. The best curtain isn't the most expensive one — it's the one that actually fits your life.",
   },
   {
-    icon:        Layers,
-    name:        'Craft',
-    description: 'We draw from centuries of East African textile tradition. Every fabric in our collection is chosen with the same care a master weaver brings to a single thread.',
+    icon:        Sun,
+    name:        'We make it last',
+    description: 'We choose fabrics that hold their colour, drape, and shape through years of Kenyan sunlight and weather. Because when you spend on something for your home, it should still feel just as right five years later.',
   },
   {
-    icon:        Heart,
-    name:        'Certainty',
-    description: 'No guessing. No regrets. We built the technology to give every client the confidence of seeing their space before they transform it. That certainty is our promise to every client.',
+    icon:        MapPin,
+    name:        'Proudly Nyeri',
+    description: "We're a Nyeri business, and that means something to us. We know Kenyan homes — how the light moves through your windows, how different regions have different seasons. That understanding doesn't come from a catalog.",
   },
 ]
 
@@ -57,7 +57,7 @@ export default function ValuesSection() {
             textTransform: 'uppercase',
             marginBottom:  '20px',
           }}>
-            What Drives Us
+            What we stand for
           </p>
           <h2 style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
@@ -67,7 +67,7 @@ export default function ValuesSection() {
             lineHeight:   1.1,
             marginBottom: 0,
           }}>
-            Three Principles.<br />Every Project.
+            Three things we<br />believe in.
           </h2>
           <GoldLine width={48} />
         </motion.div>

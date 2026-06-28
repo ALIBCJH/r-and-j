@@ -5,10 +5,10 @@ import { motion } from 'framer-motion'
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 const PARAGRAPHS = [
-  'Every year, thousands of Kenyan homeowners make expensive curtain decisions based on a small fabric swatch and their imagination. They guess, commit, and hope. Too often, what arrives looks nothing like what they envisioned.',
-  'R&J Interiors started with a conviction that this was wrong. That a client spending KES 50,000 to KES 300,000 on curtains deserved to see exactly what they were getting — before a single thread was cut.',
-  'So we built the answer. A VR configurator that puts the client inside their redesigned room at full scale. Where they can dial any color, choose any fabric, and walk around their space before making a single decision.',
-  'We are based in Nyeri, Kenya. We serve clients across the country — in their homes, in our studio, or on a call. And we own every step of the process, from the first visualization to the final curtain hung at your window.',
+  "You've probably been there. You fall in love with a fabric swatch at the shop — the colour, the way it catches the light — so you order it. Then it arrives, you hang it, and something is just off. The room doesn't feel right. The money is gone. And you're stuck living with a decision you can't easily undo.",
+  "That moment is exactly why R&J Interiors exists. We were tired of watching good people make expensive guesses. So we built a simple way for you to see your curtains in your actual room, with your actual light, before you commit to anything.",
+  "We are based in Nyeri and we serve families across Kenya — in living rooms, bedrooms, offices, and dining spaces. We understand how Kenyan homes are built, how the afternoon sun moves through your windows, and what fabrics hold up through our seasons.",
+  "Every order is handled by us from start to finish. We pick up the phone. We ask the right questions. We show up. And we don't consider the job done until you look at your windows and feel like your home finally looks the way you always imagined it could.",
 ]
 
 export default function StorySection() {
@@ -52,7 +52,7 @@ export default function StorySection() {
             marginBottom: '40px',
           }}
         >
-          A Question That<br />Became a Company
+          We Were Tired of<br />Watching People Guess
         </motion.h2>
 
         {/* Gold rule */}
