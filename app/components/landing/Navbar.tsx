@@ -8,11 +8,12 @@ import { Menu, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const LINKS = [
-  { label: 'Home',        href: '/' },
-  { label: 'Photo Match', href: '/studio' },
-  { label: 'Catalog',     href: '/catalog' },
-  { label: 'About',       href: '/about' },
-  { label: 'Contact',     href: '/contact' },
+  { label: 'Home',       href: '/'           },
+  { label: 'Experience', href: '/experience' },
+  { label: 'Studio',     href: '/studio'     },
+  { label: 'Catalog',    href: '/catalog'    },
+  { label: 'About',      href: '/about'      },
+  { label: 'Contact',    href: '/contact'    },
 ]
 
 // Only shown in the mobile overlay menu
@@ -200,7 +201,7 @@ export default function LandingNavbar() {
                   textDecoration:'none',
                 }}
               >
-                Photo Match Studio
+                Fabric Studio
               </Link>
               <Link
                 href="/contact"
