@@ -8,16 +8,16 @@ import { Menu, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const LINKS = [
-  { label: 'Home',       href: '/' },
-  { label: 'Experience', href: '/experience' },
-  { label: 'Catalog',    href: '/catalog' },
-  { label: 'About',      href: '/about' },
-  { label: 'Contact',    href: '/contact' },
+  { label: 'Home',        href: '/' },
+  { label: 'Photo Match', href: '/studio' },
+  { label: 'Catalog',     href: '/catalog' },
+  { label: 'About',       href: '/about' },
+  { label: 'Contact',     href: '/contact' },
 ]
 
 // Only shown in the mobile overlay menu
 const MOBILE_ONLY_LINKS = [
-  { label: 'Style Picker', href: '/style' },
+  { label: 'Book a Consultation', href: '/style' },
 ]
 
 export default function LandingNavbar() {

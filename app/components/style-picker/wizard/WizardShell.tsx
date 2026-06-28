@@ -3,6 +3,7 @@
 import { useState }              from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useWizard }              from './WizardProvider'
+import { API_URL }                from '@/app/lib/api'
 import { StepIndicator }          from './StepIndicator'
 import { StepFooter }             from './StepFooter'
 import { PICKER_STEPS }           from '../config/steps.config'
@@ -38,7 +39,9 @@ export function WizardShell() {
   const router = useRouter()
 
   // Booking sub-step (0 = date+time, 1 = contact)
-  const [bookingStep, setBookingStep] = useState(0)
+  const [bookingStep,       setBookingStep]       = useState(0)
+  const [bookingSubmitting, setBookingSubmitting] = useState(false)
+  const [bookingError,      setBookingError]      = useState<string | null>(null)
 
   // ── Picker phase logic ────────────────────────────────────────────────────
   const pickerStep    = PICKER_STEPS[stepIndex]
@@ -59,16 +62,43 @@ export function WizardShell() {
   const bookingDateValid = !!selections.bookingDate && !!selections.bookingTime
   const bookingContactValid = !!selections.contactName.trim() && !!selections.contactPhone.trim()
 
-  function bookingNext() {
+  async function bookingNext() {
     if (bookingStep === 0 && bookingDateValid) {
       setBookingStep(1)
+      setBookingError(null)
     } else if (bookingStep === 1 && bookingContactValid) {
-      dispatch({ type: 'COMPLETE' })
+      setBookingSubmitting(true)
+      setBookingError(null)
+      try {
+        const res = await fetch(`${API_URL}/bookings`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name:        selections.contactName,
+            phone:       selections.contactPhone,
+            email:       selections.contactEmail || undefined,
+            date:        selections.bookingDate,
+            time:        selections.bookingTime,
+            payment_ref: selections.paymentRef,
+          }),
+        })
+        if (res.status === 409) {
+          setBookingError('That slot was just taken. Please pick a different time.')
+          setBookingStep(0)
+          return
+        }
+        if (!res.ok) throw new Error()
+        dispatch({ type: 'COMPLETE' })
+      } catch {
+        setBookingError('Something went wrong. Please try again.')
+      } finally {
+        setBookingSubmitting(false)
+      }
     }
   }
   function bookingBack() {
     if (bookingStep === 0) dispatch({ type: 'GO_TO_GATE' })
-    else setBookingStep(s => s - 1)
+    else { setBookingStep(s => s - 1); setBookingError(null) }
   }
 
   // ── Phase: confirmed ──────────────────────────────────────────────────────
@@ -102,7 +132,7 @@ export function WizardShell() {
 
   // ── Phase: booking (post-payment) ─────────────────────────────────────────
   if (phase === 'booking') {
-    const canContinue = bookingStep === 0 ? bookingDateValid : bookingContactValid
+    const canContinue   = (bookingStep === 0 ? bookingDateValid : bookingContactValid) && !bookingSubmitting
     const isLastBooking = bookingStep === 1
 
     return (
@@ -213,12 +243,26 @@ export function WizardShell() {
         </div>
 
         <div style={{ flexShrink: 0, zIndex: 10 }}>
+          {bookingError && (
+            <div style={{
+              margin:       '0 20px 8px',
+              padding:      '10px 14px',
+              borderRadius: 10,
+              background:   '#FDF2F0',
+              border:       '1px solid #E8C4BC',
+            }}>
+              <p style={{ margin: 0, fontFamily: 'var(--font-inter, sans-serif)', fontSize: 13, color: '#C0503A' }}>
+                {bookingError}
+              </p>
+            </div>
+          )}
           <StepFooter
             canContinue={canContinue}
             skippable={false}
             isLast={isLastBooking}
             onNext={bookingNext}
             onSkip={() => {}}
+            nextLabel={bookingSubmitting ? 'Confirming…' : undefined}
           />
         </div>
       </div>

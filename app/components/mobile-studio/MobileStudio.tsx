@@ -110,11 +110,7 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-interface Props {
-  onSwitchTo3D: () => void
-}
-
-export default function MobileStudio({ onSwitchTo3D }: Props) {
+export default function MobileStudio() {
   const prefersReduced = useReducedMotion()
 
   // ── Core state ─────────────────────────────────────────────────────────────
@@ -518,17 +514,16 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
               New photo
             </button>
           )}
-          {/* Escape hatch → 3D Studio */}
-          <button
-            onClick={onSwitchTo3D}
+          <a
+            href="/style"
             style={{
               fontSize: '10px', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase',
               color: C.gold, background: 'rgba(201,168,76,0.08)', border: `1px solid rgba(201,168,76,0.25)`,
-              borderRadius: '999px', padding: '5px 12px', cursor: 'pointer',
+              borderRadius: '999px', padding: '5px 12px', textDecoration: 'none',
             }}
           >
-            3D Studio →
-          </button>
+            Book →
+          </a>
         </div>
       </nav>
 
@@ -768,12 +763,13 @@ export default function MobileStudio({ onSwitchTo3D }: Props) {
               <div style={{
                 position:       'absolute',
                 inset:          0,
+                overflowY:      'auto',
                 display:        'flex',
                 flexDirection:  'column',
                 alignItems:     'center',
                 justifyContent: 'center',
                 gap:            12,
-                padding:        '0 24px',
+                padding:        '24px 24px',
                 background:     'rgba(10,14,20,0.45)',
               }}>
                 {/* Lock icon */}
