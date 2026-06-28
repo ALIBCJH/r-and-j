@@ -75,11 +75,18 @@ function GoldRule() {
 
 function FormSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-      <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: C.gold, margin: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <p style={{
+        fontFamily:    'var(--font-inter, sans-serif)',
+        fontSize:      11,
+        letterSpacing: '0.2em',
+        textTransform: 'uppercase',
+        color:         C.gold,
+        margin:        0,
+      }}>
         {label}
       </p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {children}
       </div>
     </div>
@@ -91,16 +98,18 @@ function Chip({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       onClick={onClick}
       style={{
-        padding:      '7px 12px',
-        borderRadius: 6,
-        border:       active ? `1.5px solid ${C.gold}` : '1.5px solid rgba(255,255,255,0.12)',
-        background:   active ? 'rgba(201,168,76,0.14)' : 'rgba(255,255,255,0.04)',
-        color:        active ? C.goldLight : 'rgba(255,255,255,0.55)',
+        padding:      '10px 18px',
+        borderRadius: 8,
+        border:       active ? `2px solid ${C.gold}` : '1.5px solid rgba(255,255,255,0.1)',
+        background:   active ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.03)',
+        color:        active ? C.goldLight : 'rgba(255,255,255,0.6)',
         fontFamily:   'var(--font-inter, sans-serif)',
-        fontSize:     12,
+        fontSize:     14,
         cursor:       'pointer',
-        transition:   'all 0.15s',
+        transition:   'all 0.18s',
         whiteSpace:   'nowrap',
+        fontWeight:   active ? 600 : 400,
+        letterSpacing:'0.01em',
       }}
     >
       {label}
@@ -157,9 +166,10 @@ export default function MobileStudio() {
 
     const displayW = cont.clientWidth
     const nativeAR = img.naturalWidth / img.naturalHeight
+    const heightCap = phase === 'form' ? 0.38 : 0.54
     const displayH = Math.min(
       Math.round(displayW / nativeAR),
-      Math.round(window.innerHeight * 0.54),
+      Math.round(window.innerHeight * heightCap),
     )
 
     // Scale to device pixel ratio for crisp rendering on retina screens
@@ -169,10 +179,8 @@ export default function MobileStudio() {
     canvas.style.width  = `${displayW}px`
     canvas.style.height = `${displayH}px`
 
-    // drawScene resets the transform internally — no ctx.scale needed here.
-    // canvas.width = displayW * dpr already gives retina sharpness.
     drawScene(canvas, img, selectedRec?.hex ?? null)
-  }, [selectedRec])
+  }, [selectedRec, phase])
 
   useEffect(() => {
     if (phase === 'idle') return
@@ -212,7 +220,7 @@ export default function MobileStudio() {
         const nativeAR = img.naturalWidth / img.naturalHeight
         const displayH = Math.min(
           Math.round(displayW / nativeAR),
-          Math.round(window.innerHeight * 0.54),
+          Math.round(window.innerHeight * 0.42),
         )
         const dpr = window.devicePixelRatio || 1
         canvas.width        = Math.round(displayW * dpr)
@@ -653,110 +661,6 @@ export default function MobileStudio() {
               aria-label={phase === 'loaded' ? 'Tap your wall to sample its colour' : 'Room with curtains overlaid'}
             />
 
-            {/* Room details form overlay */}
-            {phase === 'form' && (
-              <div style={{
-                position:      'absolute',
-                inset:         0,
-                overflowY:     'auto',
-                background:    'rgba(10,12,16,0.88)',
-                backdropFilter:'blur(2px)',
-                padding:       '20px 20px 28px',
-                display:       'flex',
-                flexDirection: 'column',
-                gap:           16,
-              }}>
-                <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 17, color: '#F0EBE0', margin: 0 }}>
-                  Tell us about your room
-                </p>
-                <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.45)', margin: 0, marginTop: -10 }}>
-                  We&apos;ll use this to match the right curtain for your space.
-                </p>
-
-                {/* Room type */}
-                <FormSection label="Room type">
-                  {([
-                    ['living',  'Living Room'],
-                    ['bedroom', 'Bedroom'],
-                    ['dining',  'Dining Room'],
-                    ['kitchen', 'Kitchen'],
-                    ['office',  'Office'],
-                  ] as [RoomType, string][]).map(([v, label]) => (
-                    <Chip key={v} label={label} active={roomType === v} onClick={() => setRoomType(v)} />
-                  ))}
-                </FormSection>
-
-                {/* Window size */}
-                <FormSection label="Window size">
-                  {([
-                    ['small',  'Small  < 1 m'],
-                    ['medium', 'Medium 1–2 m'],
-                    ['large',  'Large  > 2 m'],
-                  ] as [WindowSize, string][]).map(([v, label]) => (
-                    <Chip key={v} label={label} active={windowSize === v} onClick={() => setWindowSize(v)} />
-                  ))}
-                </FormSection>
-
-                {/* Light preference */}
-                <FormSection label="How much light do you want?">
-                  {([
-                    ['airy',     'Open & airy'],
-                    ['filtered', 'Some filtering'],
-                    ['blackout', 'Full blackout'],
-                  ] as [LightPref, string][]).map(([v, label]) => (
-                    <Chip key={v} label={label} active={lightPref === v} onClick={() => setLightPref(v)} />
-                  ))}
-                </FormSection>
-
-                {/* Decor style */}
-                <FormSection label="Decor style">
-                  {([
-                    ['modern',  'Modern / Minimal'],
-                    ['classic', 'Classic / Warm'],
-                    ['bold',    'Bold / Statement'],
-                  ] as [DecorStyle, string][]).map(([v, label]) => (
-                    <Chip key={v} label={label} active={decorStyle === v} onClick={() => setDecorStyle(v)} />
-                  ))}
-                </FormSection>
-
-                {/* Colour preference */}
-                <FormSection label="Colour preference (optional)">
-                  {([
-                    ['any',     'No preference'],
-                    ['warm',    'Warm tones'],
-                    ['cool',    'Cool tones'],
-                    ['neutral', 'Neutral / Earthy'],
-                    ['rich',    'Bold & rich'],
-                  ] as [ColourPref, string][]).map(([v, label]) => (
-                    <Chip key={v} label={label} active={colourPref === v} onClick={() => setColourPref(v)} />
-                  ))}
-                </FormSection>
-
-                <button
-                  onClick={handleFormSubmit}
-                  disabled={!formComplete}
-                  style={{
-                    marginTop:  4,
-                    padding:    '14px',
-                    borderRadius: 8,
-                    border:     'none',
-                    background: formComplete
-                      ? `linear-gradient(135deg, ${C.goldLight}, ${C.gold})`
-                      : 'rgba(255,255,255,0.1)',
-                    color:      formComplete ? '#0A0F1C' : 'rgba(255,255,255,0.3)',
-                    fontFamily: 'var(--font-inter, sans-serif)',
-                    fontSize:   13,
-                    fontWeight: 700,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    cursor:     formComplete ? 'pointer' : 'default',
-                    transition: 'background 0.2s',
-                  }}
-                >
-                  Generate My Preview
-                </button>
-              </div>
-            )}
 
             {/* Payment gate overlay */}
             {phase === 'gate' && (
@@ -1044,9 +948,147 @@ export default function MobileStudio() {
             background: C.bg,
             paddingBottom: 'env(safe-area-inset-bottom, 24px)',
           }}>
+
             {phase === 'loaded' && !wall && (
-              <div style={{ padding: '20px 20px 0', textAlign: 'center' }}>
-                <p style={{ fontSize: '13px', color: C.muted }}>Tap anywhere on your wall to pick a colour</p>
+              <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
+                <p style={{ fontSize: '13px', color: C.muted, lineHeight: 1.6 }}>
+                  Tap anywhere on your wall to match its colour
+                </p>
+              </div>
+            )}
+
+            {/* ── Room details form — lives here, not inside the canvas ── */}
+            {phase === 'form' && (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {/* Header */}
+                <div style={{ padding: '24px 24px 0' }}>
+                  <p style={{
+                    fontFamily:    'var(--font-inter, sans-serif)',
+                    fontSize:      10,
+                    letterSpacing: '0.3em',
+                    textTransform: 'uppercase',
+                    color:         C.gold,
+                    marginBottom:  8,
+                  }}>
+                    Step 2 of 3
+                  </p>
+                  <h2 style={{
+                    fontFamily: 'var(--font-playfair, Georgia, serif)',
+                    fontSize:   22,
+                    color:      C.text,
+                    fontWeight: 400,
+                    lineHeight: 1.2,
+                    marginBottom: 6,
+                  }}>
+                    Tell us about your room
+                  </h2>
+                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                    We&apos;ll pick the best curtain match from your answers.
+                  </p>
+                </div>
+
+                {/* Divider */}
+                <div style={{ height: 1, background: C.border, margin: '20px 0' }} />
+
+                {/* Form fields */}
+                <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+                  <FormSection label="Room type">
+                    {([
+                      ['living',  'Living Room'],
+                      ['bedroom', 'Bedroom'],
+                      ['dining',  'Dining Room'],
+                      ['kitchen', 'Kitchen'],
+                      ['office',  'Office'],
+                    ] as [RoomType, string][]).map(([v, label]) => (
+                      <Chip key={v} label={label} active={roomType === v} onClick={() => setRoomType(v)} />
+                    ))}
+                  </FormSection>
+
+                  <FormSection label="Window size">
+                    {([
+                      ['small',  'Small  —  under 1 m'],
+                      ['medium', 'Medium  —  1 to 2 m'],
+                      ['large',  'Large  —  over 2 m'],
+                    ] as [WindowSize, string][]).map(([v, label]) => (
+                      <Chip key={v} label={label} active={windowSize === v} onClick={() => setWindowSize(v)} />
+                    ))}
+                  </FormSection>
+
+                  <FormSection label="How much light do you want?">
+                    {([
+                      ['airy',     'Open & airy'],
+                      ['filtered', 'Some filtering'],
+                      ['blackout', 'Full blackout'],
+                    ] as [LightPref, string][]).map(([v, label]) => (
+                      <Chip key={v} label={label} active={lightPref === v} onClick={() => setLightPref(v)} />
+                    ))}
+                  </FormSection>
+
+                  <FormSection label="Decor style">
+                    {([
+                      ['modern',  'Modern / Minimal'],
+                      ['classic', 'Classic / Warm'],
+                      ['bold',    'Bold / Statement'],
+                    ] as [DecorStyle, string][]).map(([v, label]) => (
+                      <Chip key={v} label={label} active={decorStyle === v} onClick={() => setDecorStyle(v)} />
+                    ))}
+                  </FormSection>
+
+                  <FormSection label="Colour preference  (optional)">
+                    {([
+                      ['any',     'No preference'],
+                      ['warm',    'Warm tones'],
+                      ['cool',    'Cool tones'],
+                      ['neutral', 'Neutral / Earthy'],
+                      ['rich',    'Bold & rich'],
+                    ] as [ColourPref, string][]).map(([v, label]) => (
+                      <Chip key={v} label={label} active={colourPref === v} onClick={() => setColourPref(v)} />
+                    ))}
+                  </FormSection>
+
+                </div>
+
+                {/* Progress dots */}
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'center', padding: '28px 24px 0' }}>
+                  {[!!roomType, !!windowSize, !!lightPref, !!decorStyle].map((done, i) => (
+                    <div key={i} style={{
+                      width:        done ? 20 : 6,
+                      height:       6,
+                      borderRadius: 999,
+                      background:   done ? C.gold : C.veryMuted,
+                      transition:   'all 0.25s ease',
+                    }} />
+                  ))}
+                </div>
+
+                {/* Submit */}
+                <div style={{ padding: '20px 24px 32px' }}>
+                  <button
+                    onClick={handleFormSubmit}
+                    disabled={!formComplete}
+                    style={{
+                      width:         '100%',
+                      padding:       '16px',
+                      borderRadius:  10,
+                      border:        'none',
+                      background:    formComplete
+                        ? `linear-gradient(135deg, ${C.goldLight}, ${C.gold})`
+                        : `rgba(255,255,255,0.06)`,
+                      color:         formComplete ? '#0A0F1C' : C.veryMuted,
+                      fontFamily:    'var(--font-inter, sans-serif)',
+                      fontSize:      13,
+                      fontWeight:    700,
+                      letterSpacing: '0.16em',
+                      textTransform: 'uppercase',
+                      cursor:        formComplete ? 'pointer' : 'default',
+                      transition:    'background 0.25s, color 0.25s',
+                      boxShadow:     formComplete ? '0 4px 20px rgba(201,168,76,0.25)' : 'none',
+                    }}
+                  >
+                    {formComplete ? 'Generate My Preview →' : `${[!!roomType, !!windowSize, !!lightPref, !!decorStyle].filter(Boolean).length} / 4 required fields`}
+                  </button>
+                </div>
               </div>
             )}
 
