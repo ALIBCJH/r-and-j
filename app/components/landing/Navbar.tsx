@@ -126,39 +126,50 @@ export default function LandingNavbar() {
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.38, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed inset-0 z-50 flex flex-col p-8"
-            style={{ background: '#0D1120' }}
+            transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }}
+            className="fixed inset-0 z-50 flex flex-col"
+            style={{ background: '#0D1120', padding: '0 24px 32px' }}
           >
-            <div className="flex justify-between items-center mb-16">
-              <Link href="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-                <Image src="/assets/r_j_interiors_final_premium_logo.png" alt="" width={34} height={34} />
-                <span style={{ fontFamily: 'var(--font-playfair)', color: '#E8C96D', fontSize: '18px' }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 60, flexShrink: 0 }}>
+              <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }} onClick={() => setMenuOpen(false)}>
+                <Image src="/assets/r_j_interiors_final_premium_logo.png" alt="" width={28} height={28} style={{ borderRadius: '50%' }} />
+                <span style={{ fontFamily: 'var(--font-playfair)', color: '#E8C96D', fontSize: 15, letterSpacing: '0.06em' }}>
                   R&amp;J INTERIORS
                 </span>
               </Link>
-              <button onClick={() => setMenuOpen(false)} style={{ color: '#E8C96D' }}>
-                <X size={26} />
+              <button onClick={() => setMenuOpen(false)} style={{ color: '#E8C96D', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <X size={22} />
               </button>
             </div>
 
-            <nav className="flex flex-col gap-8">
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(201,168,76,0.12)', marginBottom: 20 }} />
+
+            {/* Nav links */}
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {LINKS.map((l, i) => {
                 const isActive = l.href === '/' ? pathname === '/' : pathname.startsWith(l.href)
                 return (
                   <motion.div
                     key={l.label}
-                    initial={{ opacity: 0, x: 40 }}
+                    initial={{ opacity: 0, x: 24 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.07, ease: [0.25, 0.1, 0.25, 1] }}
+                    transition={{ delay: i * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
                   >
                     <Link
                       href={l.href}
                       onClick={() => setMenuOpen(false)}
                       style={{
-                        fontFamily: 'var(--font-playfair)',
-                        fontSize:   '40px',
-                        color:      isActive ? '#E8C96D' : '#FFFFFF',
+                        display:       'block',
+                        padding:       '12px 0',
+                        fontFamily:    'var(--font-inter, sans-serif)',
+                        fontSize:      17,
+                        fontWeight:    isActive ? 600 : 400,
+                        color:         isActive ? '#E8C96D' : 'rgba(255,255,255,0.82)',
+                        textDecoration:'none',
+                        borderBottom:  '1px solid rgba(255,255,255,0.05)',
+                        letterSpacing: '0.01em',
                       }}
                     >
                       {l.label}
@@ -168,26 +179,46 @@ export default function LandingNavbar() {
               })}
             </nav>
 
-            <div className="mt-auto flex flex-col gap-3">
+            {/* Bottom CTAs */}
+            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Link
-                href="/style"
+                href="/studio"
                 onClick={() => setMenuOpen(false)}
-                className="py-4 text-center font-semibold rounded-sm"
                 style={{
-                  background:  'rgba(74,92,68,0.15)',
-                  border:      '1.5px solid rgba(74,92,68,0.5)',
-                  color:       '#8FBF84',
-                  fontSize:    '14px',
+                  display:       'block',
+                  padding:       '13px',
+                  textAlign:     'center',
+                  fontFamily:    'var(--font-inter, sans-serif)',
+                  fontSize:      13,
+                  fontWeight:    600,
                   letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background:    'rgba(201,168,76,0.08)',
+                  border:        '1px solid rgba(201,168,76,0.25)',
+                  borderRadius:  6,
+                  color:         '#E8C96D',
+                  textDecoration:'none',
                 }}
               >
-                ✦ Style Picker — Mobile
+                Photo Match Studio
               </Link>
               <Link
                 href="/contact"
                 onClick={() => setMenuOpen(false)}
-                className="py-4 text-center font-semibold rounded-sm"
-                style={{ background: 'var(--rj-gold-gradient)', color: '#0A0F1C', fontSize: '16px' }}
+                style={{
+                  display:       'block',
+                  padding:       '14px',
+                  textAlign:     'center',
+                  fontFamily:    'var(--font-inter, sans-serif)',
+                  fontSize:      13,
+                  fontWeight:    700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background:    'linear-gradient(135deg,#F0D77A,#C9A84C)',
+                  color:         '#0A0F1C',
+                  borderRadius:  6,
+                  textDecoration:'none',
+                }}
               >
                 Book a Consultation
               </Link>
