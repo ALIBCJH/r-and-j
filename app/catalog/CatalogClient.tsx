@@ -432,7 +432,7 @@ export default function CatalogClient() {
               key={activePalette}
               style={{
                 display:             'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateColumns: 'repeat(3, 1fr)',
                 gap:                 '36px 28px',
               }}
               className="catalog-product-grid"
@@ -514,9 +514,8 @@ export default function CatalogClient() {
       </section>
 
       <style>{`
-        @media (max-width: 1100px) { .catalog-product-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-        @media (max-width: 760px)  { .catalog-product-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 480px)  { .catalog-product-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 900px)  { .catalog-product-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 520px)  { .catalog-product-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <LandingFooter />
