@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import LandingNavbar from '@/app/components/landing/Navbar'
 
 const MobileStudio = dynamic(
   () => import('../components/mobile-studio/MobileStudio'),
@@ -8,5 +9,10 @@ const MobileStudio = dynamic(
 )
 
 export default function StudioClient() {
-  return <MobileStudio />
+  return (
+    <>
+      <LandingNavbar />
+      <MobileStudio />
+    </>
+  )
 }

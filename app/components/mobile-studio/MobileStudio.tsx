@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import Image from 'next/image'
 import { drawScene } from './curtainRenderer'
 import { API_URL } from '@/app/lib/api'
 
@@ -318,28 +317,14 @@ export default function MobileStudio() {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100svh', background: C.bg, display: 'flex', flexDirection: 'column' }}>
-
-      {/* ── Navbar ──────────────────────────────────────────────────────────── */}
-      <nav style={{
-        height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 20px', background: C.navBg, borderBottom: `1px solid ${C.border}`,
-        flexShrink: 0, position: 'sticky', top: 0, zIndex: 50,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Image src="/assets/r_j_interiors_final_premium_logo.png" alt="R&J Interiors"
-            width={28} height={28}
-            style={{ borderRadius: '50%', outline: `1px solid rgba(201,168,76,0.4)`, outlineOffset: 1 }}
-          />
-          <span style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 14, color: C.gold, letterSpacing: '0.06em' }}>R&amp;J</span>
-          <span style={{ fontSize: 10, color: C.faint, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Studio</span>
-        </div>
-        <a href="/contact" style={{
-          fontSize: 10, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase',
-          color: C.gold, background: 'rgba(201,168,76,0.08)', border: `1px solid rgba(201,168,76,0.25)`,
-          borderRadius: 999, padding: '5px 12px', textDecoration: 'none',
-        }}>Book →</a>
-      </nav>
+    <div style={{
+      height:     '100svh',
+      paddingTop: 'var(--rj-navbar-height)',
+      boxSizing:  'border-box',
+      background: C.bg,
+      display:    'flex',
+      flexDirection: 'column',
+    }}>
 
       {/* ══ SELECT + GATE — FabricHero (CSS curtain close-up) ════════════════ */}
       {(phase === 'select' || phase === 'gate') && (
