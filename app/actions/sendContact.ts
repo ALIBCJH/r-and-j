@@ -28,7 +28,7 @@ export async function sendContact(data: {
 
   try {
     await resend.emails.send({
-      from: 'R&J Interiors <contact@rjinteriors.co>',
+      from: 'R&J Interiors <contact@rjinteriors.studio>',
       to: 'simonjuma465@gmail.com',
       replyTo: email,
       subject: `[${SUBJECT_LABELS[subject] ?? subject}] Message from ${name}`,
