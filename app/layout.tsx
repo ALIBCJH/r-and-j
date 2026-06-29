@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Cormorant_Garamond, Playfair_Display, Inter } from "
 import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import PageTransition from "./components/layout/PageTransition";
+import { CartProvider } from "./lib/cart";
+import CartDrawer from "./components/cart/CartDrawer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -108,7 +110,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider><PageTransition>{children}</PageTransition></ThemeProvider>
+        <CartProvider>
+          <ThemeProvider><PageTransition>{children}</PageTransition></ThemeProvider>
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

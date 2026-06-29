@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ShoppingBag } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useCart } from '@/app/lib/cart'
 
 const LINKS = [
   { label: 'Home',       href: '/'           },
@@ -26,7 +27,8 @@ export default function LandingNavbar() {
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [hoveredLink, setHoveredLink] = useState<string | null>(null)
   const { scrollY } = useScroll()
-  const pathname = usePathname()
+  const pathname    = usePathname()
+  const { totalItems, openDrawer } = useCart()
 
   useMotionValueEvent(scrollY, 'change', (v) => setScrolled(v > 80))
 
@@ -84,8 +86,51 @@ export default function LandingNavbar() {
           })}
         </div>
 
-        {/* Book a Consultation CTA */}
+        {/* Right side: cart + CTA + mobile hamburger */}
         <div className="flex items-center gap-4">
+
+          {/* Cart icon */}
+          <button
+            onClick={openDrawer}
+            aria-label="Open cart"
+            style={{
+              position:   'relative',
+              background: 'none',
+              border:     'none',
+              cursor:     'pointer',
+              color:      totalItems > 0 ? '#C9A84C' : 'rgba(255,255,255,0.6)',
+              padding:    '4px',
+              display:    'flex',
+              alignItems: 'center',
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#E8C96D')}
+            onMouseLeave={e => (e.currentTarget.style.color = totalItems > 0 ? '#C9A84C' : 'rgba(255,255,255,0.6)')}
+          >
+            <ShoppingBag size={22} />
+            {totalItems > 0 && (
+              <span style={{
+                position:      'absolute',
+                top:           '-4px',
+                right:         '-4px',
+                background:    'linear-gradient(135deg, #F0D77A, #C9A84C)',
+                color:         '#0A0F1C',
+                fontFamily:    'var(--font-inter, sans-serif)',
+                fontSize:      '10px',
+                fontWeight:    700,
+                width:         '18px',
+                height:        '18px',
+                borderRadius:  '50%',
+                display:       'flex',
+                alignItems:    'center',
+                justifyContent:'center',
+                lineHeight:    1,
+              }}>
+                {totalItems > 9 ? '9+' : totalItems}
+              </span>
+            )}
+          </button>
+
           <Link
             href="/contact"
             className="hidden md:inline-flex items-center rounded-sm font-semibold transition-all duration-300"

@@ -1,18 +1,35 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ShoppingBag, Plus, Minus } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { PRODUCTS, getRelatedProducts } from '@/app/lib/products'
 import type { Product } from '@/app/lib/products'
+import { useCart } from '@/app/lib/cart'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 export default function ProductPageClient({ product }: { product: Product }) {
-  const related = getRelatedProducts(product, 3)
+  const related          = getRelatedProducts(product, 3)
+  const { addToCart }    = useCart()
+  const [qty, setQty]    = useState(1)
+  const [added, setAdded] = useState(false)
+
+  function handleAddToCart() {
+    addToCart({
+      productId:  product.id,
+      name:       product.name,
+      image:      product.image,
+      collection: product.collection,
+      priceKsh:   product.priceKsh,
+    }, qty)
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
+  }
 
   return (
     <div style={{ background: '#0D1B2E', minHeight: '100vh' }}>
@@ -212,16 +229,91 @@ export default function ProductPageClient({ product }: { product: Product }) {
               </p>
             </div>
 
+            {/* Quantity selector */}
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{
+                fontFamily:    'var(--font-inter, sans-serif)',
+                fontSize:      '11px',
+                color:         '#6A7A88',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                marginBottom:  '10px',
+              }}>
+                Number of Panels
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                <button
+                  onClick={() => setQty(q => Math.max(1, q - 1))}
+                  style={{
+                    width:          '40px',
+                    height:         '40px',
+                    background:     'transparent',
+                    border:         '1px solid rgba(201,168,76,0.25)',
+                    borderRadius:   '4px 0 0 4px',
+                    cursor:         qty <= 1 ? 'default' : 'pointer',
+                    color:          qty <= 1 ? '#2A3A48' : '#C9A84C',
+                    display:        'flex',
+                    alignItems:     'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Minus size={14} />
+                </button>
+                <div style={{
+                  width:          '52px',
+                  height:         '40px',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  border:         '1px solid rgba(201,168,76,0.25)',
+                  borderLeft:     'none',
+                  borderRight:    'none',
+                  fontFamily:     'var(--font-playfair, Georgia, serif)',
+                  fontSize:       '18px',
+                  color:          '#F0EBE0',
+                }}>
+                  {qty}
+                </div>
+                <button
+                  onClick={() => setQty(q => Math.min(20, q + 1))}
+                  style={{
+                    width:          '40px',
+                    height:         '40px',
+                    background:     'transparent',
+                    border:         '1px solid rgba(201,168,76,0.25)',
+                    borderRadius:   '0 4px 4px 0',
+                    cursor:         'pointer',
+                    color:          '#C9A84C',
+                    display:        'flex',
+                    alignItems:     'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Plus size={14} />
+                </button>
+                <span style={{
+                  fontFamily:  'var(--font-inter, sans-serif)',
+                  fontSize:    '12px',
+                  color:       '#3A4A58',
+                  marginLeft:  '12px',
+                }}>
+                  = {product.price.replace('KSh ', 'KSh ')} × {qty} = <strong style={{ color: '#F0EBE0' }}>KSh {(product.priceKsh * qty).toLocaleString('en-KE')}</strong>
+                </span>
+              </div>
+            </div>
+
             {/* CTAs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link
-                href="/contact"
+              <button
+                onClick={handleAddToCart}
                 style={{
                   display:        'flex',
                   alignItems:     'center',
                   justifyContent: 'center',
                   gap:            '10px',
-                  background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
+                  background:     added
+                    ? 'linear-gradient(135deg, #4CAF82, #2E7D55)'
+                    : 'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
                   color:          '#0A0F1C',
                   padding:        '18px 32px',
                   borderRadius:   '4px',
@@ -230,22 +322,16 @@ export default function ProductPageClient({ product }: { product: Product }) {
                   fontWeight:     700,
                   letterSpacing:  '1.5px',
                   textTransform:  'uppercase',
-                  textDecoration: 'none',
+                  border:         'none',
+                  cursor:         'pointer',
                   boxShadow:      '0 0 32px rgba(201,168,76,0.25)',
-                  transition:     'filter 0.2s ease, transform 0.2s ease',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.filter    = 'brightness(1.1)'
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.filter    = ''
-                  e.currentTarget.style.transform = ''
+                  transition:     'all 0.3s ease',
+                  width:          '100%',
                 }}
               >
-                Enquire About This Piece
-                <ArrowRight size={14} />
-              </Link>
+                <ShoppingBag size={16} />
+                {added ? 'Added to Order!' : `Add ${qty} Panel${qty > 1 ? 's' : ''} to Order`}
+              </button>
 
               <Link
                 href="/studio"
@@ -268,12 +354,12 @@ export default function ProductPageClient({ product }: { product: Product }) {
                   transition:     'all 0.25s ease',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background   = 'rgba(201,168,76,0.08)'
-                  e.currentTarget.style.borderColor  = '#C9A84C'
+                  e.currentTarget.style.background  = 'rgba(201,168,76,0.08)'
+                  e.currentTarget.style.borderColor = '#C9A84C'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background   = 'transparent'
-                  e.currentTarget.style.borderColor  = 'rgba(201,168,76,0.4)'
+                  e.currentTarget.style.background  = 'transparent'
+                  e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)'
                 }}
               >
                 Preview in Studio
