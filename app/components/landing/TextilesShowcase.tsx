@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
@@ -7,38 +8,42 @@ import { ArrowRight } from 'lucide-react'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-const TEXTILES = [
+const FEATURED = [
   {
-    image:       '/assets/curtain1.png',
-    name:        'Charcoal Velvet & Embroidered Sheer',
-    category:    'Layered',
-    tag:         'Best Seller',
-    description: 'Deep charcoal velvet panels backed by a sheer with hand-embroidered gold florals — drama and delicacy in one window.',
-    props:       [{ k: 'Weight', v: 'Heavy' }, { k: 'Opacity', v: 'Blackout' }, { k: 'Style', v: 'Layered' }],
+    id:          1,
+    image:       '/assets/catalog1.png',
+    collection:  'The Classic',
+    name:        'Ivory Linen & Sheer Duo',
+    price:       'From KSh 18,500',
+    priceNote:   'per window · pair included',
+    badge:       'Best Seller',
   },
   {
-    image:       '/assets/curtain2.png',
-    name:        'Royal Blue Blackout',
-    category:    'Blackout',
-    tag:         'Statement',
-    description: 'Bold cobalt blue with clean eyelet heading, paired with a leaf-embroidered sheer inner for softness against the light.',
-    props:       [{ k: 'Weight', v: 'Medium' }, { k: 'Opacity', v: 'Full Block' }, { k: 'Pattern', v: 'Solid + Sheer' }],
+    id:          2,
+    image:       '/assets/catalog2.png',
+    collection:  'The Bold Contrast',
+    name:        'Mustard & Charcoal Weave',
+    price:       'From KSh 14,500',
+    priceNote:   'per panel · standard lining',
+    badge:       'New',
   },
   {
-    image:       '/assets/curtain3.png',
-    name:        'Natural Linen Sheer',
-    category:    'Linen',
-    tag:         'Light-Filtering',
-    description: 'Warm sand linen drapes with a soft white sheer inner — filters the afternoon sun into a calm, diffused glow.',
-    props:       [{ k: 'Weight', v: 'Light-Med' }, { k: 'Opacity', v: 'Semi-sheer' }, { k: 'Feel', v: 'Relaxed' }],
+    id:          3,
+    image:       '/assets/catalog3.png',
+    collection:  'The Coastal',
+    name:        'Teal, Ivory & Cream Trio',
+    price:       'From KSh 16,500',
+    priceNote:   'per panel · tri-layer set',
+    badge:       null,
   },
   {
-    image:       '/assets/curtain4.png',
-    name:        'Champagne Gold Velvet',
-    category:    'Velvet',
-    tag:         'Premium',
-    description: 'Lustrous gold-toned velvet with an ornate floral tieback — a formal statement curtain built for spaces that demand presence.',
-    props:       [{ k: 'Weight', v: 'Heavy' }, { k: 'Sheen', v: 'Satin-finish' }, { k: 'Detail', v: 'Tieback incl.' }],
+    id:          4,
+    image:       '/assets/catalog4.png',
+    collection:  'The Metropolitan',
+    name:        'Steel Textured Drape',
+    price:       'From KSh 12,000',
+    priceNote:   'per panel · blackout lining',
+    badge:       null,
   },
 ]
 
@@ -101,14 +106,14 @@ export default function TextilesShowcase() {
           </motion.p>
         </div>
 
-        {/* Grid — 4 cards, 2×2 on desktop */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4" style={{ gap: '16px' }}>
-          {TEXTILES.map((t, i) => (
-            <TextileCard key={t.name} textile={t} index={i} />
+        {/* Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4" style={{ gap: '28px' }}>
+          {FEATURED.map((product, i) => (
+            <FeaturedCard key={product.id} product={product} index={i} />
           ))}
         </div>
 
-        {/* View More CTA */}
+        {/* View Full Catalog CTA */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -120,26 +125,26 @@ export default function TextilesShowcase() {
             href="/catalog"
             className="inline-flex items-center gap-2 group"
             style={{
-              border:        '1px solid rgba(201,168,76,0.45)',
-              color:         '#C9A84C',
-              padding:       '14px 36px',
-              fontFamily:    'var(--font-inter, sans-serif)',
-              fontSize:      '14px',
-              fontWeight:    500,
-              letterSpacing: '0.5px',
+              border:         '1px solid rgba(201,168,76,0.45)',
+              color:          '#C9A84C',
+              padding:        '14px 36px',
+              fontFamily:     'var(--font-inter, sans-serif)',
+              fontSize:       '14px',
+              fontWeight:     500,
+              letterSpacing:  '0.5px',
               textDecoration: 'none',
-              transition:    'all 0.3s ease',
+              transition:     'all 0.3s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background   = 'rgba(201,168,76,0.08)'
-              e.currentTarget.style.borderColor  = '#C9A84C'
+              e.currentTarget.style.background  = 'rgba(201,168,76,0.08)'
+              e.currentTarget.style.borderColor = '#C9A84C'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background   = ''
-              e.currentTarget.style.borderColor  = 'rgba(201,168,76,0.45)'
+              e.currentTarget.style.background  = ''
+              e.currentTarget.style.borderColor = 'rgba(201,168,76,0.45)'
             }}
           >
-            View More
+            View Full Catalog
             <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </motion.div>
@@ -149,112 +154,148 @@ export default function TextilesShowcase() {
   )
 }
 
-function TextileCard({ textile, index }: { textile: typeof TEXTILES[number]; index: number }) {
-  const { image, name, category, tag, description, props } = textile
+function FeaturedCard({ product, index }: { product: typeof FEATURED[number]; index: number }) {
+  const [hovered, setHovered] = useState(false)
+  const { image, collection, name, price, badge } = product
 
   return (
-    <motion.div
+    <motion.article
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.7, ease, delay: index * 0.08 }}
-      className="group"
-      style={{
-        background:  'transparent',
-        border:      '1px solid rgba(201,168,76,0.1)',
-        overflow:    'hidden',
-        cursor:      'pointer',
-        transition:  'border-color 0.3s ease',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.45)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.1)')}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ background: 'transparent', cursor: 'pointer' }}
     >
       {/* Image */}
-      <div style={{ position: 'relative', height: '280px', overflow: 'hidden' }}>
+      <div style={{
+        position:     'relative',
+        aspectRatio:  '2/3',
+        overflow:     'hidden',
+        borderRadius: '4px',
+        marginBottom: '18px',
+      }}>
         <Image
           src={image}
           alt={name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          style={{ objectFit: 'cover', transition: 'transform 0.6s ease' }}
-          className="group-hover:scale-105"
+          style={{
+            objectFit:      'cover',
+            objectPosition: 'center',
+            transform:      hovered ? 'scale(1.06)' : 'scale(1)',
+            transition:     'transform 0.7s ease',
+          }}
         />
-        {/* Tag */}
+
+        {/* Badge */}
+        {badge && (
+          <div style={{
+            position:      'absolute',
+            top:           '14px',
+            left:          '14px',
+            background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
+            color:         '#0A0F1C',
+            fontFamily:    'var(--font-inter, sans-serif)',
+            fontSize:      '9px',
+            fontWeight:    700,
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            padding:       '5px 12px',
+            borderRadius:  '2px',
+            zIndex:        2,
+          }}>
+            {badge}
+          </div>
+        )}
+
+        {/* Hover overlay */}
         <div style={{
           position:       'absolute',
-          top:            '14px',
-          left:           '14px',
-          background:     'rgba(10,12,20,0.82)',
-          border:         '1px solid rgba(201,168,76,0.3)',
-          padding:        '4px 10px',
-          fontFamily:     'var(--font-inter, sans-serif)',
-          fontSize:       '10px',
-          color:          '#C9A84C',
-          letterSpacing:  '2.5px',
-          textTransform:  'uppercase',
-          backdropFilter: 'blur(6px)',
-          zIndex:         2,
+          inset:          0,
+          background:     'rgba(8,16,30,0.52)',
+          display:        'flex',
+          flexDirection:  'column',
+          alignItems:     'center',
+          justifyContent: 'center',
+          gap:            '12px',
+          opacity:        hovered ? 1 : 0,
+          transition:     'opacity 0.35s ease',
+          zIndex:         1,
         }}>
-          {tag}
-        </div>
-        {/* Category */}
-        <div style={{
-          position:      'absolute',
-          bottom:        '14px',
-          right:         '14px',
-          fontFamily:    'var(--font-inter, sans-serif)',
-          fontSize:      '10px',
-          color:         'rgba(255,255,255,0.5)',
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          zIndex:        2,
-        }}>
-          {category}
+          <Link
+            href="/contact"
+            style={{
+              fontFamily:     'var(--font-inter, sans-serif)',
+              fontSize:       '11px',
+              fontWeight:     600,
+              letterSpacing:  '2.5px',
+              textTransform:  'uppercase',
+              color:          '#0A0F1C',
+              background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
+              padding:        '13px 36px',
+              textDecoration: 'none',
+              borderRadius:   '2px',
+              whiteSpace:     'nowrap',
+            }}
+          >
+            Enquire
+          </Link>
+          <Link
+            href="/studio"
+            style={{
+              fontFamily:     'var(--font-inter, sans-serif)',
+              fontSize:       '10px',
+              letterSpacing:  '1.5px',
+              textTransform:  'uppercase',
+              color:          'rgba(232,201,109,0.85)',
+              border:         '1px solid rgba(232,201,109,0.4)',
+              padding:        '10px 28px',
+              textDecoration: 'none',
+              borderRadius:   '2px',
+              whiteSpace:     'nowrap',
+            }}
+          >
+            View in Studio
+          </Link>
         </div>
       </div>
 
       {/* Info */}
-      <div style={{ padding: '20px 20px 24px' }}>
+      <div>
+        <p style={{
+          fontFamily:    'var(--font-inter, sans-serif)',
+          fontSize:      '9px',
+          color:         '#C9A84C',
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          marginBottom:  '8px',
+        }}>
+          {collection}
+        </p>
+
         <h3 style={{
           fontFamily:   'var(--font-playfair, Georgia, serif)',
-          fontSize:     '17px',
-          color:        '#FFFFFF',
-          marginBottom: '8px',
-          lineHeight:   1.3,
+          fontSize:     '18px',
+          color:        '#F0EBE0',
+          fontWeight:   400,
+          lineHeight:   1.25,
+          marginBottom: '10px',
         }}>
           {name}
         </h3>
 
         <p style={{
-          fontFamily:   'var(--font-inter, sans-serif)',
-          fontSize:     '13px',
-          color:        '#6A7A8A',
-          lineHeight:   1.7,
-          marginBottom: '16px',
+          fontFamily: 'var(--font-playfair, Georgia, serif)',
+          fontSize:   '16px',
+          color:      '#C9A84C',
+          fontWeight: 400,
+          fontStyle:  'italic',
         }}>
-          {description}
+          {price}
         </p>
-
-        {/* Props chips */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {props.map(({ k, v }) => (
-            <div
-              key={k}
-              style={{
-                border:        '1px solid rgba(201,168,76,0.18)',
-                padding:       '3px 8px',
-                fontFamily:    'var(--font-inter, sans-serif)',
-                fontSize:      '10px',
-                color:         '#8A9AA8',
-                letterSpacing: '0.3px',
-              }}
-            >
-              <span style={{ color: 'rgba(201,168,76,0.55)', marginRight: '4px' }}>{k}</span>
-              {v}
-            </div>
-          ))}
-        </div>
       </div>
-    </motion.div>
+    </motion.article>
   )
 }
