@@ -17,7 +17,7 @@ export async function sendBooking(data: {
   try {
     await resend.emails.send({
       from:    'R&J Interiors <contact@rjinteriors.co>',
-      to:      'hello@rjinteriors.co',
+      to:      'simonjuma465@gmail.com',
       replyTo: email,
       subject: `VR Studio Booking — ${date} at ${time} — ${name}`,
       html: `
