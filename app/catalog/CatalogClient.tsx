@@ -4,166 +4,46 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
+import { PRODUCTS } from '@/app/lib/products'
+import type { Product } from '@/app/lib/products'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-// ─── Product Data ───────────────────────────────────────────────────────────
-
-type Product = {
-  id:          number
-  image:       string
-  collection:  string
-  name:        string
-  material:    string
-  description: string
-  price:       string
-  priceNote:   string
-  tags:        string[]
-  badge:       string | null
-  palette:     string
-}
-
-const PRODUCTS: Product[] = [
-  {
-    id:          1,
-    image:       '/assets/catalog1.png',
-    collection:  'The Classic',
-    name:        'Ivory Linen & Sheer Duo',
-    material:    'Blackout Linen + Voile Sheer Pair',
-    description: 'The timeless combination — heavyweight ivory linen blackout paired with a flowing white voile sheer. Independent light and privacy control, floor to ceiling.',
-    price:       'From KSh 18,500',
-    priceNote:   'per window · pair included',
-    tags:        ['Dual Layer', 'Neutral', 'Blackout + Sheer'],
-    badge:       'Best Seller',
-    palette:     'Neutrals',
-  },
-  {
-    id:          2,
-    image:       '/assets/catalog2.png',
-    collection:  'The Bold Contrast',
-    name:        'Mustard & Charcoal Weave',
-    material:    'Woven Cotton — Mustard & Charcoal',
-    description: 'Two strong opinions sharing one window. The most requested combination for living rooms and offices that refuse to be forgettable.',
-    price:       'From KSh 14,500',
-    priceNote:   'per panel · standard lining',
-    tags:        ['Bold', 'Contrast Weave', 'Statement'],
-    badge:       'New',
-    palette:     'Bold Colors',
-  },
-  {
-    id:          3,
-    image:       '/assets/catalog3.png',
-    collection:  'The Coastal',
-    name:        'Teal, Ivory & Cream Trio',
-    material:    'Teal Linen Blend + Ivory Sheer + Cream',
-    description: 'Three tones, one cohesive palette. Teal anchors the room while ivory and cream panels soften and filter. A complete window treatment as a single collection.',
-    price:       'From KSh 16,500',
-    priceNote:   'per panel · tri-layer set',
-    tags:        ['Teal', 'Tri-tone', 'Coastal'],
-    badge:       null,
-    palette:     'Bold Colors',
-  },
-  {
-    id:          4,
-    image:       '/assets/catalog4.png',
-    collection:  'The Metropolitan',
-    name:        'Steel Textured Drape',
-    material:    'Textured Steel-Grey Poly Blend',
-    description: 'Understated at first glance, increasingly beautiful on closer look. A subtle embossed texture in cool steel grey — quiet sophistication for bedrooms and offices.',
-    price:       'From KSh 12,000',
-    priceNote:   'per panel · blackout lining',
-    tags:        ['Textured', 'Steel Grey', 'Premium'],
-    badge:       null,
-    palette:     'Neutrals',
-  },
-  {
-    id:          5,
-    image:       '/assets/curtain1.png',
-    collection:  'East African Series',
-    name:        'Nairobi Linen',
-    material:    'Premium East African Linen',
-    description: 'Hand-woven in the highlands of central Kenya. The loose open weave catches afternoon light beautifully — warm, lived-in, deeply rooted in East African tradition.',
-    price:       'From KSh 11,000',
-    priceNote:   'per panel · natural finish',
-    tags:        ['Hand-woven', 'Breathable', 'Natural'],
-    badge:       null,
-    palette:     'Neutrals',
-  },
-  {
-    id:          6,
-    image:       '/assets/curtain2.png',
-    collection:  'East African Series',
-    name:        'Rift Valley Linen',
-    material:    'Heavyweight Terracotta Linen',
-    description: 'Terracotta is the colour of Kenyan earth after rain — warm, alive, full of character. Heavyweight enough to command a full wall of windows.',
-    price:       'From KSh 13,500',
-    priceNote:   'per panel · blackout lining',
-    tags:        ['Terracotta', 'Heavyweight', 'Earthy'],
-    badge:       null,
-    palette:     'Earthy Tones',
-  },
-  {
-    id:          7,
-    image:       '/assets/curtain3.png',
-    collection:  'Coastal Collection',
-    name:        'Mombasa Mist Sheer',
-    material:    'White Coastal Sheer',
-    description: 'The morning mist off the Indian Ocean — white without being stark, light without being invisible. Fills a room with the feeling of being somewhere beautiful.',
-    price:       'From KSh 8,500',
-    priceNote:   'per panel · natural drape',
-    tags:        ['Sheer', 'White', 'Light Diffusion'],
-    badge:       null,
-    palette:     'Sheers & Lights',
-  },
-  {
-    id:          8,
-    image:       '/assets/curtain4.png',
-    collection:  'Premium Velvet',
-    name:        'Maasai Ember Velvet',
-    material:    'Ochre Cotton Velvet',
-    description: 'Inspired by golden hour across the Maasai Mara — a rich ochre velvet that holds light on its surface. In a dining room or bedroom, this fabric does not decorate. It defines.',
-    price:       'From KSh 19,000',
-    priceNote:   'per panel · premium lining',
-    tags:        ['Velvet', 'Ochre', 'Statement'],
-    badge:       'Premium',
-    palette:     'Earthy Tones',
-  },
-]
-
 const PALETTES = ['All', 'Neutrals', 'Earthy Tones', 'Bold Colors', 'Sheers & Lights']
 
-// ─── Filter Pill ────────────────────────────────────────────────────────────
+// ─── Filter Pill ─────────────────────────────────────────────────────────────
 
 function Pill({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       style={{
-        fontFamily:    'var(--font-inter, sans-serif)',
-        fontSize:      '13px',
-        fontWeight:    selected ? 500 : 400,
-        padding:       '10px 22px',
-        borderRadius:  '32px',
-        cursor:        'pointer',
-        border:        `1px solid ${selected ? '#C9A84C' : 'rgba(201,168,76,0.3)'}`,
-        background:    selected ? 'rgba(201,168,76,0.12)' : 'transparent',
-        color:         selected ? '#C9A84C' : '#A8B2BE',
-        transition:    'all 0.2s ease',
-        outline:       'none',
-        whiteSpace:    'nowrap',
+        fontFamily:   'var(--font-inter, sans-serif)',
+        fontSize:     '13px',
+        fontWeight:   selected ? 500 : 400,
+        padding:      '10px 22px',
+        borderRadius: '32px',
+        cursor:       'pointer',
+        border:       `1px solid ${selected ? '#C9A84C' : 'rgba(201,168,76,0.3)'}`,
+        background:   selected ? 'rgba(201,168,76,0.12)' : 'transparent',
+        color:        selected ? '#C9A84C' : '#A8B2BE',
+        transition:   'all 0.2s ease',
+        outline:      'none',
+        whiteSpace:   'nowrap',
       }}
       onMouseEnter={e => {
         if (!selected) {
           e.currentTarget.style.borderColor = 'rgba(201,168,76,0.6)'
-          e.currentTarget.style.color = '#E8C96D'
+          e.currentTarget.style.color       = '#E8C96D'
         }
       }}
       onMouseLeave={e => {
         if (!selected) {
           e.currentTarget.style.borderColor = 'rgba(201,168,76,0.3)'
-          e.currentTarget.style.color = '#A8B2BE'
+          e.currentTarget.style.color       = '#A8B2BE'
         }
       }}
     >
@@ -172,153 +52,175 @@ function Pill({ label, selected, onClick }: { label: string; selected: boolean; 
   )
 }
 
-// ─── Product Card ───────────────────────────────────────────────────────────
+// ─── Product Card ─────────────────────────────────────────────────────────────
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <motion.article
+    <motion.div
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      transition={{ duration: 0.5, ease, delay: index * 0.07 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ background: 'transparent', cursor: 'pointer' }}
+      transition={{ duration: 0.5, ease, delay: index * 0.06 }}
     >
-      {/* Image */}
-      <div style={{
-        position:     'relative',
-        aspectRatio:  '2/3',
-        overflow:     'hidden',
-        borderRadius: '4px',
-        marginBottom: '18px',
-      }}>
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          style={{
-            objectFit:      'cover',
-            objectPosition: 'center',
-            transform:      hovered ? 'scale(1.06)' : 'scale(1)',
-            transition:     'transform 0.7s ease',
-          }}
-        />
+      <Link
+        href={`/catalog/${product.id}`}
+        style={{ textDecoration: 'none', display: 'block' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <article style={{
+          border:      `1px solid ${hovered ? 'rgba(201,168,76,0.4)' : 'rgba(201,168,76,0.12)'}`,
+          borderRadius: '4px',
+          overflow:    'hidden',
+          transition:  'border-color 0.3s ease',
+          background:  'transparent',
+        }}>
 
-        {/* Badge */}
-        {product.badge && (
+          {/* Image */}
           <div style={{
-            position:      'absolute',
-            top:           '14px',
-            left:          '14px',
-            background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
-            color:         '#0A0F1C',
-            fontFamily:    'var(--font-inter, sans-serif)',
-            fontSize:      '9px',
-            fontWeight:    700,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            padding:       '5px 12px',
-            borderRadius:  '2px',
-            zIndex:        2,
+            position:    'relative',
+            aspectRatio: '2/3',
+            overflow:    'hidden',
           }}>
-            {product.badge}
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="(max-width: 900px) 50vw, 33vw"
+              style={{
+                objectFit:      'cover',
+                objectPosition: 'center',
+                transform:      hovered ? 'scale(1.05)' : 'scale(1)',
+                transition:     'transform 0.7s ease',
+              }}
+            />
+
+            {/* Badge */}
+            {product.badge && (
+              <div style={{
+                position:      'absolute',
+                top:           '14px',
+                left:          '14px',
+                background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
+                color:         '#0A0F1C',
+                fontFamily:    'var(--font-inter, sans-serif)',
+                fontSize:      '9px',
+                fontWeight:    700,
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                padding:       '5px 12px',
+                borderRadius:  '2px',
+                zIndex:        2,
+              }}>
+                {product.badge}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Hover overlay — enquire CTA */}
-        <div style={{
-          position:       'absolute',
-          inset:          0,
-          background:     'rgba(8,16,30,0.52)',
-          display:        'flex',
-          flexDirection:  'column',
-          alignItems:     'center',
-          justifyContent: 'center',
-          gap:            '12px',
-          opacity:        hovered ? 1 : 0,
-          transition:     'opacity 0.35s ease',
-          zIndex:         1,
-        }}>
-          <Link
-            href="/contact"
-            style={{
-              fontFamily:     'var(--font-inter, sans-serif)',
-              fontSize:       '11px',
-              fontWeight:     600,
-              letterSpacing:  '2.5px',
-              textTransform:  'uppercase',
-              color:          '#0A0F1C',
-              background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
-              padding:        '13px 36px',
-              textDecoration: 'none',
-              borderRadius:   '2px',
-              whiteSpace:     'nowrap',
-            }}
-          >
-            Enquire
-          </Link>
-          <Link
-            href="/studio"
-            style={{
-              fontFamily:     'var(--font-inter, sans-serif)',
-              fontSize:       '10px',
-              letterSpacing:  '1.5px',
-              textTransform:  'uppercase',
-              color:          'rgba(232,201,109,0.85)',
-              border:         '1px solid rgba(232,201,109,0.4)',
-              padding:        '10px 28px',
-              textDecoration: 'none',
-              borderRadius:   '2px',
-              whiteSpace:     'nowrap',
-            }}
-          >
-            View in Studio
-          </Link>
-        </div>
-      </div>
+          {/* Info */}
+          <div style={{ padding: '20px 20px 24px' }}>
 
-      {/* Info */}
-      <div>
-        <p style={{
-          fontFamily:    'var(--font-inter, sans-serif)',
-          fontSize:      '9px',
-          color:         '#C9A84C',
-          letterSpacing: '3px',
-          textTransform: 'uppercase',
-          marginBottom:  '8px',
-        }}>
-          {product.collection}
-        </p>
+            {/* Collection */}
+            <p style={{
+              fontFamily:    'var(--font-inter, sans-serif)',
+              fontSize:      '9px',
+              color:         '#C9A84C',
+              letterSpacing: '3px',
+              textTransform: 'uppercase',
+              marginBottom:  '10px',
+            }}>
+              {product.collection}
+            </p>
 
-        <h3 style={{
-          fontFamily:   'var(--font-playfair, Georgia, serif)',
-          fontSize:     '18px',
-          color:        '#F0EBE0',
-          fontWeight:   400,
-          lineHeight:   1.25,
-          marginBottom: '10px',
-        }}>
-          {product.name}
-        </h3>
+            {/* Name */}
+            <h3 style={{
+              fontFamily:   'var(--font-playfair, Georgia, serif)',
+              fontSize:     '18px',
+              color:        '#F0EBE0',
+              fontWeight:   400,
+              lineHeight:   1.25,
+              marginBottom: '6px',
+            }}>
+              {product.name}
+            </h3>
 
-        <p style={{
-          fontFamily: 'var(--font-playfair, Georgia, serif)',
-          fontSize:   '16px',
-          color:      '#C9A84C',
-          fontWeight: 400,
-          fontStyle:  'italic',
-        }}>
-          {product.price}
-        </p>
-      </div>
-    </motion.article>
+            {/* Material */}
+            <p style={{
+              fontFamily:   'var(--font-inter, sans-serif)',
+              fontSize:     '12px',
+              color:        '#4A5A6A',
+              lineHeight:   1.5,
+              marginBottom: '16px',
+            }}>
+              {product.material}
+            </p>
+
+            {/* Divider */}
+            <div style={{
+              width:        '100%',
+              height:       '1px',
+              background:   'rgba(201,168,76,0.1)',
+              marginBottom: '16px',
+            }} />
+
+            {/* Price */}
+            <p style={{
+              fontFamily:   'var(--font-playfair, Georgia, serif)',
+              fontSize:     '20px',
+              color:        '#F0EBE0',
+              fontWeight:   400,
+              lineHeight:   1,
+              marginBottom: '4px',
+            }}>
+              {product.price}
+            </p>
+
+            {/* Price note */}
+            <p style={{
+              fontFamily:   'var(--font-inter, sans-serif)',
+              fontSize:     '11px',
+              color:        '#4A5A6A',
+              marginBottom: '18px',
+            }}>
+              {product.priceNote}
+            </p>
+
+            {/* View Details CTA */}
+            <div style={{
+              display:    'flex',
+              alignItems: 'center',
+              gap:        '6px',
+              color:      hovered ? '#E8C96D' : '#C9A84C',
+              transition: 'color 0.25s ease',
+            }}>
+              <span style={{
+                fontFamily:    'var(--font-inter, sans-serif)',
+                fontSize:      '11px',
+                fontWeight:    600,
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}>
+                View Details
+              </span>
+              <ArrowRight
+                size={12}
+                style={{
+                  transform:  hovered ? 'translateX(4px)' : 'translateX(0)',
+                  transition: 'transform 0.25s ease',
+                }}
+              />
+            </div>
+
+          </div>
+        </article>
+      </Link>
+    </motion.div>
   )
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function CatalogClient() {
   const [activePalette, setActivePalette] = useState('All')
@@ -368,10 +270,10 @@ export default function CatalogClient() {
                   Curtains &amp; Fabrics
                 </h1>
                 <h1 style={{
-                  fontFamily:  'var(--font-playfair, Georgia, serif)',
-                  fontSize:    'clamp(36px, 4vw, 56px)',
-                  fontWeight:  400,
-                  lineHeight:  1.1,
+                  fontFamily:   'var(--font-playfair, Georgia, serif)',
+                  fontSize:     'clamp(36px, 4vw, 56px)',
+                  fontWeight:   400,
+                  lineHeight:   1.1,
                   marginBottom: 0,
                 }}>
                   <em style={{ color: '#C9A84C', fontStyle: 'italic' }}>Made for Your Space.</em>
@@ -408,7 +310,6 @@ export default function CatalogClient() {
       <section style={{ padding: '64px 6vw 100px' }}>
         <div style={{ maxWidth: '1320px', margin: '0 auto' }}>
 
-          {/* Count */}
           <motion.p
             key={activePalette}
             initial={{ opacity: 0 }}
@@ -426,7 +327,6 @@ export default function CatalogClient() {
             {activePalette !== 'All' ? ` in ${activePalette}` : ''}
           </motion.p>
 
-          {/* Grid */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activePalette}
