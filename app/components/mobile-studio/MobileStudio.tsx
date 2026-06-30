@@ -773,38 +773,18 @@ export default function MobileStudio() {
                 </div>
               </div>
 
-              {/* CTAs */}
-              <div style={{ padding: '12px 20px 36px', display: 'flex', flexDirection: 'column', gap: 10, background: C.bg }}>
-                <a href="/contact" style={{
-                  display: 'block', padding: '15px', borderRadius: 10,
+              {/* Pay to Book CTA */}
+              <div style={{ padding: '12px 20px 44px', background: C.bg }}>
+                <a href="/checkout" style={{
+                  display: 'block', padding: '17px', borderRadius: 12,
                   background: C.goldGrad, color: '#0A0F1C',
-                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                  fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase',
+                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
+                  fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase',
                   textDecoration: 'none', textAlign: 'center',
-                  boxShadow: '0 4px 22px rgba(201,168,76,0.26)',
-                  transition: 'filter 0.22s,box-shadow 0.22s',
+                  boxShadow: '0 6px 28px rgba(201,168,76,0.32)',
                 }}>
-                  Book a Consultation
+                  Pay to Book
                 </a>
-                <button
-                  onClick={() => {
-                    setPhase('configure')
-                    setStep(1)
-                    setWallColor(null)
-                    setWindowProfile(null)
-                    setRoomType(null)
-                    setFabricOpts([])
-                    setActiveFabric(null)
-                    setShowWindow(true)
-                  }}
-                  style={{
-                    padding: '13px', borderRadius: 10, background: 'transparent',
-                    border: `1px solid ${C.border}`, color: C.muted, cursor: 'pointer',
-                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
-                    transition: 'border-color 0.22s,color 0.22s',
-                  }}>
-                  Start Over
-                </button>
               </div>
 
             </motion.div>
