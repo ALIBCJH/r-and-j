@@ -74,7 +74,7 @@ function grainAt(x: number, y: number): number {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export type WindowProfile = 'modern' | 'french' | 'double-hung'
+export type WindowProfile = 'minimalist' | 'classic' | 'doubleHung'
 
 /**
  * Draw the photo and (optionally) curtain panels onto the display canvas.
@@ -101,7 +101,7 @@ export function drawScene(
   ctx.drawImage(img, 0, 0, W, H)
 
   // Window frame overlay — drawn over photo, beneath curtain panels
-  if (profile) drawWindowFrame(ctx, W, H, ROD_H, Math.floor(W * PANEL_FRACTION), profile)
+  if (profile) drawWindowStructure(ctx, W, H, ROD_H, Math.floor(W * PANEL_FRACTION), profile)
 
   if (!fabricHex) return
 
@@ -267,69 +267,233 @@ function drawRod(ctx: CanvasRenderingContext2D, W: number, panelW: number): void
   }
 }
 
-// ─── Window frame ─────────────────────────────────────────────────────────────
+// ─── Window structure ─────────────────────────────────────────────────────────
 
-function drawWindowFrame(
-  ctx:     CanvasRenderingContext2D,
-  W:       number,
-  H:       number,
-  rodH:    number,
-  panelW:  number,
-  profile: WindowProfile,
+// Renders a single glass pane: sky-to-ground gradient + double-pane sheen.
+function drawPane(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  const rx = Math.round(x), ry = Math.round(y)
+  const rw = Math.round(w), rh = Math.round(h)
+  if (rw <= 0 || rh <= 0) return
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(rx, ry, rw, rh)
+  ctx.clip()
+
+  // Exterior sky-to-earth gradient — desaturated for a recessed exterior feel
+  const sky = ctx.createLinearGradient(rx, ry, rx, ry + rh)
+  sky.addColorStop(0.00, '#3A5A8C')
+  sky.addColorStop(0.38, '#6EA8D0')
+  sky.addColorStop(0.62, '#B8D4E6')
+  sky.addColorStop(0.80, '#C8C09A')
+  sky.addColorStop(1.00, '#7A6548')
+  ctx.fillStyle = sky
+  ctx.fillRect(rx, ry, rw, rh)
+
+  // Double-pane refraction — sheen layer 1 (primary)
+  const g1 = ctx.createLinearGradient(rx, ry, rx + rw * 0.44, ry + rh * 0.38)
+  g1.addColorStop(0, 'rgba(255,255,255,0.18)')
+  g1.addColorStop(1, 'rgba(255,255,255,0.00)')
+  ctx.fillStyle = g1
+  ctx.beginPath()
+  ctx.moveTo(rx,              ry)
+  ctx.lineTo(rx + rw * 0.62, ry)
+  ctx.lineTo(rx,              ry + rh * 0.50)
+  ctx.closePath()
+  ctx.fill()
+
+  // Double-pane refraction — sheen layer 2 offset 4px (simulates glass thickness)
+  const g2 = ctx.createLinearGradient(rx + 4, ry, rx + rw * 0.44 + 4, ry + rh * 0.38)
+  g2.addColorStop(0, 'rgba(255,255,255,0.11)')
+  g2.addColorStop(1, 'rgba(255,255,255,0.00)')
+  ctx.fillStyle = g2
+  ctx.beginPath()
+  ctx.moveTo(rx + 4,              ry)
+  ctx.lineTo(rx + rw * 0.62 + 4, ry)
+  ctx.lineTo(rx + 4,              ry + rh * 0.50)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.restore()
+}
+
+// Renders a single muntin or sash rail with beveled catch-light and micro-shadow.
+function drawMuntin(
+  ctx:   CanvasRenderingContext2D,
+  x:     number,
+  y:     number,
+  w:     number,
+  h:     number,
+  color: string,
 ): void {
-  const wx = panelW           // window left edge (between curtain panels)
-  const ww = W - panelW * 2  // window width
-  const wy = rodH             // window top (just below rod)
-  const wh = H - rodH         // window height
+  const rx = Math.round(x), ry = Math.round(y)
+  const rw = Math.round(w), rh = Math.round(h)
+  if (rw <= 0 || rh <= 0) return
+
+  ctx.fillStyle = color
+  ctx.fillRect(rx, ry, rw, rh)
+
+  // Top / left catch-light — ambient light from upper-left
+  ctx.strokeStyle = 'rgba(255,255,255,0.20)'
+  ctx.lineWidth   = 1
+  ctx.beginPath()
+  ctx.moveTo(rx,      ry + rh); ctx.lineTo(rx,      ry)
+  ctx.moveTo(rx,      ry);      ctx.lineTo(rx + rw, ry)
+  ctx.stroke()
+
+  // Bottom / right micro-shadow — anchors the member in depth
+  ctx.strokeStyle = 'rgba(0,0,0,0.50)'
+  ctx.lineWidth   = 1
+  ctx.beginPath()
+  ctx.moveTo(rx,      ry + rh); ctx.lineTo(rx + rw, ry + rh)
+  ctx.moveTo(rx + rw, ry);      ctx.lineTo(rx + rw, ry + rh)
+  ctx.stroke()
+}
+
+function drawWindowStructure(
+  ctx:    CanvasRenderingContext2D,
+  W:      number,
+  H:      number,
+  rodH:   number,
+  panelW: number,
+  style:  WindowProfile,
+): void {
+  const wx = Math.round(panelW)
+  const wy = Math.round(rodH)
+  const ww = Math.round(W - panelW * 2)
+  const wh = Math.round(H - rodH)
 
   ctx.save()
 
-  if (profile === 'modern') {
-    // Thick matte black industrial frame — single heavy rect
-    ctx.strokeStyle = 'rgba(18,18,18,0.78)'
-    ctx.lineWidth   = Math.max(7, W * 0.012)
-    ctx.strokeRect(wx, wy, ww, wh)
-    // Thin inner highlight to separate frame from glass
-    ctx.strokeStyle = 'rgba(90,90,90,0.28)'
-    ctx.lineWidth   = 1.5
-    ctx.strokeRect(wx + 5, wy + 5, ww - 10, wh - 10)
+  let frameColor: string
+  let frameW: number
 
-  } else if (profile === 'french') {
-    // White painted molding with 2×3 pane grid
-    ctx.strokeStyle = 'rgba(225,218,202,0.58)'
-    ctx.lineWidth   = 3
-    ctx.strokeRect(wx, wy, ww, wh)
-    // Vertical centre mullion
-    ctx.beginPath()
-    ctx.moveTo(wx + ww * 0.5, wy)
-    ctx.lineTo(wx + ww * 0.5, wy + wh)
-    ctx.stroke()
-    // Two horizontal rails
-    const r1 = wy + wh * 0.35
-    const r2 = wy + wh * 0.70
-    ctx.beginPath(); ctx.moveTo(wx, r1); ctx.lineTo(wx + ww, r1); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(wx, r2); ctx.lineTo(wx + ww, r2); ctx.stroke()
-    // Subtle shadow inset
-    ctx.strokeStyle = 'rgba(0,0,0,0.12)'
-    ctx.lineWidth   = 1
-    ctx.strokeRect(wx + 5, wy + 5, ww - 10, wh - 10)
+  switch (style) {
+    case 'minimalist':
+      frameColor = '#1A1A1A'
+      frameW     = Math.max(8, Math.round(ww * 0.030))
+      break
+    case 'classic':
+      frameColor = '#D4CCBA'
+      frameW     = Math.max(7, Math.round(ww * 0.024))
+      break
+    default: // doubleHung
+      frameColor = '#C8C0AC'
+      frameW     = Math.max(7, Math.round(ww * 0.026))
+  }
+
+  // Glass aperture — inset from the casing on all sides
+  const gx = wx + frameW
+  const gy = wy + frameW
+  const gw = ww - frameW * 2
+  const gh = wh - frameW * 2
+
+  if (gw <= 0 || gh <= 0) { ctx.restore(); return }
+
+  // ── 1. Recessed AO: casing cast with shadow that spills into the glass ────
+  ctx.shadowColor   = 'rgba(0,0,0,0.40)'
+  ctx.shadowBlur    = 12
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = 4
+
+  ctx.beginPath()
+  ctx.rect(wx, wy, ww, wh)  // outer casing bound
+  ctx.rect(gx, gy, gw, gh)  // glass aperture cutout
+  ctx.fillStyle = frameColor
+  ctx.fill('evenodd')
+
+  // Disable shadow before bevels — crisp lines must not blur
+  ctx.shadowColor   = 'rgba(0,0,0,0)'
+  ctx.shadowBlur    = 0
+  ctx.shadowOffsetY = 0
+
+  // ── 2. Structural bevel — four-edge catch-lights and micro-shadows ────────
+  ctx.lineWidth = 1
+
+  // Outer face: top + left catch ambient light
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'
+  ctx.beginPath()
+  ctx.moveTo(wx,      wy + wh); ctx.lineTo(wx,      wy)
+  ctx.moveTo(wx,      wy);      ctx.lineTo(wx + ww, wy)
+  ctx.stroke()
+
+  // Outer face: bottom + right sit in shadow
+  ctx.strokeStyle = 'rgba(0,0,0,0.30)'
+  ctx.beginPath()
+  ctx.moveTo(wx,      wy + wh); ctx.lineTo(wx + ww, wy + wh)
+  ctx.moveTo(wx + ww, wy);      ctx.lineTo(wx + ww, wy + wh)
+  ctx.stroke()
+
+  // Inner aperture: top + left pick up wall ambient bounce
+  ctx.strokeStyle = 'rgba(255,255,255,0.20)'
+  ctx.beginPath()
+  ctx.moveTo(gx,      gy + gh); ctx.lineTo(gx,      gy)
+  ctx.moveTo(gx,      gy);      ctx.lineTo(gx + gw, gy)
+  ctx.stroke()
+
+  // Inner aperture: bottom + right sit in the recess shadow
+  ctx.strokeStyle = 'rgba(0,0,0,0.50)'
+  ctx.beginPath()
+  ctx.moveTo(gx,      gy + gh); ctx.lineTo(gx + gw, gy + gh)
+  ctx.moveTo(gx + gw, gy);      ctx.lineTo(gx + gw, gy + gh)
+  ctx.stroke()
+
+  // ── 3. Glass panes + beveled muntins per architectural style ──────────────
+  if (style === 'minimalist') {
+    drawPane(ctx, gx, gy, gw, gh)
+
+  } else if (style === 'classic') {
+    const COLS = 3, ROWS = 2
+    const mw   = Math.max(4, Math.round(ww * 0.012))
+    const pw   = Math.round((gw - mw * (COLS - 1)) / COLS)
+    const ph   = Math.round((gh - mw * (ROWS - 1)) / ROWS)
+
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLS; col++) {
+        drawPane(ctx, gx + col * (pw + mw), gy + row * (ph + mw), pw, ph)
+      }
+    }
+    for (let col = 1; col < COLS; col++) {
+      drawMuntin(ctx, gx + col * pw + (col - 1) * mw, gy, mw, gh, frameColor)
+    }
+    for (let row = 1; row < ROWS; row++) {
+      drawMuntin(ctx, gx, gy + row * ph + (row - 1) * mw, gw, mw, frameColor)
+    }
+    // Outer molding accent — delicate secondary line outside the casing
+    ctx.strokeStyle = 'rgba(200,192,172,0.40)'
+    ctx.lineWidth   = 1.5
+    ctx.strokeRect(wx - 2.5, wy - 2.5, ww + 5, wh + 5)
 
   } else {
-    // double-hung — warm wood tone with sash divider
-    ctx.strokeStyle = 'rgba(108,72,28,0.68)'
-    ctx.lineWidth   = Math.max(5, W * 0.008)
-    ctx.strokeRect(wx, wy, ww, wh)
-    // Horizontal sash rail at midpoint
-    const mid = wy + wh * 0.5
+    // doubleHung — two sashes meeting at mid-height with overlap rail illusion
+    const midH  = Math.round(gh * 0.5)
+    const railW = Math.max(5, Math.round(gh * 0.025))
+    const mw    = Math.max(3, Math.round(ww * 0.010))
+    const halfW = Math.round((gw - mw) / 2)
+
+    const topH = midH - Math.round(railW / 2)
+    const botY = gy + midH + Math.round(railW / 2)
+    const botH = gh - midH - Math.round(railW / 2)
+
+    // Four panes (2 upper, 2 lower)
+    drawPane(ctx, gx,              gy,   halfW, topH)
+    drawPane(ctx, gx + halfW + mw, gy,   halfW, topH)
+    drawPane(ctx, gx,              botY, halfW, botH)
+    drawPane(ctx, gx + halfW + mw, botY, halfW, botH)
+
+    // Center vertical muntin spans full glass height
+    drawMuntin(ctx, gx + halfW, gy, mw, gh, frameColor)
+
+    // Horizontal meeting rail (thicker — sash overlap illusion)
+    drawMuntin(ctx, gx, gy + midH - Math.round(railW / 2), gw, railW, frameColor)
+
+    // Thin depth line at the bottom of the rail — lower sash sits proud
+    ctx.strokeStyle = 'rgba(0,0,0,0.28)'
+    ctx.lineWidth   = 1
     ctx.beginPath()
-    ctx.moveTo(wx, mid)
-    ctx.lineTo(wx + ww, mid)
+    ctx.moveTo(Math.round(gx),      Math.round(botY))
+    ctx.lineTo(Math.round(gx + gw), Math.round(botY))
     ctx.stroke()
-    // Upper and lower sash insets
-    ctx.strokeStyle = 'rgba(108,72,28,0.32)'
-    ctx.lineWidth   = 1.5
-    ctx.strokeRect(wx + 6, wy + 5,      ww - 12, wh * 0.5 - 9)
-    ctx.strokeRect(wx + 6, mid + 4, ww - 12, wh * 0.5 - 9)
   }
 
   ctx.restore()

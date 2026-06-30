@@ -40,19 +40,19 @@ const WALL_COLORS = [
 
 const WINDOW_PROFILES: { id: WindowProfile; tag: string; name: string; desc: string }[] = [
   {
-    id:   'modern',
+    id:   'minimalist',
     tag:  'CONTEMPORARY',
     name: 'Modern Minimalist',
     desc: 'Floor-to-ceiling glass with a thick matte black industrial frame',
   },
   {
-    id:   'french',
+    id:   'classic',
     tag:  'TRADITIONAL',
     name: 'French Classic',
     desc: 'Elegant multi-pane grid with delicate white frame molding',
   },
   {
-    id:   'double-hung',
+    id:   'doubleHung',
     tag:  'HERITAGE',
     name: 'Double-Hung',
     desc: 'Classic recessed wooden frame with heritage proportions',
@@ -83,14 +83,14 @@ function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
   const fill    = 'rgba(180,215,245,0.07)'
   const stroke2 = active ? C.goldLight : 'rgba(255,255,255,0.12)'
 
-  if (id === 'modern') return (
+  if (id === 'minimalist') return (
     <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
       <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="5.5"/>
       <rect x="11" y="11" width="38" height="66" rx="0.5" stroke={stroke2} strokeWidth="1"/>
     </svg>
   )
 
-  if (id === 'french') return (
+  if (id === 'classic') return (
     <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
       <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="3"/>
       <line x1="30" y1="3"  x2="30" y2="85"  stroke={stroke} strokeWidth="2.5"/>
@@ -153,6 +153,7 @@ export default function MobileStudio() {
   const [msgIdx,         setMsgIdx]         = useState(0)
   const [fabricOpts,     setFabricOpts]     = useState<FabricOpt[]>([])
   const [activeFabric,   setActiveFabric]   = useState<FabricOpt | null>(null)
+  const [showWindow,     setShowWindow]     = useState(true)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -226,7 +227,7 @@ export default function MobileStudio() {
     const W   = cont.clientWidth
     const H   = Math.min(
       Math.round(W * img.naturalHeight / img.naturalWidth),
-      Math.round(window.innerHeight * 0.52),
+      Math.round(window.innerHeight * 0.72),
     )
     const dpr           = window.devicePixelRatio || 1
     canvas.width        = Math.round(W * dpr)
@@ -234,8 +235,8 @@ export default function MobileStudio() {
     canvas.style.width  = `${W}px`
     canvas.style.height = `${H}px`
 
-    drawScene(canvas, img, activeFabric?.hex ?? null, windowProfile ?? undefined)
-  }, [activeFabric, windowProfile])
+    drawScene(canvas, img, activeFabric?.hex ?? null, (showWindow && windowProfile) ? windowProfile : undefined)
+  }, [activeFabric, windowProfile, showWindow])
 
   useEffect(() => {
     if (phase === 'reveal' && imgReady) redraw()
@@ -278,7 +279,7 @@ export default function MobileStudio() {
               initial={pageIn} animate={pageAnim} exit={pageOut}>
 
               {/* Page header */}
-              <div style={{ padding: '30px 24px 0' }}>
+              <div style={{ padding: '20px 20px 0' }}>
                 <p style={{
                   fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
                   letterSpacing: '0.30em', color: C.gold, textTransform: 'uppercase', margin: '0 0 12px',
@@ -304,7 +305,7 @@ export default function MobileStudio() {
                 <StepBar current={step} />
               </div>
 
-              <div style={{ height: 30 }} />
+              <div style={{ height: 12 }} />
 
               {/* ── Step content ─────────────────────────────────────────── */}
               <AnimatePresence mode="wait">
@@ -313,12 +314,6 @@ export default function MobileStudio() {
                 {step === 1 && (
                   <motion.div key="step1"
                     initial={stepIn} animate={stepAnim} exit={stepOut}>
-                    <p style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 24,
-                    }}>
-                      Tap the dominant colour in your space
-                    </p>
                     <div style={{
                       display: 'flex', gap: 12, overflowX: 'auto',
                       padding: '4px 24px 28px', scrollbarWidth: 'none',
@@ -388,12 +383,6 @@ export default function MobileStudio() {
                   <motion.div key="step2"
                     initial={stepIn} animate={stepAnim} exit={stepOut}
                     style={{ padding: '0 20px 32px' }}>
-                    <p style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 4,
-                    }}>
-                      Choose the architectural style of your window
-                    </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {WINDOW_PROFILES.map(p => {
                         const active = windowProfile === p.id
@@ -454,12 +443,6 @@ export default function MobileStudio() {
                   <motion.div key="step3"
                     initial={stepIn} animate={stepAnim} exit={stepOut}
                     style={{ padding: '0 20px 32px' }}>
-                    <p style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 4,
-                    }}>
-                      Where will these curtains hang?
-                    </p>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                       {ROOM_TYPES.map(r => {
                         const active = roomType === r.id
@@ -674,21 +657,45 @@ export default function MobileStudio() {
                   </div>
                 )}
 
-                {/* Window profile badge */}
+                {/* Window toggle */}
                 {windowProfile && (
-                  <div style={{
-                    position: 'absolute', bottom: 12, right: 12, zIndex: 10,
-                    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
-                    borderRadius: 8, padding: '5px 10px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}>
+                  <button
+                    onClick={() => setShowWindow(s => !s)}
+                    style={{
+                      position: 'absolute', bottom: 12, left: 12, zIndex: 10,
+                      background: showWindow ? 'rgba(0,0,0,0.70)' : 'rgba(0,0,0,0.82)',
+                      backdropFilter: 'blur(6px)',
+                      borderRadius: 99, padding: '5px 10px 5px 8px',
+                      display: 'flex', alignItems: 'center', gap: 7,
+                      border: `1px solid ${showWindow ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.10)'}`,
+                      cursor: 'pointer',
+                      transition: 'border-color 0.22s, background 0.22s',
+                    }}>
+                    {/* Mini toggle track */}
+                    <div style={{
+                      width: 22, height: 12, borderRadius: 6, position: 'relative', flexShrink: 0,
+                      background: showWindow ? C.gold : 'rgba(255,255,255,0.15)',
+                      transition: 'background 0.22s',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 2,
+                        left: showWindow ? 12 : 2,
+                        width: 8, height: 8, borderRadius: '50%', background: '#fff',
+                        transition: 'left 0.22s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                      }} />
+                    </div>
                     <span style={{
                       fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                      color: 'rgba(255,255,255,0.5)', letterSpacing: '0.14em', textTransform: 'uppercase',
+                      color: showWindow ? C.goldLight : 'rgba(255,255,255,0.35)',
+                      letterSpacing: '0.14em', textTransform: 'uppercase',
+                      transition: 'color 0.22s',
                     }}>
-                      {WINDOW_PROFILES.find(p => p.id === windowProfile)?.name}
+                      {showWindow
+                        ? WINDOW_PROFILES.find(p => p.id === windowProfile)?.name
+                        : 'Window Off'}
                     </span>
-                  </div>
+                  </button>
                 )}
 
                 {!imgReady && (
@@ -722,16 +729,8 @@ export default function MobileStudio() {
               <div style={{
                 background:  C.surface,
                 borderTop:   `1px solid ${C.border}`,
-                padding:     '18px 0 20px',
+                padding:     '14px 0 16px',
               }}>
-                <p style={{
-                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                  letterSpacing: '0.28em', color: C.gold, textTransform: 'uppercase',
-                  margin: '0 0 14px', paddingLeft: 20,
-                }}>
-                  Fabric Match
-                </p>
-
                 {/* Pill buttons — horizontal scroll */}
                 <div style={{
                   display: 'flex', gap: 9, overflowX: 'auto',
@@ -774,58 +773,8 @@ export default function MobileStudio() {
                 </div>
               </div>
 
-              {/* Active fabric detail card */}
-              {activeFabric && (
-                <motion.div
-                  key={activeFabric.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease } }}
-                  style={{ padding: '0 20px', background: C.bg }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    padding: '14px 16px',
-                    background: 'rgba(201,168,76,0.04)',
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 10,
-                  }}>
-                    <div style={{
-                      width: 32, height: 48, borderRadius: 5,
-                      background: activeFabric.hex, flexShrink: 0,
-                      boxShadow: '0 4px 14px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06)',
-                      position: 'relative', overflow: 'hidden',
-                    }}>
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 60%)',
-                      }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{
-                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                        color: C.gold, letterSpacing: '0.26em', textTransform: 'uppercase',
-                        margin: '0 0 4px',
-                      }}>
-                        {activeFabric.collection}
-                      </p>
-                      <p style={{
-                        fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 18,
-                        color: C.text, margin: '0 0 4px', fontWeight: 400,
-                      }}>
-                        {activeFabric.label}
-                      </p>
-                      <p style={{
-                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                        color: C.muted, margin: 0, letterSpacing: '0.06em',
-                      }}>
-                        {activeFabric.hex.toUpperCase()}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
               {/* CTAs */}
-              <div style={{ padding: '14px 20px 52px', display: 'flex', flexDirection: 'column', gap: 10, background: C.bg }}>
+              <div style={{ padding: '12px 20px 36px', display: 'flex', flexDirection: 'column', gap: 10, background: C.bg }}>
                 <a href="/contact" style={{
                   display: 'block', padding: '15px', borderRadius: 10,
                   background: C.goldGrad, color: '#0A0F1C',
@@ -846,6 +795,7 @@ export default function MobileStudio() {
                     setRoomType(null)
                     setFabricOpts([])
                     setActiveFabric(null)
+                    setShowWindow(true)
                   }}
                   style={{
                     padding: '13px', borderRadius: 10, background: 'transparent',
