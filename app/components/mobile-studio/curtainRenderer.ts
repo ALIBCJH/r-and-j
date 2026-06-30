@@ -74,17 +74,21 @@ function grainAt(x: number, y: number): number {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+export type WindowProfile = 'modern' | 'french' | 'double-hung'
+
 /**
  * Draw the photo and (optionally) curtain panels onto the display canvas.
  *
  * @param canvas     The canvas shown to the user (native resolution, no DPR scale).
  * @param img        The loaded photo HTMLImageElement.
  * @param fabricHex  Selected fabric colour (#RRGGBB), or null for photo-only.
+ * @param profile    Optional window profile — draws an architectural frame over the photo.
  */
 export function drawScene(
   canvas:    HTMLCanvasElement,
   img:       HTMLImageElement,
   fabricHex: string | null,
+  profile?:  WindowProfile,
 ): void {
   const ctx = canvas.getContext('2d')!
   const W   = canvas.width   // native pixels
@@ -95,6 +99,10 @@ export function drawScene(
 
   // Photo first — always the base layer
   ctx.drawImage(img, 0, 0, W, H)
+
+  // Window frame overlay — drawn over photo, beneath curtain panels
+  if (profile) drawWindowFrame(ctx, W, H, ROD_H, Math.floor(W * PANEL_FRACTION), profile)
+
   if (!fabricHex) return
 
   const [fr, fg, fb] = parseHex(fabricHex)
@@ -257,6 +265,74 @@ function drawRod(ctx: CanvasRenderingContext2D, W: number, panelW: number): void
       ctx.fill()
     }
   }
+}
+
+// ─── Window frame ─────────────────────────────────────────────────────────────
+
+function drawWindowFrame(
+  ctx:     CanvasRenderingContext2D,
+  W:       number,
+  H:       number,
+  rodH:    number,
+  panelW:  number,
+  profile: WindowProfile,
+): void {
+  const wx = panelW           // window left edge (between curtain panels)
+  const ww = W - panelW * 2  // window width
+  const wy = rodH             // window top (just below rod)
+  const wh = H - rodH         // window height
+
+  ctx.save()
+
+  if (profile === 'modern') {
+    // Thick matte black industrial frame — single heavy rect
+    ctx.strokeStyle = 'rgba(18,18,18,0.78)'
+    ctx.lineWidth   = Math.max(7, W * 0.012)
+    ctx.strokeRect(wx, wy, ww, wh)
+    // Thin inner highlight to separate frame from glass
+    ctx.strokeStyle = 'rgba(90,90,90,0.28)'
+    ctx.lineWidth   = 1.5
+    ctx.strokeRect(wx + 5, wy + 5, ww - 10, wh - 10)
+
+  } else if (profile === 'french') {
+    // White painted molding with 2×3 pane grid
+    ctx.strokeStyle = 'rgba(225,218,202,0.58)'
+    ctx.lineWidth   = 3
+    ctx.strokeRect(wx, wy, ww, wh)
+    // Vertical centre mullion
+    ctx.beginPath()
+    ctx.moveTo(wx + ww * 0.5, wy)
+    ctx.lineTo(wx + ww * 0.5, wy + wh)
+    ctx.stroke()
+    // Two horizontal rails
+    const r1 = wy + wh * 0.35
+    const r2 = wy + wh * 0.70
+    ctx.beginPath(); ctx.moveTo(wx, r1); ctx.lineTo(wx + ww, r1); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(wx, r2); ctx.lineTo(wx + ww, r2); ctx.stroke()
+    // Subtle shadow inset
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)'
+    ctx.lineWidth   = 1
+    ctx.strokeRect(wx + 5, wy + 5, ww - 10, wh - 10)
+
+  } else {
+    // double-hung — warm wood tone with sash divider
+    ctx.strokeStyle = 'rgba(108,72,28,0.68)'
+    ctx.lineWidth   = Math.max(5, W * 0.008)
+    ctx.strokeRect(wx, wy, ww, wh)
+    // Horizontal sash rail at midpoint
+    const mid = wy + wh * 0.5
+    ctx.beginPath()
+    ctx.moveTo(wx, mid)
+    ctx.lineTo(wx + ww, mid)
+    ctx.stroke()
+    // Upper and lower sash insets
+    ctx.strokeStyle = 'rgba(108,72,28,0.32)'
+    ctx.lineWidth   = 1.5
+    ctx.strokeRect(wx + 6, wy + 5,      ww - 12, wh * 0.5 - 9)
+    ctx.strokeRect(wx + 6, mid + 4, ww - 12, wh * 0.5 - 9)
+  }
+
+  ctx.restore()
 }
 
 // ─── Offscreen copy ───────────────────────────────────────────────────────────

@@ -1,723 +1,866 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
-import { drawScene } from './curtainRenderer'
-import { API_URL } from '@/app/lib/api'
+import { motion, AnimatePresence } from 'framer-motion'
+import { drawScene, WindowProfile } from './curtainRenderer'
+import { getRecommendations, hexToRgb } from '@/app/lib/colorEngine'
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const C = {
   bg:        '#08090D',
-  navBg:     '#0A0B10',
+  surface:   '#0D0F14',
   border:    'rgba(201,168,76,0.14)',
+  borderMid: 'rgba(201,168,76,0.30)',
+  borderHi:  'rgba(201,168,76,0.58)',
   gold:      '#C9A84C',
   goldLight: '#E8C87A',
+  goldGrad:  'linear-gradient(135deg,#E8C87A,#C9A84C)',
   text:      '#F0EBE0',
   muted:     '#A09080',
-  faint:     '#3A3430',
+  faint:     '#2A2420',
   subtle:    'rgba(255,255,255,0.04)',
 } as const
 
-// ─── Fabric catalogue ─────────────────────────────────────────────────────────
-const SWATCHES = [
-  { hex: '#F5F0E8', name: 'Ivory Linen',    collection: 'ESSENTIALS' },
-  { hex: '#E8DCC8', name: 'Pale Linen',      collection: 'ESSENTIALS' },
-  { hex: '#D4B896', name: 'Desert Sand',     collection: 'WARMTH'    },
-  { hex: '#C8A070', name: 'Gilded Silk',     collection: 'SUNSTONE'  },
-  { hex: '#E0B8B4', name: 'Blush Voile',     collection: 'BLOOM'     },
-  { hex: '#C49890', name: 'Dusty Rose',      collection: 'BLOOM'     },
-  { hex: '#8FAF8C', name: 'Sage Weave',      collection: 'BOTANICA'  },
-  { hex: '#4A7A5C', name: 'Forest Deep',     collection: 'BOTANICA'  },
-  { hex: '#3A5F8A', name: 'Denim Dusk',      collection: 'NOIR'      },
-  { hex: '#1E3A5F', name: 'Midnight Navy',   collection: 'NOIR'      },
-  { hex: '#3C3C3C', name: 'Charcoal Drape',  collection: 'NOIR'      },
-  { hex: '#C07455', name: 'Terracotta',      collection: 'WARMTH'    },
-  { hex: '#7A2F3A', name: 'Burgundy Velour', collection: 'REGAL'     },
+const ease = [0.25, 0.1, 0.25, 1] as const
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const WALL_COLORS = [
+  { id: 'off-white',  name: 'Off White',      hex: '#F5F0E8' },
+  { id: 'warm-sand',  name: 'Warm Sand',       hex: '#E2D5BF' },
+  { id: 'terracotta', name: 'Soft Terracotta', hex: '#C07455' },
+  { id: 'ochre',      name: 'Deep Ochre',      hex: '#B8843A' },
+  { id: 'sage',       name: 'Sage Green',      hex: '#8FAF8C' },
+  { id: 'charcoal',   name: 'Charcoal',        hex: '#3C3C3C' },
+  { id: 'slate',      name: 'Slate Blue',      hex: '#6A7A84' },
+  { id: 'dusty-rose', name: 'Dusty Rose',      hex: '#C49890' },
+  { id: 'forest',     name: 'Forest',          hex: '#4A7A5C' },
+  { id: 'midnight',   name: 'Midnight',        hex: '#1E3A5F' },
 ]
 
-type Swatch = typeof SWATCHES[number]
+const WINDOW_PROFILES: { id: WindowProfile; tag: string; name: string; desc: string }[] = [
+  {
+    id:   'modern',
+    tag:  'CONTEMPORARY',
+    name: 'Modern Minimalist',
+    desc: 'Floor-to-ceiling glass with a thick matte black industrial frame',
+  },
+  {
+    id:   'french',
+    tag:  'TRADITIONAL',
+    name: 'French Classic',
+    desc: 'Elegant multi-pane grid with delicate white frame molding',
+  },
+  {
+    id:   'double-hung',
+    tag:  'HERITAGE',
+    name: 'Double-Hung',
+    desc: 'Classic recessed wooden frame with heritage proportions',
+  },
+]
 
-// ─── Form option types ────────────────────────────────────────────────────────
-type RoomType   = 'living' | 'bedroom' | 'dining' | 'kitchen' | 'office'
-type WindowSize = 'small'  | 'medium'  | 'large'
-type LightPref  = 'airy'   | 'filtered' | 'blackout'
+const ROOM_TYPES = [
+  { id: 'sitting', label: 'Sitting Room' },
+  { id: 'bedroom', label: 'Bedroom' },
+]
 
-type Phase = 'select' | 'gate' | 'revealed'
+const PROCESSING_MSGS = [
+  'Analyzing architectural scale…',
+  'Computing geometric color harmonies…',
+  'Weaving custom textile layers…',
+]
 
-// ─── FabricHero ──────────────────────────────────────────────────────────────
-// CSS-only curtain close-up: fold lines, header tape, gold rod, center window gap.
-// The actual room render (drawScene) is the reveal AFTER payment — makes people
-// want to pay to see it.
-function FabricHero({ swatch, blurred = false }: { swatch: Swatch; blurred?: boolean }) {
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Phase = 'configure' | 'processing' | 'reveal'
+type Step  = 1 | 2 | 3
+
+interface WallColor { id: string; name: string; hex: string }
+interface FabricOpt { id: string; label: string; hex: string; collection: string }
+
+// ─── Window SVG icons ─────────────────────────────────────────────────────────
+function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
+  const stroke  = active ? C.gold : 'rgba(255,255,255,0.22)'
+  const fill    = 'rgba(180,215,245,0.07)'
+  const stroke2 = active ? C.goldLight : 'rgba(255,255,255,0.12)'
+
+  if (id === 'modern') return (
+    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+      <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="5.5"/>
+      <rect x="11" y="11" width="38" height="66" rx="0.5" stroke={stroke2} strokeWidth="1"/>
+    </svg>
+  )
+
+  if (id === 'french') return (
+    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+      <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="3"/>
+      <line x1="30" y1="3"  x2="30" y2="85"  stroke={stroke} strokeWidth="2.5"/>
+      <line x1="3"  y1="33" x2="57" y2="33"  stroke={stroke} strokeWidth="2.5"/>
+      <line x1="3"  y1="61" x2="57" y2="61"  stroke={stroke} strokeWidth="2.5"/>
+      <rect x="8"  y="8"  width="18" height="21" rx="0.5" stroke={stroke2} strokeWidth="1"/>
+      <rect x="34" y="8"  width="18" height="21" rx="0.5" stroke={stroke2} strokeWidth="1"/>
+    </svg>
+  )
+
   return (
-    <div style={{
-      position:   'relative',
-      width:      '100%',
-      height:     'clamp(220px, 55vw, 300px)',
-      background: swatch.hex,
-      overflow:   'hidden',
-      filter:     blurred ? 'blur(12px) brightness(0.38)' : 'none',
-      transition: 'filter 0.4s ease, background 0.5s ease',
-      flexShrink: 0,
-    }}>
-      {/* Woven fold lines */}
-      <div style={{
-        position:        'absolute',
-        inset:           0,
-        backgroundImage: `
-          repeating-linear-gradient(
-            90deg,
-            rgba(255,255,255,0.055) 0px, rgba(255,255,255,0.055) 1px,
-            transparent 1px, transparent 16px,
-            rgba(0,0,0,0.10) 16px, rgba(0,0,0,0.10) 17px,
-            transparent 17px, transparent 32px
-          )
-        `,
-      }} />
+    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+      <rect x="4" y="4" width="52" height="80" rx="2" fill={fill} stroke={stroke} strokeWidth="4.5"/>
+      <line x1="4" y1="46" x2="56" y2="46" stroke={stroke} strokeWidth="4.5"/>
+      <rect x="10" y="9"  width="40" height="32" rx="1" stroke={stroke2} strokeWidth="1.5"/>
+      <rect x="10" y="51" width="40" height="28" rx="1" stroke={stroke2} strokeWidth="1.5"/>
+    </svg>
+  )
+}
 
-      {/* Pleated header tape */}
-      <div style={{ position: 'absolute', top: 10, left: 0, right: 0, height: '13%', background: 'rgba(0,0,0,0.30)' }} />
-
-      {/* Left panel shadow toward center */}
-      <div style={{ position: 'absolute', top: 0, bottom: 0, left: 'calc(50% - 72px)', width: 72, background: 'linear-gradient(to right, transparent, rgba(0,0,0,0.28))' }} />
-
-      {/* Right panel shadow toward center */}
-      <div style={{ position: 'absolute', top: 0, bottom: 0, right: 'calc(50% - 72px)', width: 72, background: 'linear-gradient(to left, transparent, rgba(0,0,0,0.28))' }} />
-
-      {/* Center window gap — the light between the two panels */}
-      <div style={{
-        position:   'absolute',
-        top:        10,
-        bottom:     0,
-        left:       'calc(50% - 1px)',
-        width:      2,
-        background: 'rgba(255,255,255,0.22)',
-        boxShadow:  '0 0 32px 14px rgba(255,255,255,0.09)',
-      }} />
-
-      {/* Outer edge shadows */}
-      <div style={{
-        position:   'absolute',
-        inset:      0,
-        background: 'linear-gradient(to right, rgba(0,0,0,0.22), transparent 22%, transparent 78%, rgba(0,0,0,0.22))',
-      }} />
-
-      {/* Gold rod */}
-      <div style={{
-        position:   'absolute',
-        top:        0,
-        left:       0,
-        right:      0,
-        height:     10,
-        background: 'linear-gradient(to bottom, #F8EEB8, #D4A838 30%, #9C7020 68%, #5E3C0A)',
-        zIndex:     2,
-      }} />
-
-      {/* Diagonal light shimmer */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.10) 0%, transparent 42%, rgba(0,0,0,0.10) 100%)' }} />
-
-      {/* Bottom hem fade */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to top, rgba(0,0,0,0.45), transparent)' }} />
-
-      {/* Collection + fabric name badge */}
-      {!blurred && (
-        <div style={{ position: 'absolute', bottom: 14, left: 16, zIndex: 4, pointerEvents: 'none' }}>
-          <p style={{ fontSize: 9, color: C.gold, letterSpacing: '0.26em', textTransform: 'uppercase', margin: 0, marginBottom: 3, fontFamily: 'var(--font-inter,sans-serif)' }}>
-            {swatch.collection}
-          </p>
-          <p style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 22, color: 'rgba(255,255,255,0.92)', margin: 0, fontWeight: 400, textShadow: '0 2px 12px rgba(0,0,0,0.6)' }}>
-            {swatch.name}
-          </p>
-        </div>
-      )}
-
-      {/* Tap hint badge */}
-      {!blurred && (
-        <div style={{
-          position: 'absolute', top: 14, right: 14,
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-          borderRadius: 99, padding: '5px 11px', zIndex: 4,
-        }}>
-          <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9, color: 'rgba(255,255,255,0.60)', margin: 0, letterSpacing: '0.12em' }}>
-            ← tap a colour
-          </p>
-        </div>
-      )}
+// ─── Step progress bar ────────────────────────────────────────────────────────
+function StepBar({ current }: { current: Step }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      {([1, 2, 3] as Step[]).map(s => (
+        <div key={s} style={{
+          height:       5,
+          width:        s === current ? 28 : s < current ? 16 : 16,
+          borderRadius: 999,
+          background:   s < current ? C.gold : s === current ? C.goldLight : 'rgba(255,255,255,0.13)',
+          transition:   'all 0.4s ease',
+          opacity:      s > current ? 0.5 : 1,
+        }} />
+      ))}
+      <span style={{
+        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
+        color: C.muted, letterSpacing: '0.14em', marginLeft: 6,
+      }}>
+        {current} / 3
+      </span>
     </div>
   )
 }
 
-// ─── Small atoms ──────────────────────────────────────────────────────────────
-function GoldRule() {
-  return <div style={{ height: 1, background: `linear-gradient(to right,transparent,${C.gold},transparent)` }} />
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase', color: C.gold, margin: 0 }}>
-      {children}
-    </p>
-  )
-}
-
-function Pill({ label, sub, active, onClick }: { label: string; sub?: string; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      padding:       '10px 16px',
-      borderRadius:  8,
-      border:        active ? `2px solid ${C.gold}` : `1.5px solid rgba(255,255,255,0.09)`,
-      background:    active ? 'rgba(201,168,76,0.12)' : C.subtle,
-      color:         active ? C.goldLight : 'rgba(255,255,255,0.50)',
-      fontFamily:    'var(--font-inter,sans-serif)',
-      fontSize:      13,
-      fontWeight:    active ? 600 : 400,
-      cursor:        'pointer',
-      transition:    'all 0.15s',
-      whiteSpace:    'nowrap',
-      display:       'flex',
-      flexDirection: 'column',
-      alignItems:    'center',
-      gap:           2,
-    }}>
-      <span>{label}</span>
-      {sub && <span style={{ fontSize: 9, opacity: 0.55 }}>{sub}</span>}
-    </button>
-  )
-}
+// ─── Shared motion variants ───────────────────────────────────────────────────
+const pageIn  = { opacity: 0, y: 22 }
+const pageOut  = { opacity: 0, y: -14 }
+const pageAnim = { opacity: 1, y: 0, transition: { duration: 0.5, ease } }
+const stepIn   = { opacity: 0, x: 32 }
+const stepOut  = { opacity: 0, x: -24 }
+const stepAnim = { opacity: 1, x: 0, transition: { duration: 0.38, ease } }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function MobileStudio() {
-  const prefersReduced = useReducedMotion()
+  const [phase,          setPhase]          = useState<Phase>('configure')
+  const [step,           setStep]           = useState<Step>(1)
+  const [wallColor,      setWallColor]      = useState<WallColor | null>(null)
+  const [windowProfile,  setWindowProfile]  = useState<WindowProfile | null>(null)
+  const [roomType,       setRoomType]       = useState<string | null>(null)
+  const [msgIdx,         setMsgIdx]         = useState(0)
+  const [fabricOpts,     setFabricOpts]     = useState<FabricOpt[]>([])
+  const [activeFabric,   setActiveFabric]   = useState<FabricOpt | null>(null)
 
-  // ── Selector state ──────────────────────────────────────────────────────────
-  const [swatch,     setSwatch]     = useState<Swatch>(SWATCHES[0])
-  const [roomType,   setRoomType]   = useState<RoomType   | null>(null)
-  const [windowSize, setWindowSize] = useState<WindowSize | null>(null)
-  const [lightPref,  setLightPref]  = useState<LightPref  | null>(null)
-  const [phase,      setPhase]      = useState<Phase>('select')
-
-  // ── Payment state ───────────────────────────────────────────────────────────
-  const [selectedPrice, setSelectedPrice] = useState<100 | 300>(100)
-  const [phone,         setPhone]         = useState('')
-  const [paying,        setPaying]        = useState(false)
-  const [payError,      setPayError]      = useState<string | null>(null)
-  const [checkoutId,    setCheckoutId]    = useState<string | null>(null)
-  const [canRetry,      setCanRetry]      = useState(false)
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // ── Canvas refs — only active in the revealed phase ─────────────────────────
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const templateRef  = useRef<HTMLImageElement | null>(null)
-  const [imgReady, setImgReady] = useState(false)
+  const imgRef       = useRef<HTMLImageElement | null>(null)
+  const [imgReady,   setImgReady]   = useState(false)
 
-  // ── Computed ────────────────────────────────────────────────────────────────
-  const formComplete = !!(roomType && windowSize && lightPref)
-  const phoneDigits  = phone.replace(/\D/g, '')
-  const phoneValid   = phoneDigits.length >= 9
-
-  function formatPhone(raw: string) {
-    const d = raw.replace(/\D/g, '')
-    if (d.startsWith('254')) return `+${d}`
-    if (d.startsWith('0'))   return `+254${d.slice(1)}`
-    return `+254${d}`
-  }
-
-  // ── Preload template image in background ─────────────────────────────────────
+  // Preload room image once
   useEffect(() => {
-    const img = document.createElement('img')
-    img.onload = () => { templateRef.current = img; setImgReady(true) }
+    const img = new Image()
+    img.onload = () => { imgRef.current = img; setImgReady(true) }
     img.src = '/assets/sittingroom.png'
   }, [])
 
-  // ── Draw room canvas (revealed phase only) ───────────────────────────────────
+  // Auto-advance step handlers
+  function selectWallColor(c: WallColor) {
+    setWallColor(c)
+    setTimeout(() => setStep(2), 480)
+  }
+
+  function selectWindowProfile(id: WindowProfile) {
+    setWindowProfile(id)
+    setTimeout(() => setStep(3), 480)
+  }
+
+  function selectRoomType(id: string) {
+    setRoomType(id)
+    setTimeout(() => setPhase('processing'), 580)
+  }
+
+  // Processing phase — cycles through messages twice then auto-reveals
+  useEffect(() => {
+    if (phase !== 'processing') return
+    setMsgIdx(0)
+    let count = 0
+    const LOOPS = 2
+    const TOTAL = PROCESSING_MSGS.length * LOOPS
+
+    const iv = setInterval(() => {
+      count++
+      if (count >= TOTAL) {
+        clearInterval(iv)
+        // Compute fabric recommendations from wall colour
+        if (wallColor) {
+          const [r, g, b] = hexToRgb(wallColor.hex)
+          const recs = getRecommendations(r, g, b)
+          const opts: FabricOpt[] = recs.map(rec => ({
+            id:         rec.id,
+            label:      rec.label,
+            hex:        rec.hex,
+            collection: rec.collection,
+          }))
+          setFabricOpts(opts)
+          setActiveFabric(opts[0] ?? null)
+        }
+        setTimeout(() => setPhase('reveal'), 380)
+        return
+      }
+      setMsgIdx(count % PROCESSING_MSGS.length)
+    }, 860)
+
+    return () => clearInterval(iv)
+  }, [phase, wallColor])
+
+  // Canvas draw
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
-    const img    = templateRef.current
+    const img    = imgRef.current
     const cont   = containerRef.current
     if (!canvas || !img || !cont) return
-    const displayW = cont.clientWidth
-    const displayH = Math.min(
-      Math.round(displayW * img.naturalHeight / img.naturalWidth),
-      Math.round(window.innerHeight * 0.50),
+
+    const W   = cont.clientWidth
+    const H   = Math.min(
+      Math.round(W * img.naturalHeight / img.naturalWidth),
+      Math.round(window.innerHeight * 0.52),
     )
     const dpr           = window.devicePixelRatio || 1
-    canvas.width        = Math.round(displayW * dpr)
-    canvas.height       = Math.round(displayH * dpr)
-    canvas.style.width  = `${displayW}px`
-    canvas.style.height = `${displayH}px`
-    drawScene(canvas, img, swatch.hex)
-  }, [swatch.hex])
+    canvas.width        = Math.round(W * dpr)
+    canvas.height       = Math.round(H * dpr)
+    canvas.style.width  = `${W}px`
+    canvas.style.height = `${H}px`
+
+    drawScene(canvas, img, activeFabric?.hex ?? null, windowProfile ?? undefined)
+  }, [activeFabric, windowProfile])
 
   useEffect(() => {
-    if (phase === 'revealed' && imgReady) redraw()
+    if (phase === 'reveal' && imgReady) redraw()
   }, [phase, imgReady, redraw])
 
   useEffect(() => {
-    if (phase !== 'revealed') return
+    if (phase !== 'reveal') return
     const ro = new ResizeObserver(redraw)
     if (containerRef.current) ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [phase, redraw])
 
-  // ── Payment retry timer ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!paying) { setCanRetry(false); return }
-    retryTimer.current = setTimeout(() => setCanRetry(true), 15_000)
-    return () => { if (retryTimer.current) clearTimeout(retryTimer.current) }
-  }, [paying])
+  // Ambient background hue from selected wall colour
+  const bgGlow = wallColor
+    ? `radial-gradient(ellipse at 50% -10%, ${wallColor.hex}22 0%, transparent 58%)`
+    : undefined
 
-  // ── Poll for payment status ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!checkoutId || !paying) return
-    let attempts = 0
-    const iv = setInterval(async () => {
-      if (++attempts > 40) {
-        clearInterval(iv)
-        setCheckoutId(null); setPaying(false)
-        setPayError('Payment timed out. Please try again.')
-        return
-      }
-      try {
-        const data = await fetch(`${API_URL}/mpesa/status/${checkoutId}`).then(r => r.json())
-        if (data.status === 'complete') {
-          clearInterval(iv); setCheckoutId(null); setPaying(false); setPhase('revealed')
-        } else if (data.status === 'failed') {
-          clearInterval(iv); setCheckoutId(null); setPaying(false)
-          setPayError('Payment declined. Check your M-Pesa balance.')
-        }
-      } catch { /* keep polling */ }
-    }, 3000)
-    return () => clearInterval(iv)
-  }, [checkoutId, paying])
-
-  // ── Initiate STK push ────────────────────────────────────────────────────────
-  async function handlePay() {
-    if (!phoneValid || paying) return
-    setPaying(true); setPayError(null)
-    try {
-      const res = await fetch(`${API_URL}/mpesa/stk-push`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: formatPhone(phone), amount: selectedPrice }),
-      })
-      if (!res.ok) throw new Error()
-      const { checkout_request_id } = await res.json()
-      setCheckoutId(checkout_request_id)
-    } catch {
-      setPaying(false)
-      setPayError('Could not reach payment service. Please try again.')
-    }
-  }
-
-  const fadeUp = prefersReduced ? {} : {
-    initial: { opacity: 0, y: 14 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      height:     '100svh',
-      paddingTop: 'var(--rj-navbar-height)',
-      boxSizing:  'border-box',
-      background: C.bg,
-      display:    'flex',
-      flexDirection: 'column',
+      minHeight:   '100svh',
+      paddingTop:  'var(--rj-navbar-height,60px)',
+      background:  C.bg,
+      position:    'relative',
+      overflowX:   'hidden',
     }}>
+      {/* Dynamic wall-colour glow */}
+      <div style={{
+        position:   'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: bgGlow,
+        transition: 'background 0.9s ease',
+      }} />
 
-      {/* ══ SELECT + GATE — FabricHero (CSS curtain close-up) ════════════════ */}
-      {(phase === 'select' || phase === 'gate') && (
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          {/* Ambient color glow behind hero */}
-          <div style={{
-            position: 'absolute', bottom: 0, left: '10%', right: '10%', height: '40%',
-            background: `radial-gradient(ellipse at center, ${swatch.hex}26 0%, transparent 72%)`,
-            transition: 'background 0.5s ease', pointerEvents: 'none', zIndex: 0,
-          }} />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <AnimatePresence mode="wait">
 
-          <FabricHero swatch={swatch} blurred={phase === 'gate'} />
+          {/* ══ PHASE 1 — CONFIGURE ══════════════════════════════════════════ */}
+          {phase === 'configure' && (
+            <motion.div key="configure"
+              initial={pageIn} animate={pageAnim} exit={pageOut}>
 
-          {/* ── Gate overlay ──────────────────────────────────────────────── */}
-          {phase === 'gate' && (
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 10,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 16, padding: '20px 24px',
-            }}>
-              {/* Lock icon */}
-              <div style={{
-                width: 46, height: 46, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(8px)',
-                border: '1.5px solid rgba(255,255,255,0.20)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+              {/* Page header */}
+              <div style={{ padding: '30px 24px 0' }}>
+                <p style={{
+                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
+                  letterSpacing: '0.30em', color: C.gold, textTransform: 'uppercase', margin: '0 0 12px',
+                }}>
+                  Design Studio
+                </p>
+                <AnimatePresence mode="wait">
+                  <motion.h1
+                    key={step}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease } }}
+                    exit={{ opacity: 0, y: -6, transition: { duration: 0.2 } }}
+                    style={{
+                      fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 24,
+                      color: C.text, fontWeight: 400, margin: '0 0 20px', lineHeight: 1.25,
+                    }}
+                  >
+                    {step === 1 && 'What colour are your walls?'}
+                    {step === 2 && 'Choose your window profile.'}
+                    {step === 3 && 'Which room is this for?'}
+                  </motion.h1>
+                </AnimatePresence>
+                <StepBar current={step} />
               </div>
 
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 20, color: '#FFF', margin: 0, marginBottom: 4 }}>
-                  Ready to see it in your room?
-                </p>
-                <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-                  Unlock your personalised room preview
-                </p>
-              </div>
+              <div style={{ height: 30 }} />
 
-              {/* Price cards */}
-              <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 290 }}>
-                {([100, 300] as const).map(price => {
-                  const active = selectedPrice === price
-                  return (
-                    <button key={price} onClick={() => setSelectedPrice(price)} style={{
-                      flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
-                      border:     active ? `2px solid ${C.gold}` : '1.5px solid rgba(255,255,255,0.12)',
-                      background: active ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.05)',
-                      textAlign:  'center', transition: 'all 0.15s',
+              {/* ── Step content ─────────────────────────────────────────── */}
+              <AnimatePresence mode="wait">
+
+                {/* Step 1 — Wall colour swatches */}
+                {step === 1 && (
+                  <motion.div key="step1"
+                    initial={stepIn} animate={stepAnim} exit={stepOut}>
+                    <p style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 24,
                     }}>
-                      <div style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 20, color: active ? C.goldLight : '#FFF', marginBottom: 3 }}>
-                        KES {price}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: active ? 'rgba(232,200,122,0.7)' : 'rgba(255,255,255,0.38)', lineHeight: 1.4 }}>
-                        {price === 100 ? 'Room preview + fabric name' : 'Room preview + full quote'}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Phone + pay */}
-              {!paying ? (
-                <div style={{ width: '100%', maxWidth: 290, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{
-                    display: 'flex', borderRadius: 10, overflow: 'hidden',
-                    border: '1.5px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.07)',
-                  }}>
-                    <div style={{ padding: '0 12px', borderRight: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>🇰🇪 +254</span>
+                      Tap the dominant colour in your space
+                    </p>
+                    <div style={{
+                      display: 'flex', gap: 12, overflowX: 'auto',
+                      padding: '4px 24px 28px', scrollbarWidth: 'none',
+                      WebkitOverflowScrolling: 'touch',
+                    }}>
+                      {WALL_COLORS.map(c => {
+                        const active = wallColor?.id === c.id
+                        return (
+                          <button key={c.id} onClick={() => selectWallColor(c)}
+                            style={{
+                              flexShrink: 0, display: 'flex', flexDirection: 'column',
+                              alignItems: 'center', gap: 10, background: 'none',
+                              border: 'none', cursor: 'pointer', padding: 0,
+                            }}>
+                            <div style={{
+                              width: 58, height: 82, borderRadius: 10, background: c.hex,
+                              border:     `2.5px solid ${active ? C.gold : 'transparent'}`,
+                              boxShadow:  active
+                                ? `0 0 0 1px rgba(201,168,76,0.5), 0 14px 30px ${c.hex}55`
+                                : '0 4px 16px rgba(0,0,0,0.55)',
+                              position: 'relative', overflow: 'hidden',
+                              transform:  active ? 'scale(1.07)' : 'scale(1)',
+                              transition: 'all 0.25s ease',
+                            }}>
+                              {/* Woven texture */}
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                backgroundImage: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.07) 0px,rgba(255,255,255,0.07) 1px,transparent 1px,transparent 8px)',
+                              }} />
+                              {/* Sheen */}
+                              <div style={{
+                                position: 'absolute', inset: 0,
+                                background: 'linear-gradient(135deg,rgba(255,255,255,0.20) 0%,transparent 55%,rgba(0,0,0,0.14) 100%)',
+                              }} />
+                              {active && (
+                                <div style={{
+                                  position: 'absolute', bottom: 6, right: 6,
+                                  width: 18, height: 18, borderRadius: '50%',
+                                  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none"
+                                    stroke={C.gold} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 6l3 3 5-5"/>
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            <span style={{
+                              fontFamily:  'var(--font-inter,sans-serif)', fontSize: 9,
+                              letterSpacing: '0.12em', textTransform: 'uppercase',
+                              color:       active ? C.gold : 'rgba(255,255,255,0.28)',
+                              textAlign:   'center', maxWidth: 58, lineHeight: 1.35,
+                              transition:  'color 0.22s',
+                            }}>
+                              {c.name}
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
-                    <input
-                      type="tel" inputMode="numeric" placeholder="7XX XXX XXX"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value.replace(/\D/g,'').slice(0,10))}
-                      style={{ flex: 1, padding: '12px', border: 'none', outline: 'none', background: 'transparent', color: '#FFF', fontSize: 15, fontFamily: 'var(--font-inter,sans-serif)' }}
-                    />
-                  </div>
-                  {payError && (
-                    <p style={{ margin: 0, fontSize: 11, color: '#F87171', textAlign: 'center', fontFamily: 'var(--font-inter,sans-serif)' }}>{payError}</p>
-                  )}
-                  <button onClick={handlePay} disabled={!phoneValid} style={{
-                    padding: '13px', borderRadius: 10, border: 'none', cursor: phoneValid ? 'pointer' : 'default',
-                    background: phoneValid ? 'linear-gradient(135deg,#007A39,#00A84F)' : 'rgba(255,255,255,0.08)',
-                    color: phoneValid ? '#FFF' : 'rgba(255,255,255,0.28)',
-                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, fontWeight: 700,
-                  }}>
-                    Pay KES {selectedPrice} via M-Pesa
+                  </motion.div>
+                )}
+
+                {/* Step 2 — Window profile cards */}
+                {step === 2 && (
+                  <motion.div key="step2"
+                    initial={stepIn} animate={stepAnim} exit={stepOut}
+                    style={{ padding: '0 20px 32px' }}>
+                    <p style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 4,
+                    }}>
+                      Choose the architectural style of your window
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {WINDOW_PROFILES.map(p => {
+                        const active = windowProfile === p.id
+                        return (
+                          <button key={p.id} onClick={() => selectWindowProfile(p.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 18,
+                              padding: '18px 20px', borderRadius: 14, cursor: 'pointer',
+                              background:  active ? 'rgba(201,168,76,0.07)' : C.subtle,
+                              border:      `1.5px solid ${active ? C.borderHi : C.border}`,
+                              textAlign:   'left',
+                              transform:   active ? 'scale(1.015)' : 'scale(1)',
+                              boxShadow:   active ? '0 10px 36px rgba(201,168,76,0.13)' : 'none',
+                              transition:  'all 0.25s ease',
+                            }}>
+                            <WindowSVG id={p.id} active={active} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{
+                                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                                letterSpacing: '0.24em', textTransform: 'uppercase',
+                                color: active ? C.gold : C.muted, margin: '0 0 5px',
+                              }}>
+                                {p.tag}
+                              </p>
+                              <p style={{
+                                fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 17,
+                                color: C.text, margin: '0 0 5px', fontWeight: 400,
+                              }}>
+                                {p.name}
+                              </p>
+                              <p style={{
+                                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                                color: C.muted, margin: 0, lineHeight: 1.62,
+                              }}>
+                                {p.desc}
+                              </p>
+                            </div>
+                            {/* Radio circle */}
+                            <div style={{
+                              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                              border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.2)'}`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all 0.25s ease',
+                            }}>
+                              {active && (
+                                <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.gold }} />
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3 — Room type */}
+                {step === 3 && (
+                  <motion.div key="step3"
+                    initial={stepIn} animate={stepAnim} exit={stepOut}
+                    style={{ padding: '0 20px 32px' }}>
+                    <p style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                      color: C.muted, letterSpacing: '0.06em', margin: '0 0 18px', paddingLeft: 4,
+                    }}>
+                      Where will these curtains hang?
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                      {ROOM_TYPES.map(r => {
+                        const active = roomType === r.id
+                        return (
+                          <button key={r.id} onClick={() => selectRoomType(r.id)}
+                            style={{
+                              padding: '34px 16px', borderRadius: 16,
+                              background: active ? 'rgba(201,168,76,0.09)' : C.subtle,
+                              border:     `1.5px solid ${active ? C.borderHi : C.border}`,
+                              cursor:     'pointer',
+                              display:    'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                              transform:  active ? 'scale(1.03)' : 'scale(1)',
+                              boxShadow:  active ? '0 14px 44px rgba(201,168,76,0.16)' : 'none',
+                              transition: 'all 0.26s ease',
+                            }}>
+                            {r.id === 'sitting' ? (
+                              <svg width="44" height="36" viewBox="0 0 44 36" fill="none">
+                                <rect x="2" y="18" width="40" height="16" rx="3"
+                                  fill={active ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)'}
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
+                                <path d="M9 18V10a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8"
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
+                                <rect x="0" y="24" width="8" height="12" rx="2"
+                                  fill={active ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)'}
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.15)'} strokeWidth="1.5"/>
+                                <rect x="36" y="24" width="8" height="12" rx="2"
+                                  fill={active ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)'}
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.15)'} strokeWidth="1.5"/>
+                              </svg>
+                            ) : (
+                              <svg width="44" height="30" viewBox="0 0 44 30" fill="none">
+                                <rect x="2" y="14" width="40" height="14" rx="3"
+                                  fill={active ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)'}
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
+                                <path d="M7 14V7a2 2 0 0 1 2-2h26a2 2 0 0 1 2 2v7"
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
+                                <rect x="9" y="17" width="26" height="7" rx="1"
+                                  fill={active ? 'rgba(201,168,76,0.09)' : 'rgba(255,255,255,0.03)'}
+                                  stroke={active ? C.goldLight : 'rgba(255,255,255,0.1)'} strokeWidth="1"/>
+                                <line x1="2" y1="14" x2="42" y2="14"
+                                  stroke={active ? C.gold : 'rgba(255,255,255,0.18)'} strokeWidth="2"/>
+                              </svg>
+                            )}
+                            <p style={{
+                              fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 16,
+                              color: active ? C.goldLight : C.text, margin: 0, fontWeight: 400,
+                            }}>
+                              {r.label}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+
+              {/* Back navigation */}
+              {step > 1 && (
+                <div style={{ padding: '0 24px 36px', display: 'flex', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => setStep((step - 1) as Step)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
+                      color: C.muted, letterSpacing: '0.1em',
+                      display: 'flex', alignItems: 'center', gap: 7,
+                      transition: 'color 0.2s',
+                    }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M19 12H5M12 5l-7 7 7 7"/>
+                    </svg>
+                    Back
                   </button>
-                  <button onClick={() => setPhase('select')} style={{
-                    background: 'none', border: 'none', color: 'rgba(255,255,255,0.32)',
-                    fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font-inter,sans-serif)',
-                  }}>
-                    ← Change colour or details
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                    style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.15)', borderTop: '3px solid #FFF' }}
-                  />
-                  <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                    Check your phone for the M-Pesa prompt…
-                  </p>
-                  {canRetry && (
-                    <button onClick={() => { setCanRetry(false); setCheckoutId(null); setPaying(false); handlePay() }}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.38)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-inter,sans-serif)' }}>
-                      Didn&apos;t get the prompt? Try again
-                    </button>
-                  )}
                 </div>
               )}
-            </div>
+
+            </motion.div>
           )}
-        </div>
-      )}
 
-      {/* ══ REVEALED — actual room render (the reward for paying) ════════════ */}
-      {phase === 'revealed' && (
-        <div ref={containerRef} style={{ position: 'relative', flexShrink: 0, background: '#0A0B10' }}>
-          {/* "Your room" badge */}
-          <div style={{
-            position: 'absolute', top: 12, left: 12, zIndex: 10,
-            background: 'rgba(0,0,0,0.68)', backdropFilter: 'blur(6px)',
-            borderRadius: 99, padding: '5px 12px',
-            display: 'flex', alignItems: 'center', gap: 6,
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />
-            <span style={{ fontSize: 9, fontFamily: 'var(--font-inter,sans-serif)', color: 'rgba(255,255,255,0.8)', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600 }}>
-              Your room
-            </span>
-          </div>
+          {/* ══ PHASE 2 — CINEMATIC PROCESSING ══════════════════════════════ */}
+          {phase === 'processing' && (
+            <motion.div key="processing"
+              initial={pageIn} animate={pageAnim} exit={pageOut}
+              style={{
+                height:         '100svh',
+                display:        'flex',
+                flexDirection:  'column',
+                alignItems:     'center',
+                justifyContent: 'center',
+                padding:        '0 36px',
+                pointerEvents:  'none', // prevent any tap-through
+              }}>
 
-          {/* Fabric badge */}
-          <div style={{
-            position: 'absolute', bottom: 14, left: 14, zIndex: 10,
-            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)',
-            borderRadius: 8, padding: '7px 12px', border: '1px solid rgba(255,255,255,0.08)',
-          }}>
-            <p style={{ fontSize: 8, color: C.gold, letterSpacing: '0.22em', textTransform: 'uppercase', margin: 0, marginBottom: 2 }}>{swatch.collection}</p>
-            <p style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 14, color: '#FFF', margin: 0 }}>{swatch.name}</p>
-          </div>
-
-          {/* Glass sheen */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%)', pointerEvents: 'none', zIndex: 9 }} />
-
-          {!imgReady && (
-            <div style={{ width: '100%', height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0F14' }}>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
-                style={{ width: 26, height: 26, borderRadius: '50%', border: `2px solid ${C.faint}`, borderTop: `2px solid ${C.gold}` }}
-              />
-            </div>
-          )}
-          <canvas ref={canvasRef} style={{ display: 'block', width: '100%' }} />
-        </div>
-      )}
-
-      {/* ── Scrollable content ───────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: 'auto', background: C.bg, paddingBottom: 'env(safe-area-inset-bottom,32px)' }}>
-
-        {/* ══ SELECT content ════════════════════════════════════════════════ */}
-        {phase === 'select' && (
-          <motion.div {...fadeUp}>
-
-            {/* Swatch picker */}
-            <div style={{ padding: '22px 20px 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <SectionLabel>Choose a fabric</SectionLabel>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)', fontFamily: 'var(--font-inter,sans-serif)' }}>{SWATCHES.length} colours</span>
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'none' }}>
-                {SWATCHES.map(s => {
-                  const active = swatch.hex === s.hex
-                  return (
-                    <button key={s.hex} onClick={() => setSwatch(s)} style={{
-                      flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                      gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    }}>
-                      {/* Fabric sample card */}
-                      <div style={{
-                        width: 46, height: 80, borderRadius: 7, background: s.hex,
-                        border: active ? `2.5px solid ${C.gold}` : '2.5px solid transparent',
-                        boxShadow: active ? `0 0 0 1px rgba(201,168,76,0.38), 0 8px 22px ${s.hex}55` : '0 2px 10px rgba(0,0,0,0.5)',
-                        position: 'relative', overflow: 'hidden', transition: 'all 0.18s ease',
-                      }}>
-                        {/* Woven texture */}
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 7px, rgba(0,0,0,0.08) 7px, rgba(0,0,0,0.08) 8px, transparent 8px)' }} />
-                        {/* Shimmer */}
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 50%, rgba(0,0,0,0.12) 100%)' }} />
-                        {/* Mini gold rod */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 5, background: 'linear-gradient(to bottom, #D4A838, #5E3C0A)' }} />
-                        {/* Active check */}
-                        {active && (
-                          <div style={{
-                            position: 'absolute', bottom: 6, right: 6,
-                            width: 16, height: 16, borderRadius: '50%',
-                            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke={C.gold} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M2 6l3 3 5-5" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <span style={{ fontSize: 9, color: active ? C.gold : 'rgba(255,255,255,0.28)', textAlign: 'center', maxWidth: 46, lineHeight: 1.3, fontFamily: 'var(--font-inter,sans-serif)', transition: 'color 0.18s', display: 'block' }}>
-                        {s.name.split(' ').slice(0, 2).join(' ')}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div style={{ height: 1, background: 'rgba(201,168,76,0.08)', margin: '22px 0 0' }} />
-
-            {/* About your space */}
-            <div style={{ padding: '22px 20px 0' }}>
-              <div style={{ marginBottom: 22 }}>
-                <SectionLabel>About your space</SectionLabel>
-                <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: 'rgba(255,255,255,0.28)', margin: '6px 0 0' }}>
-                  3 quick questions — helps us get the match right
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: 'rgba(255,255,255,0.42)', letterSpacing: '0.1em' }}>Room type</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {([['living','Living Room'],['bedroom','Bedroom'],['dining','Dining'],['kitchen','Kitchen'],['office','Office']] as [RoomType,string][]).map(([v,label]) => (
-                      <Pill key={v} label={label} active={roomType === v} onClick={() => setRoomType(v)} />
-                    ))}
-                  </div>
+              {/* Counter-rotating ring spinner */}
+              <div style={{ position: 'relative', width: 76, height: 76, marginBottom: 44 }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+                  style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    border: `2px solid rgba(201,168,76,0.14)`,
+                    borderTop: `2px solid ${C.gold}`,
+                  }}
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 2.1, repeat: Infinity, ease: 'linear' }}
+                  style={{
+                    position: 'absolute', inset: 12, borderRadius: '50%',
+                    border: `1.5px solid rgba(201,168,76,0.08)`,
+                    borderBottom: `1.5px solid ${C.goldLight}`,
+                  }}
+                />
+                {/* Centre dot */}
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    width: 6, height: 6, borderRadius: '50%', background: C.gold,
+                    boxShadow: `0 0 10px ${C.gold}`,
+                  }} />
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: 'rgba(255,255,255,0.42)', letterSpacing: '0.1em' }}>Window size</span>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {([['small','Small','< 1 m'],['medium','Medium','1–2 m'],['large','Large','> 2 m']] as [WindowSize,string,string][]).map(([v,label,sub]) => (
-                      <Pill key={v} label={label} sub={sub} active={windowSize === v} onClick={() => setWindowSize(v)} />
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: 'rgba(255,255,255,0.42)', letterSpacing: '0.1em' }}>Light control</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {([['airy','Open & airy'],['filtered','Some filtering'],['blackout','Full blackout']] as [LightPref,string][]).map(([v,label]) => (
-                      <Pill key={v} label={label} active={lightPref === v} onClick={() => setLightPref(v)} />
-                    ))}
-                  </div>
-                </div>
-
               </div>
-            </div>
 
-            {/* Progress + CTA */}
-            <div style={{ padding: '28px 20px 28px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-                {[!!roomType, !!windowSize, !!lightPref, true].map((done, i) => (
-                  <div key={i} style={{ width: done ? 20 : 6, height: 6, borderRadius: 999, background: done ? C.gold : C.faint, transition: 'all 0.25s ease' }} />
+              {/* Cycling status text */}
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={msgIdx}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.38, ease } }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: 0.26 } }}
+                  style={{
+                    fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 21,
+                    color: C.text, textAlign: 'center', margin: 0, lineHeight: 1.4,
+                  }}>
+                  {PROCESSING_MSGS[msgIdx]}
+                </motion.p>
+              </AnimatePresence>
+
+              <p style={{
+                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
+                color: C.muted, textAlign: 'center', marginTop: 14,
+                letterSpacing: '0.20em', textTransform: 'uppercase',
+              }}>
+                Building your personalised canvas
+              </p>
+
+              {/* Message progress dots */}
+              <div style={{ display: 'flex', gap: 7, marginTop: 44 }}>
+                {PROCESSING_MSGS.map((_, i) => (
+                  <div key={i} style={{
+                    width:      i === msgIdx ? 22 : 6,
+                    height:     6,
+                    borderRadius: 999,
+                    background: i === msgIdx ? C.gold : 'rgba(255,255,255,0.11)',
+                    transition: 'all 0.38s ease',
+                  }} />
                 ))}
               </div>
 
-              <button
-                onClick={() => formComplete && setPhase('gate')}
-                disabled={!formComplete}
-                style={{
-                  width: '100%', padding: '16px', borderRadius: 10, border: 'none',
-                  background:    formComplete ? `linear-gradient(135deg,${C.goldLight},${C.gold})` : 'rgba(255,255,255,0.04)',
-                  color:         formComplete ? '#0A0F1C' : C.faint,
-                  fontFamily:    'var(--font-inter,sans-serif)',
-                  fontSize:      12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase',
-                  cursor:        formComplete ? 'pointer' : 'default',
-                  transition:    'background 0.25s',
-                  boxShadow:     formComplete ? '0 4px 20px rgba(201,168,76,0.22)' : 'none',
-                }}
-              >
-                {formComplete ? 'See It In My Room →' : `${[!!roomType, !!windowSize, !!lightPref].filter(Boolean).length} / 3 to go`}
-              </button>
+            </motion.div>
+          )}
 
-              <p style={{ fontSize: 10, color: C.faint, textAlign: 'center', lineHeight: 1.8, fontFamily: 'var(--font-inter,sans-serif)' }}>
-                Your room preview unlocks after a small payment — KES 100 or 300.
-                We confirm the exact fabric with you before making anything.
-              </p>
-            </div>
+          {/* ══ PHASE 3 — INTERACTIVE REVEAL ═════════════════════════════════ */}
+          {phase === 'reveal' && (
+            <motion.div key="reveal" initial={pageIn} animate={pageAnim} exit={pageOut}>
 
-          </motion.div>
-        )}
+              {/* Canvas viewport */}
+              <div ref={containerRef} style={{ position: 'relative', background: '#0A0B10' }}>
 
-        {/* ══ WHY IT WORKS — feature strip (select phase only) ════════════════ */}
-        {phase === 'select' && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', borderTop: `1px solid rgba(201,168,76,0.08)`, padding: '28px 20px 32px' }}>
-            <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, letterSpacing: '0.26em', textTransform: 'uppercase', color: C.gold, margin: '0 0 22px' }}>
-              What you get
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {[
-                {
-                  icon: '✦',
-                  title: 'Every fabric. Real feel.',
-                  body:  'Sheer linen that whispers light. Heavy velvet that commands a room. Each colour swatch you see is matched to a real fabric in our collection — not a guess.',
-                },
-                {
-                  icon: '◈',
-                  title: 'Your room. Before you pay for it.',
-                  body:  'Once you unlock the preview, you see your chosen curtain in an actual room — not a showroom, not a mood board. Something you can picture hanging in your home.',
-                },
-                {
-                  icon: '◇',
-                  title: 'Order with certainty.',
-                  body:  'No more hoping the swatch matches. What you confirm with us is what we make. Zero surprises. Same-day quote. Delivered and installed.',
-                },
-              ].map(f => (
-                <div key={f.title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 14, color: C.gold, flexShrink: 0, marginTop: 2, fontFamily: 'var(--font-playfair,Georgia,serif)' }}>{f.icon}</span>
-                  <div>
-                    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 5px', letterSpacing: '0.01em' }}>{f.title}</p>
-                    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.muted, lineHeight: 1.75, margin: 0 }}>{f.body}</p>
-                  </div>
+                {/* Live preview badge */}
+                <div style={{
+                  position: 'absolute', top: 12, left: 12, zIndex: 10,
+                  background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+                  borderRadius: 99, padding: '5px 12px',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />
+                  <span style={{
+                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                    color: 'rgba(255,255,255,0.8)', letterSpacing: '0.16em',
+                    textTransform: 'uppercase', fontWeight: 600,
+                  }}>
+                    Live Preview
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* ══ REVEALED content ════════════════════════════════════════════════ */}
-        {phase === 'revealed' && (
-          <motion.div {...fadeUp} style={{ padding: '22px 20px' }}>
-            <GoldRule />
+                {/* Wall colour badge */}
+                {wallColor && (
+                  <div style={{
+                    position: 'absolute', top: 12, right: 12, zIndex: 10,
+                    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+                    borderRadius: 8, padding: '5px 10px',
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <div style={{
+                      width: 11, height: 11, borderRadius: 3,
+                      background: wallColor.hex, flexShrink: 0,
+                    }} />
+                    <span style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                      color: 'rgba(255,255,255,0.6)', letterSpacing: '0.14em', textTransform: 'uppercase',
+                    }}>
+                      {wallColor.name}
+                    </span>
+                  </div>
+                )}
 
-            {/* Fabric detail card */}
-            <div style={{
-              display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px',
-              background: 'rgba(201,168,76,0.04)', border: `1px solid ${C.border}`,
-              borderRadius: 10, margin: '20px 0',
-            }}>
+                {/* Window profile badge */}
+                {windowProfile && (
+                  <div style={{
+                    position: 'absolute', bottom: 12, right: 12, zIndex: 10,
+                    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+                    borderRadius: 8, padding: '5px 10px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <span style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                      color: 'rgba(255,255,255,0.5)', letterSpacing: '0.14em', textTransform: 'uppercase',
+                    }}>
+                      {WINDOW_PROFILES.find(p => p.id === windowProfile)?.name}
+                    </span>
+                  </div>
+                )}
+
+                {!imgReady && (
+                  <div style={{
+                    width: '100%', height: 240,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: '#0D0F14',
+                  }}>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+                      style={{
+                        width: 24, height: 24, borderRadius: '50%',
+                        border: `2px solid ${C.faint}`,
+                        borderTop: `2px solid ${C.gold}`,
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Glass sheen overlay */}
+                <div style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9,
+                  background: 'linear-gradient(135deg,rgba(255,255,255,0.025) 0%,transparent 50%)',
+                }} />
+
+                <canvas ref={canvasRef} style={{ display: 'block', width: '100%' }} />
+              </div>
+
+              {/* ── Fabric control bar ──────────────────────────────────── */}
               <div style={{
-                width: 36, height: 58, borderRadius: 5, background: swatch.hex, flexShrink: 0,
-                boxShadow: `0 4px 14px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)`,
-                position: 'relative', overflow: 'hidden',
+                background:  C.surface,
+                borderTop:   `1px solid ${C.border}`,
+                padding:     '18px 0 20px',
               }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: 9, color: C.gold, letterSpacing: '0.28em', textTransform: 'uppercase', marginBottom: 4 }}>{swatch.collection}</p>
-                <p style={{ fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 20, color: C.text, fontWeight: 400, marginBottom: 6 }}>{swatch.name}</p>
-                <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.65, fontFamily: 'var(--font-inter,sans-serif)' }}>
-                  {roomType === 'living' ? 'Living Room' : roomType === 'dining' ? 'Dining Room' : roomType === 'bedroom' ? 'Bedroom' : roomType === 'kitchen' ? 'Kitchen' : 'Office'} ·{' '}
-                  {windowSize === 'small' ? '< 1 m window' : windowSize === 'medium' ? '1–2 m window' : '> 2 m window'} ·{' '}
-                  {lightPref === 'airy' ? 'Open & airy' : lightPref === 'filtered' ? 'Filtered light' : 'Full blackout'}
+                <p style={{
+                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                  letterSpacing: '0.28em', color: C.gold, textTransform: 'uppercase',
+                  margin: '0 0 14px', paddingLeft: 20,
+                }}>
+                  Fabric Match
                 </p>
+
+                {/* Pill buttons — horizontal scroll */}
+                <div style={{
+                  display: 'flex', gap: 9, overflowX: 'auto',
+                  padding: '0 20px 2px', scrollbarWidth: 'none',
+                }}>
+                  {fabricOpts.map(f => {
+                    const active = activeFabric?.id === f.id
+                    return (
+                      <button key={f.id}
+                        onClick={() => setActiveFabric(f)}
+                        style={{
+                          flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '9px 16px', borderRadius: 99,
+                          background:  active ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.04)',
+                          border:      `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.09)'}`,
+                          cursor:      'pointer',
+                          transition:  'all 0.22s ease',
+                          transform:   active ? 'scale(1.04)' : 'scale(1)',
+                          boxShadow:   active ? '0 4px 16px rgba(201,168,76,0.15)' : 'none',
+                        }}>
+                        {/* Colour dot */}
+                        <div style={{
+                          width: 11, height: 11, borderRadius: '50%',
+                          background: f.hex, flexShrink: 0,
+                          boxShadow: active ? `0 0 0 2px rgba(201,168,76,0.3)` : 'none',
+                          transition: 'box-shadow 0.22s',
+                        }} />
+                        <span style={{
+                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                          fontWeight: active ? 600 : 400, letterSpacing: '0.08em',
+                          color:      active ? C.goldLight : 'rgba(255,255,255,0.42)',
+                          whiteSpace: 'nowrap',
+                          transition: 'all 0.22s',
+                        }}>
+                          {f.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
 
-            <GoldRule />
+              {/* Active fabric detail card */}
+              {activeFabric && (
+                <motion.div
+                  key={activeFabric.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.3, ease } }}
+                  style={{ padding: '0 20px', background: C.bg }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '14px 16px',
+                    background: 'rgba(201,168,76,0.04)',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 10,
+                  }}>
+                    <div style={{
+                      width: 32, height: 48, borderRadius: 5,
+                      background: activeFabric.hex, flexShrink: 0,
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06)',
+                      position: 'relative', overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 60%)',
+                      }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                        color: C.gold, letterSpacing: '0.26em', textTransform: 'uppercase',
+                        margin: '0 0 4px',
+                      }}>
+                        {activeFabric.collection}
+                      </p>
+                      <p style={{
+                        fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 18,
+                        color: C.text, margin: '0 0 4px', fontWeight: 400,
+                      }}>
+                        {activeFabric.label}
+                      </p>
+                      <p style={{
+                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                        color: C.muted, margin: 0, letterSpacing: '0.06em',
+                      }}>
+                        {activeFabric.hex.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <a href="/contact" style={{
-                display: 'block', width: '100%', padding: '15px',
-                background: `linear-gradient(135deg,${C.goldLight},${C.gold})`,
-                color: '#0A0F1C', fontFamily: 'var(--font-inter,sans-serif)',
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase',
-                borderRadius: 8, textDecoration: 'none', textAlign: 'center',
-                boxShadow: '0 4px 16px rgba(201,168,76,0.22)',
-              }}>
-                Book a Consultation
-              </a>
-              <button
-                onClick={() => { setPhase('select'); setRoomType(null); setWindowSize(null); setLightPref(null) }}
-                style={{
-                  display: 'block', width: '100%', padding: '13px',
-                  background: 'transparent', border: `1px solid rgba(201,168,76,0.18)`,
-                  borderRadius: 8, color: C.muted, fontSize: 12, cursor: 'pointer',
-                  fontFamily: 'var(--font-inter,sans-serif)',
-                }}
-              >
-                Try a different colour
-              </button>
-            </div>
-          </motion.div>
-        )}
+              {/* CTAs */}
+              <div style={{ padding: '14px 20px 52px', display: 'flex', flexDirection: 'column', gap: 10, background: C.bg }}>
+                <a href="/contact" style={{
+                  display: 'block', padding: '15px', borderRadius: 10,
+                  background: C.goldGrad, color: '#0A0F1C',
+                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                  fontWeight: 700, letterSpacing: '0.26em', textTransform: 'uppercase',
+                  textDecoration: 'none', textAlign: 'center',
+                  boxShadow: '0 4px 22px rgba(201,168,76,0.26)',
+                  transition: 'filter 0.22s,box-shadow 0.22s',
+                }}>
+                  Book a Consultation
+                </a>
+                <button
+                  onClick={() => {
+                    setPhase('configure')
+                    setStep(1)
+                    setWallColor(null)
+                    setWindowProfile(null)
+                    setRoomType(null)
+                    setFabricOpts([])
+                    setActiveFabric(null)
+                  }}
+                  style={{
+                    padding: '13px', borderRadius: 10, background: 'transparent',
+                    border: `1px solid ${C.border}`, color: C.muted, cursor: 'pointer',
+                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
+                    transition: 'border-color 0.22s,color 0.22s',
+                  }}>
+                  Start Over
+                </button>
+              </div>
 
+            </motion.div>
+          )}
+
+        </AnimatePresence>
       </div>
     </div>
   )
