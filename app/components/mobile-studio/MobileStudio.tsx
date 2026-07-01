@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { drawScene, WindowProfile } from './curtainRenderer'
+import { composeScene } from './fabricCompositor'
+import { CURTAIN_STYLES, loadPanelSet, type PanelSet } from './assetManifest'
 import { getRecommendations, hexToRgb } from '@/app/lib/colorEngine'
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -73,9 +75,20 @@ const PROCESSING_MSGS = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Phase = 'configure' | 'processing' | 'reveal'
 type Step  = 1 | 2 | 3
+// Reveal render engine: 'photo' = photo-match (drawScene), 'studio' = compositor scene.
+type RenderMode = 'photo' | 'studio'
 
 interface WallColor { id: string; name: string; hex: string }
 interface FabricOpt { id: string; label: string; hex: string; collection: string }
+
+// Default curtain style for studio mode (until a style picker exists).
+const STUDIO_STYLE = CURTAIN_STYLES[0].id
+// Map the chosen architectural profile onto the compositor's window-size axis.
+const PROFILE_SIZE: Record<WindowProfile, 'small' | 'medium' | 'large'> = {
+  minimalist: 'large',
+  classic:    'medium',
+  doubleHung: 'small',
+}
 
 // ─── Window SVG icons ─────────────────────────────────────────────────────────
 function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
@@ -154,6 +167,8 @@ export default function MobileStudio() {
   const [fabricOpts,     setFabricOpts]     = useState<FabricOpt[]>([])
   const [activeFabric,   setActiveFabric]   = useState<FabricOpt | null>(null)
   const [showWindow,     setShowWindow]     = useState(true)
+  const [renderMode,     setRenderMode]     = useState<RenderMode>('photo')
+  const [studioPanels,   setStudioPanels]   = useState<PanelSet | null>(null)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -166,6 +181,15 @@ export default function MobileStudio() {
     img.onload = () => { imgRef.current = img; setImgReady(true) }
     img.src = '/assets/sittingroom.png'
   }, [])
+
+  // Lazily resolve compositor panels the first time Studio mode is used.
+  // Falls back to the code placeholder until a Blender render lands in /public/curtains.
+  useEffect(() => {
+    if (renderMode !== 'studio' || studioPanels) return
+    let cancelled = false
+    loadPanelSet(STUDIO_STYLE, 'open').then(ps => { if (!cancelled) setStudioPanels(ps) })
+    return () => { cancelled = true }
+  }, [renderMode, studioPanels])
 
   // Auto-advance step handlers
   function selectWallColor(c: WallColor) {
@@ -220,23 +244,40 @@ export default function MobileStudio() {
   // Canvas draw
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
-    const img    = imgRef.current
     const cont   = containerRef.current
-    if (!canvas || !img || !cont) return
+    if (!canvas || !cont) return
+    const img = imgRef.current
 
-    const W   = cont.clientWidth
-    const H   = Math.min(
-      Math.round(W * img.naturalHeight / img.naturalWidth),
-      Math.round(window.innerHeight * 0.72),
-    )
+    // Canvas box keeps the photo's aspect ratio for a consistent frame in both modes.
+    const W = cont.clientWidth
+    const aspectH = img
+      ? Math.round(W * img.naturalHeight / img.naturalWidth)
+      : Math.round(W * 1.3)
+    const H = Math.min(aspectH, Math.round(window.innerHeight * 0.72))
     const dpr           = window.devicePixelRatio || 1
     canvas.width        = Math.round(W * dpr)
     canvas.height       = Math.round(H * dpr)
     canvas.style.width  = `${W}px`
     canvas.style.height = `${H}px`
 
+    if (renderMode === 'studio') {
+      if (!studioPanels) return   // panels still loading — draw effect re-runs when ready
+      composeScene(canvas, {
+        wallHex:    wallColor?.hex   ?? '#E2D5BF',
+        fabricHex:  activeFabric?.hex ?? '#D9C7A3',
+        leftPanel:  studioPanels.left,
+        rightPanel: studioPanels.right,
+        shadow:     studioPanels.shadow,
+        windowSize: windowProfile ? PROFILE_SIZE[windowProfile] : 'medium',
+        tintGain:   studioPanels.tintGain,
+      })
+      return
+    }
+
+    // Photo Match (default)
+    if (!img) return
     drawScene(canvas, img, activeFabric?.hex ?? null, (showWindow && windowProfile) ? windowProfile : undefined)
-  }, [activeFabric, windowProfile, showWindow])
+  }, [renderMode, studioPanels, wallColor, activeFabric, windowProfile, showWindow])
 
   useEffect(() => {
     if (phase === 'reveal' && imgReady) redraw()
@@ -657,8 +698,8 @@ export default function MobileStudio() {
                   </div>
                 )}
 
-                {/* Window toggle */}
-                {windowProfile && (
+                {/* Window toggle — Photo mode only (Studio always frames a window) */}
+                {windowProfile && renderMode === 'photo' && (
                   <button
                     onClick={() => setShowWindow(s => !s)}
                     style={{
@@ -715,6 +756,33 @@ export default function MobileStudio() {
                     />
                   </div>
                 )}
+
+                {/* Render-mode toggle — Photo Match ↔ Studio Room (compositor) */}
+                <div style={{
+                  position: 'absolute', bottom: 12, right: 12, zIndex: 10,
+                  display: 'flex', gap: 3, padding: 3,
+                  background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
+                  borderRadius: 99, border: '1px solid rgba(255,255,255,0.10)',
+                }}>
+                  {([['photo', 'Photo'], ['studio', 'Studio']] as [RenderMode, string][]).map(([m, label]) => {
+                    const on = renderMode === m
+                    return (
+                      <button key={m}
+                        onClick={() => setRenderMode(m)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 99, cursor: 'pointer',
+                          border: 'none',
+                          background: on ? C.gold : 'transparent',
+                          color: on ? '#0A0F1C' : 'rgba(255,255,255,0.5)',
+                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                          fontWeight: on ? 700 : 500, letterSpacing: '0.14em',
+                          textTransform: 'uppercase', transition: 'all 0.2s ease',
+                        }}>
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
 
                 {/* Glass sheen overlay */}
                 <div style={{
