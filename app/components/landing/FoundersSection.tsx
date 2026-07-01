@@ -5,47 +5,165 @@ import { motion } from 'framer-motion'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-const SIMON_TAGS = ['Digital Product Design', 'Systems Architecture', 'User Experience', 'Attention to Detail']
-const ROSE_TAGS  = ['Fashion & Fabric Design', 'Material Expertise', 'Colour & Texture', 'Design Instinct']
-
 function GoldLine({ width = 48 }: { width?: number }) {
   return (
     <div style={{
-      width:        `${width}px`,
-      height:       '1px',
-      background:   'linear-gradient(90deg, transparent, #C9A84C 30%, #E8C96D 50%, #C9A84C 70%, transparent)',
-      margin:       '0 auto',
+      width:      `${width}px`,
+      height:     '1px',
+      background: 'linear-gradient(90deg, transparent, #C9A84C 30%, #E8C96D 50%, #C9A84C 70%, transparent)',
+      margin:     '0 auto',
     }} />
   )
 }
 
-function SkillTag({ label, delay }: { label: string; delay: number }) {
+interface Founder {
+  badge:     string
+  name:      string
+  role:      string
+  story:     string
+  signature: string
+  img:       string
+  alt:       string
+  objectPos: string
+}
+
+// Copy grounded in claims already published on the site. The two lines marked
+// PERSONALIZE are safe as-is but sing louder with a real specific from Douglas.
+const FOUNDERS: Founder[] = [
+  {
+    badge:     'The Architect',
+    name:      'Engineer Juma',
+    role:      'Founder · Creative Technologist',
+    story:
+      'R&J began with something Juma kept noticing: people choosing curtains the hard way — squinting at a ' +
+      'thumbnail swatch, carrying the fabric home, and simply hoping it suited the room. He was certain there ' +
+      'was a better way, so he built it — the tool that lets you see your curtains on your own window before ' +
+      'you spend a single shilling. Every layer of R&J is his: the app, the visualiser, the quiet way it all just works.',
+    signature: 'There is always a better way. My work is to build it.',
+    img:       '/assets/jumafounder.jpeg',
+    alt:       'Engineer Juma, Founder of R&J Interiors',
+    objectPos: 'center top',
+  },
+  {
+    badge:     'The Designer',
+    name:      'Designer Rose',
+    role:      'Co-Founder · Fashion & Design',
+    story:
+      'Rose came to curtains through fashion, where she spent years learning how cloth behaves — how it catches ' +
+      'light, holds weight, and quietly sets the mood of a space. Linen is where her heart is: she can walk into ' +
+      'a bare room and know exactly which weave will settle it. Describe the feeling you want your home to have, ' +
+      'and she will hand you the fabric that delivers it.',
+    signature: 'The right fabric does not cover a window. It changes the room.',
+    img:       '/assets/rosedesigner.jpeg',
+    alt:       'Designer Rose, Co-Founder of R&J Interiors',
+    objectPos: 'center',
+  },
+]
+
+function FounderRow({ f, reverse, delay }: { f: Founder; reverse: boolean; delay: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 44 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.4, ease, delay }}
-      style={{
-        border:        '1px solid rgba(201,168,76,0.25)',
-        padding:       '6px 16px',
-        borderRadius:  '20px',
-        fontFamily:    'var(--font-inter, sans-serif)',
-        fontSize:      '12px',
-        color:         '#A8B2BE',
-        cursor:        'default',
-        transition:    'border-color 0.2s ease, color 0.2s ease',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'rgba(201,168,76,0.6)'
-        e.currentTarget.style.color       = '#C9A84C'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'rgba(201,168,76,0.25)'
-        e.currentTarget.style.color       = '#A8B2BE'
-      }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.85, ease, delay }}
+      className={`flex flex-col gap-8 md:gap-16 md:items-center ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'}`}
     >
-      {label}
+      {/* Portrait */}
+      <div className="w-full md:w-1/2">
+        <div style={{
+          position:     'relative',
+          width:        '100%',
+          aspectRatio:  '4/5',
+          borderRadius: '10px',
+          overflow:     'hidden',
+          border:       '1px solid rgba(201,168,76,0.22)',
+          boxShadow:    '0 24px 60px rgba(0,0,0,0.45)',
+        }}>
+          <Image
+            src={f.img}
+            alt={f.alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            style={{ objectFit: 'cover', objectPosition: f.objectPos }}
+          />
+          {/* Soft base gradient anchors the portrait into the deep-navy section */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to top, rgba(13,27,46,0.55) 0%, transparent 42%)',
+          }} />
+        </div>
+      </div>
+
+      {/* Story */}
+      <div className="w-full md:w-1/2">
+        <span style={{
+          display:       'inline-block',
+          background:    'rgba(201,168,76,0.08)',
+          border:        '1px solid rgba(201,168,76,0.3)',
+          padding:       '5px 16px',
+          borderRadius:  '20px',
+          fontFamily:    'var(--font-inter, sans-serif)',
+          fontSize:      '10px',
+          color:         '#C9A84C',
+          letterSpacing: '3px',
+          textTransform: 'uppercase',
+          marginBottom:  '18px',
+        }}>
+          {f.badge}
+        </span>
+
+        <h3 style={{
+          fontFamily:   'var(--font-playfair, Georgia, serif)',
+          fontSize:     'clamp(30px, 3.4vw, 44px)',
+          color:        '#FFFFFF',
+          fontWeight:   400,
+          lineHeight:   1.1,
+          marginBottom: '8px',
+        }}>
+          {f.name}
+        </h3>
+
+        <p style={{
+          fontFamily:    'var(--font-inter, sans-serif)',
+          fontSize:      '13px',
+          color:         '#A8B2BE',
+          letterSpacing: '1px',
+          marginBottom:  '24px',
+        }}>
+          {f.role}
+        </p>
+
+        <p style={{
+          fontFamily: 'var(--font-inter, sans-serif)',
+          fontSize:   'clamp(15px, 1.5vw, 17px)',
+          color:      '#C6CFD8',
+          lineHeight: 1.75,
+          maxWidth:   '46ch',
+          margin:     '0 0 26px',
+        }}>
+          {f.story}
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width:      '34px',
+            height:     '1px',
+            background: 'linear-gradient(90deg, #C9A84C, transparent)',
+            flexShrink: 0,
+          }} />
+          <p style={{
+            fontFamily: 'var(--font-playfair, Georgia, serif)',
+            fontSize:   '17px',
+            color:      '#C9A84C',
+            fontStyle:  'italic',
+            lineHeight: 1.45,
+            margin:     0,
+          }}>
+            {f.signature}
+          </p>
+        </div>
+      </div>
     </motion.div>
   )
 }
@@ -53,14 +171,14 @@ function SkillTag({ label, delay }: { label: string; delay: number }) {
 export default function FoundersSection({ firstSection }: { firstSection?: boolean }) {
   return (
     <section style={{
-      background:     '#0D1B2E',
-      paddingTop:     firstSection ? 'calc(var(--rj-navbar-height) + 24px)' : '120px',
-      paddingBottom:  '120px',
-      paddingLeft:    '6vw',
-      paddingRight:   '6vw',
-      borderTop:      firstSection ? 'none' : '1px solid rgba(201,168,76,0.12)',
+      background:    '#0D1B2E',
+      paddingTop:    firstSection ? 'calc(var(--rj-navbar-height) + 24px)' : '120px',
+      paddingBottom: '120px',
+      paddingLeft:   '6vw',
+      paddingRight:  '6vw',
+      borderTop:     firstSection ? 'none' : '1px solid rgba(201,168,76,0.12)',
     }}>
-      <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1180px', margin: '0 auto' }}>
 
         {/* Section header */}
         <motion.div
@@ -68,7 +186,7 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.8, ease }}
-          style={{ textAlign: 'center', marginBottom: '40px' }}
+          style={{ textAlign: 'center', marginBottom: '84px' }}
         >
           <p style={{
             fontFamily:    'var(--font-inter, sans-serif)',
@@ -76,327 +194,30 @@ export default function FoundersSection({ firstSection }: { firstSection?: boole
             color:         '#C9A84C',
             letterSpacing: '4px',
             textTransform: 'uppercase',
-            marginBottom:  '12px',
+            marginBottom:  '18px',
           }}>
-            The People Behind R&amp;J
+            The People Behind R&J
           </p>
-
           <h2 style={{
             fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(32px, 5vw, 52px)',
+            fontSize:     'clamp(32px, 5vw, 56px)',
             color:        '#FFFFFF',
             fontWeight:   400,
-            lineHeight:   1.1,
-            marginBottom: '16px',
+            lineHeight:   1.15,
+            marginBottom: '20px',
           }}>
-            The Architect &amp; The Curator
+            Two People.{' '}
+            <em style={{ color: '#C9A84C' }}>One Obsession With Your Home.</em>
           </h2>
-
           <GoldLine width={48} />
         </motion.div>
 
-        {/* Two-column card grid */}
-        <div
-          className="grid md:grid-cols-2"
-          style={{ gap: '48px', alignItems: 'stretch' }}
-        >
-
-          {/* ── Card 1: Simon / The Architect ── */}
-          <motion.div
-            initial={{ opacity: 0, x: -60 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.9, ease, delay: 0.3 }}
-            style={{
-              background:   'transparent',
-              border:       '1px solid rgba(201,168,76,0.2)',
-              borderRadius: '8px',
-              padding:      'clamp(24px, 4vw, 48px)',
-              position:     'relative',
-              overflow:     'hidden',
-              transition:   'all 0.35s ease',
-              cursor:       'default',
-            }}
-            whileHover={{
-              y:          -4,
-              boxShadow:  '0 12px 40px rgba(0,0,0,0.4)',
-              borderColor:'rgba(201,168,76,0.5)',
-            }}
-          >
-            {/* Image */}
-            <div style={{
-              width:        '100%',
-              aspectRatio:  '3/4',
-              borderRadius: '10px',
-              overflow:     'hidden',
-              border:       '1px solid rgba(201,168,76,0.2)',
-              marginBottom: '32px',
-              position:     'relative',
-              background:   'transparent',
-            }}>
-              <Image
-                src="/assets/jumafounder.jpeg"
-                alt="Engineer Juma — Founder, R&J Interiors"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: 'cover', objectPosition: 'center top' }}
-              />
-            </div>
-
-            {/* Badge */}
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <span style={{
-                display:       'inline-block',
-                background:    'rgba(201,168,76,0.08)',
-                border:        '1px solid rgba(201,168,76,0.3)',
-                padding:       '5px 16px',
-                borderRadius:  '20px',
-                fontFamily:    'var(--font-inter, sans-serif)',
-                fontSize:      '10px',
-                color:         '#C9A84C',
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-              }}>
-                The Architect
-              </span>
-            </div>
-
-            {/* Name */}
-            <h3 style={{
-              fontFamily:   'var(--font-playfair, Georgia, serif)',
-              fontSize:     '26px',
-              color:        '#FFFFFF',
-              fontWeight:   400,
-              textAlign:    'center',
-              marginBottom: '6px',
-            }}>
-              Engineer Juma
-            </h3>
-
-            {/* Role */}
-            <p style={{
-              fontFamily:    'var(--font-inter, sans-serif)',
-              fontSize:      '13px',
-              color:         '#A8B2BE',
-              textAlign:     'center',
-              letterSpacing: '1px',
-              marginBottom:  0,
-            }}>
-              Founder · Creative Technologist
-            </p>
-
-            {/* Tagline */}
-            <p style={{
-              fontFamily:   'var(--font-inter, sans-serif)',
-              fontSize:     '14px',
-              color:        '#C9A84C',
-              fontStyle:    'italic',
-              textAlign:    'center',
-              marginTop:    '8px',
-            }}>
-              Where code meets creativity
-            </p>
-
-            {/* Divider */}
-            <div style={{ margin: '24px 0' }}>
-              <GoldLine width={32} />
-            </div>
-
-            {/* Bio */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{
-                fontFamily: 'var(--font-inter, sans-serif)',
-                fontSize:   '15px',
-                color:      '#A8B2BE',
-                lineHeight: 1.8,
-              }}>
-                Juma builds the world you see. From the feel of the app in your hand
-                to the tool that shows your curtains in your actual room before you
-                spend a shilling — he engineered every layer of the R&amp;J experience,
-                obsessing over the details that make the difference between something
-                that works and something that genuinely delights.
-              </p>
-              <p style={{
-                fontFamily: 'var(--font-playfair, Georgia, serif)',
-                fontSize:   '17px',
-                color:      '#FFFFFF',
-                fontStyle:  'italic',
-                lineHeight: 1.7,
-              }}>
-                Detail is not a finishing touch. It is where the work begins.
-              </p>
-            </div>
-
-            {/* Skill tags */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '28px' }}>
-              {SIMON_TAGS.map((tag, i) => (
-                <SkillTag key={tag} label={tag} delay={0.3 + i * 0.08} />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* ── Card 2: Rose / The Curator ── */}
-          <motion.div
-            initial={{ opacity: 0, x: 60 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.9, ease, delay: 0.5 }}
-            style={{
-              background:   'transparent',
-              border:       '1px solid rgba(201,168,76,0.2)',
-              borderRadius: '8px',
-              padding:      'clamp(24px, 4vw, 48px)',
-              position:     'relative',
-              overflow:     'hidden',
-              transition:   'all 0.35s ease',
-              cursor:       'default',
-            }}
-            whileHover={{
-              y:          -4,
-              boxShadow:  '0 12px 40px rgba(0,0,0,0.4)',
-              borderColor:'rgba(201,168,76,0.5)',
-            }}
-          >
-            {/* Image */}
-            <div style={{
-              width:        '100%',
-              aspectRatio:  '3/4',
-              borderRadius: '10px',
-              overflow:     'hidden',
-              border:       '1px solid rgba(201,168,76,0.2)',
-              marginBottom: '32px',
-              position:     'relative',
-              background:   'transparent',
-            }}>
-              <Image
-                src="/assets/rosedesigner.jpeg"
-                alt="Rose — Designer, R&J Interiors"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: 'cover', objectPosition: 'center' }}
-              />
-            </div>
-
-            {/* Badge */}
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <span style={{
-                display:       'inline-block',
-                background:    'rgba(201,168,76,0.08)',
-                border:        '1px solid rgba(201,168,76,0.3)',
-                padding:       '5px 16px',
-                borderRadius:  '20px',
-                fontFamily:    'var(--font-inter, sans-serif)',
-                fontSize:      '10px',
-                color:         '#C9A84C',
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-              }}>
-                Co-Founder
-              </span>
-            </div>
-
-            {/* Name */}
-            <h3 style={{
-              fontFamily:   'var(--font-playfair, Georgia, serif)',
-              fontSize:     '26px',
-              color:        '#FFFFFF',
-              fontWeight:   400,
-              textAlign:    'center',
-              marginBottom: '6px',
-            }}>
-              Designer Rose
-            </h3>
-
-            {/* Role */}
-            <p style={{
-              fontFamily:    'var(--font-inter, sans-serif)',
-              fontSize:      '13px',
-              color:         '#A8B2BE',
-              textAlign:     'center',
-              letterSpacing: '1px',
-              marginBottom:  0,
-            }}>
-              Co-Founder · Fashion &amp; Design
-            </p>
-
-            {/* Tagline */}
-            <p style={{
-              fontFamily:   'var(--font-inter, sans-serif)',
-              fontSize:     '14px',
-              color:        '#C9A84C',
-              fontStyle:    'italic',
-              textAlign:    'center',
-              marginTop:    '8px',
-            }}>
-              Where instinct becomes your home
-            </p>
-
-            {/* Divider */}
-            <div style={{ margin: '24px 0' }}>
-              <GoldLine width={32} />
-            </div>
-
-            {/* Bio */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <p style={{
-                fontFamily: 'var(--font-inter, sans-serif)',
-                fontSize:   '15px',
-                color:      '#A8B2BE',
-                lineHeight: 1.8,
-              }}>
-                Rose came to curtains through fashion. She spent years learning how
-                fabric lives — how silk catches morning light differently from linen,
-                how weight and weave change the entire feeling of a room, how a single
-                material choice can make a space feel either restless or at peace.
-                That trained eye is the soul of R&amp;J. When a client describes a
-                feeling they want in their home, Rose is the one who knows exactly
-                which fabric delivers it.
-              </p>
-              <p style={{
-                fontFamily: 'var(--font-playfair, Georgia, serif)',
-                fontSize:   '17px',
-                color:      '#FFFFFF',
-                fontStyle:  'italic',
-                lineHeight: 1.7,
-              }}>
-                The right fabric does not just cover a window. It changes the whole room.
-              </p>
-            </div>
-
-            {/* Skill tags */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '28px' }}>
-              {ROSE_TAGS.map((tag, i) => (
-                <SkillTag key={tag} label={tag} delay={0.5 + i * 0.08} />
-              ))}
-            </div>
-          </motion.div>
-
+        {/* Editorial alternating rows */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(72px, 9vw, 120px)' }}>
+          {FOUNDERS.map((f, i) => (
+            <FounderRow key={f.name} f={f} reverse={i % 2 === 1} delay={0.15} />
+          ))}
         </div>
-
-        {/* Closing statement */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, ease }}
-          style={{ marginTop: '64px', textAlign: 'center' }}
-        >
-          <GoldLine width={32} />
-          <p style={{
-            fontFamily:  'var(--font-playfair, Georgia, serif)',
-            fontSize:    '20px',
-            color:       '#A8B2BE',
-            fontStyle:   'italic',
-            textAlign:   'center',
-            maxWidth:    '640px',
-            margin:      '32px auto',
-            lineHeight:  1.75,
-          }}>
-            Every R&amp;J Interiors piece is a direct collaboration between us —
-            the technology and the taste, working as one.
-          </p>
-          <GoldLine width={32} />
-        </motion.div>
 
       </div>
     </section>
