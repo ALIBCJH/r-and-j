@@ -169,6 +169,7 @@ export default function MobileStudio() {
   const [showWindow,     setShowWindow]     = useState(true)
   const [renderMode,     setRenderMode]     = useState<RenderMode>('photo')
   const [studioPanels,   setStudioPanels]   = useState<PanelSet | null>(null)
+  const [curtainStyle,   setCurtainStyle]   = useState<string>(STUDIO_STYLE)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -182,14 +183,15 @@ export default function MobileStudio() {
     img.src = '/assets/sittingroom.png'
   }, [])
 
-  // Lazily resolve compositor panels the first time Studio mode is used.
-  // Falls back to the code placeholder until a Blender render lands in /public/curtains.
+  // Resolve compositor panels for the selected style whenever Studio mode is
+  // active or the style changes. loadPanelSet caches images, so re-selecting is
+  // cheap; falls back to the code placeholder until a render lands in /public/curtains.
   useEffect(() => {
-    if (renderMode !== 'studio' || studioPanels) return
+    if (renderMode !== 'studio') return
     let cancelled = false
-    loadPanelSet(STUDIO_STYLE, 'open').then(ps => { if (!cancelled) setStudioPanels(ps) })
+    loadPanelSet(curtainStyle, 'open').then(ps => { if (!cancelled) setStudioPanels(ps) })
     return () => { cancelled = true }
-  }, [renderMode, studioPanels])
+  }, [renderMode, curtainStyle])
 
   // Auto-advance step handlers
   function selectWallColor(c: WallColor) {
@@ -799,6 +801,46 @@ export default function MobileStudio() {
                 borderTop:   `1px solid ${C.border}`,
                 padding:     '14px 0 16px',
               }}>
+                {/* Curtain-style picker — Studio mode only */}
+                {renderMode === 'studio' && (
+                  <div style={{ padding: '0 20px 12px' }}>
+                    <p style={{
+                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+                      letterSpacing: '0.22em', textTransform: 'uppercase',
+                      color: C.muted, margin: '0 0 9px',
+                    }}>
+                      Curtain Style
+                    </p>
+                    <div style={{
+                      display: 'flex', gap: 9, overflowX: 'auto',
+                      paddingBottom: 2, scrollbarWidth: 'none',
+                    }}>
+                      {CURTAIN_STYLES.map(s => {
+                        const active = curtainStyle === s.id
+                        return (
+                          <button key={s.id}
+                            onClick={() => setCurtainStyle(s.id)}
+                            style={{
+                              flexShrink: 0, padding: '9px 16px', borderRadius: 99,
+                              background:  active ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.04)',
+                              border:      `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.09)'}`,
+                              cursor:      'pointer',
+                              transition:  'all 0.22s ease',
+                              transform:   active ? 'scale(1.04)' : 'scale(1)',
+                              boxShadow:   active ? '0 4px 16px rgba(201,168,76,0.15)' : 'none',
+                              fontFamily:  'var(--font-inter,sans-serif)', fontSize: 11,
+                              fontWeight:  active ? 600 : 400, letterSpacing: '0.08em',
+                              color:       active ? C.goldLight : 'rgba(255,255,255,0.42)',
+                              whiteSpace:  'nowrap',
+                            }}>
+                            {s.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Pill buttons — horizontal scroll */}
                 <div style={{
                   display: 'flex', gap: 9, overflowX: 'auto',
