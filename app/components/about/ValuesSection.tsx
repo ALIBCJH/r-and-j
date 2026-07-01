@@ -2,43 +2,45 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useIsMobile } from '@/app/components/style-picker/hooks/useIsMobile'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 const VALUES = [
   {
-    number:      '01',
-    name:        'We Listen First.',
-    description: "We won't push a fabric on you. We ask about your room, your family, how you actually live in your space.",
+    number: '01',
+    name:   'We Listen First.',
+    desc:   'Before we talk fabric, we learn your home — your light, your layout, and how you actually live in the room. The curtain is the last decision, not the first.',
   },
   {
-    number:      '02',
-    name:        'We Make It Last.',
-    description: 'We choose fabrics built to hold their colour, drape, and shape through years of Kenyan sunlight and weather.',
+    number: '02',
+    name:   'We Make It Last.',
+    desc:   'Full linings, reinforced headers, hardware that holds. We build curtains to outlive the trend that inspired them — and the season you bought them in.',
   },
   {
-    number:      '03',
-    name:        'Proudly Nyeri.',
-    description: "We know Kenyan homes — how the light moves through your windows, how the seasons differ. That understanding doesn't come from a catalog.",
+    number: '03',
+    name:   'Proudly Nyeri.',
+    desc:   'Made by Kenyan hands for Kenyan homes, with the patience that only comes from where we are from. When we say a slot, we keep it.',
   },
 ]
 
 export default function ValuesSection() {
+  const isMobile = useIsMobile() === true
+
   return (
     <section style={{
       background: '#0D1B2E',
-      padding:    '120px 6vw',
+      padding:    isMobile ? '88px 24px' : '120px 6vw',
       borderTop:  '1px solid rgba(201,168,76,0.12)',
     }}>
       <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.7, ease }}
-          style={{ marginBottom: '80px' }}
+          style={{ marginBottom: isMobile ? '48px' : '80px' }}
         >
           <p style={{
             fontFamily:    'var(--font-inter, sans-serif)',
@@ -52,50 +54,49 @@ export default function ValuesSection() {
           </p>
           <h2 style={{
             fontFamily: 'var(--font-playfair, Georgia, serif)',
-            fontSize:   'clamp(36px, 4vw, 54px)',
+            fontSize:   'clamp(32px, 4vw, 54px)',
             color:      '#FFFFFF',
             fontWeight: 400,
             lineHeight: 1.1,
+            margin:     0,
           }}>
-            Three things we<br />
+            Three things we{' '}
             <em style={{ color: '#C9A84C' }}>never compromise on.</em>
           </h2>
         </motion.div>
 
-        {/* Value rows */}
         <div>
           {VALUES.map((value, i) => (
-            <ValueRow key={value.number} value={value} index={i} />
+            <ValueRow key={value.number} value={value} index={i} isMobile={isMobile} />
           ))}
         </div>
 
       </div>
-
-      <style>{`
-        .value-row-inner {
-          display: grid;
-          grid-template-columns: 64px 1fr 1fr;
-          gap: 48px;
-          align-items: start;
-        }
-        @media (max-width: 768px) {
-          .value-row-inner {
-            grid-template-columns: 40px 1fr;
-            gap: 24px;
-          }
-          .value-row-inner p:last-child {
-            grid-column: 1 / -1;
-            padding-top: 0 !important;
-            max-width: 100% !important;
-          }
-        }
-      `}</style>
     </section>
   )
 }
 
-function ValueRow({ value, index }: { value: typeof VALUES[number]; index: number }) {
+function ValueRow({
+  value,
+  index,
+  isMobile,
+}: {
+  value: typeof VALUES[number]
+  index: number
+  isMobile: boolean
+}) {
   const [hovered, setHovered] = useState(false)
+  // On touch devices there is no hover — show the "active" treatment by default.
+  const active = hovered || isMobile
+
+  const rule = (on: boolean) => ({
+    width:      '100%',
+    height:     '1px',
+    background: on
+      ? 'linear-gradient(to right, transparent, rgba(201,168,76,0.5) 20%, rgba(201,168,76,0.5) 80%, transparent)'
+      : 'linear-gradient(to right, transparent, rgba(201,168,76,0.15) 20%, rgba(201,168,76,0.15) 80%, transparent)',
+    transition: 'background 0.4s ease',
+  })
 
   return (
     <motion.div
@@ -107,71 +108,54 @@ function ValueRow({ value, index }: { value: typeof VALUES[number]; index: numbe
       onMouseLeave={() => setHovered(false)}
       style={{ cursor: 'default' }}
     >
-      {/* Top rule */}
-      <div style={{
-        width:      '100%',
-        height:     '1px',
-        background: hovered
-          ? 'linear-gradient(to right, transparent, rgba(201,168,76,0.5) 20%, rgba(201,168,76,0.5) 80%, transparent)'
-          : 'linear-gradient(to right, transparent, rgba(201,168,76,0.15) 20%, rgba(201,168,76,0.15) 80%, transparent)',
-        transition: 'background 0.4s ease',
-      }} />
+      <div style={rule(active)} />
 
-      <div
-        className="value-row-inner"
-        style={{ padding: '48px 0', alignItems: 'flex-start' }}
-      >
-        {/* Number tag */}
+      <div style={{
+        display:             'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '64px 1fr',
+        gap:                 isMobile ? '14px' : '48px',
+        alignItems:          'start',
+        padding:             isMobile ? '36px 0' : '52px 0',
+      }}>
         <p style={{
           fontFamily:    'var(--font-inter, sans-serif)',
           fontSize:      '11px',
-          color:         hovered ? '#C9A84C' : 'rgba(201,168,76,0.4)',
+          color:         active ? '#C9A84C' : 'rgba(201,168,76,0.4)',
           letterSpacing: '3px',
-          paddingTop:    '10px',
           transition:    'color 0.3s ease',
-          flexShrink:    0,
+          margin:        0,
         }}>
           {value.number}
         </p>
 
-        {/* Value name */}
-        <h3 style={{
-          fontFamily:  'var(--font-playfair, Georgia, serif)',
-          fontSize:    'clamp(36px, 4.5vw, 62px)',
-          fontWeight:  400,
-          lineHeight:  1.05,
-          color:       hovered ? '#FFFFFF' : 'rgba(255,255,255,0.75)',
-          transition:  'color 0.35s ease',
-          letterSpacing: '-0.01em',
-        }}>
-          {value.name}
-        </h3>
-
-        {/* Description */}
-        <p style={{
-          fontFamily: 'var(--font-inter, sans-serif)',
-          fontSize:   '15px',
-          color:      hovered ? '#A8B2BE' : '#5A6A7A',
-          lineHeight: 1.8,
-          maxWidth:   '340px',
-          paddingTop: '8px',
-          transition: 'color 0.3s ease',
-        }}>
-          {value.description}
-        </p>
+        <div>
+          <h3 style={{
+            fontFamily:    'var(--font-playfair, Georgia, serif)',
+            fontSize:      'clamp(30px, 5.5vw, 68px)',
+            fontWeight:    400,
+            lineHeight:    1.05,
+            color:         active ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+            transition:    'color 0.35s ease',
+            letterSpacing: '-0.01em',
+            margin:        0,
+          }}>
+            {value.name}
+          </h3>
+          <p style={{
+            fontFamily: 'var(--font-inter, sans-serif)',
+            fontSize:   isMobile ? '15px' : '16px',
+            color:      'rgba(202,212,224,0.6)',
+            lineHeight: 1.75,
+            maxWidth:   '560px',
+            marginTop:  isMobile ? '14px' : '20px',
+            marginBottom: 0,
+          }}>
+            {value.desc}
+          </p>
+        </div>
       </div>
 
-      {/* Bottom rule only on last item */}
-      {index === VALUES.length - 1 && (
-        <div style={{
-          width:      '100%',
-          height:     '1px',
-          background: hovered
-            ? 'linear-gradient(to right, transparent, rgba(201,168,76,0.5) 20%, rgba(201,168,76,0.5) 80%, transparent)'
-            : 'linear-gradient(to right, transparent, rgba(201,168,76,0.15) 20%, rgba(201,168,76,0.15) 80%, transparent)',
-          transition: 'background 0.4s ease',
-        }} />
-      )}
+      {index === VALUES.length - 1 && <div style={rule(active)} />}
     </motion.div>
   )
 }
