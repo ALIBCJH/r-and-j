@@ -27,35 +27,33 @@ interface Founder {
   objectPos: string
 }
 
-// Copy grounded in claims already published on the site. The two lines marked
-// PERSONALIZE are safe as-is but sing louder with a real specific from Douglas.
 const FOUNDERS: Founder[] = [
   {
     badge:     'The Architect',
-    name:      'Engineer Juma',
-    role:      'Founder · Creative Technologist',
+    name:      'Simon Juma',
+    role:      'Co-Founder & Tech Lead',
     story:
-      'R&J began with something Juma kept noticing: people choosing curtains the hard way — squinting at a ' +
-      'thumbnail swatch, carrying the fabric home, and simply hoping it suited the room. He was certain there ' +
-      'was a better way, so he built it — the tool that lets you see your curtains on your own window before ' +
-      'you spend a single shilling. Every layer of R&J is his: the app, the visualiser, the quiet way it all just works.',
-    signature: 'There is always a better way. My work is to build it.',
+      "Simon is a software engineer who builds solutions for real-world bottlenecks. Frustrated by how difficult " +
+      "it is for consumers to buy home furnishings online with confidence, he built R&J's proprietary window " +
+      "visualizer from scratch. He manages the platform's development, checkout pipelines, and overall technical " +
+      "strategy — turning complex code into a seamless, fast user experience.",
+    signature: 'If the current way of doing things is broken, my job is to write the code that fixes it.',
     img:       '/assets/jumafounder.jpeg',
-    alt:       'Engineer Juma, Founder of R&J Interiors',
+    alt:       'Simon Juma, Co-Founder & Tech Lead of R&J Interiors',
     objectPos: 'center top',
   },
   {
     badge:     'The Designer',
-    name:      'Designer Rose',
-    role:      'Co-Founder · Fashion & Design',
+    name:      'Rose',
+    role:      'Co-Founder & Design Principal',
     story:
-      'Rose came to curtains through fashion, where she spent years learning how cloth behaves — how it catches ' +
-      'light, holds weight, and quietly sets the mood of a space. Linen is where her heart is: she can walk into ' +
-      'a bare room and know exactly which weave will settle it. Describe the feeling you want your home to have, ' +
-      'and she will hand you the fabric that delivers it.',
+      "Rose brings years of expertise in fashion, textile design, and spatial aesthetics to R&J. She understands " +
+      "exactly how fabrics behave, catch light, and transform a room. Rose handles product curation and user " +
+      "experience, ensuring that what customers see on their screens perfectly matches the high-quality physical " +
+      "product delivered to their door.",
     signature: 'The right fabric does not cover a window. It changes the room.',
     img:       '/assets/rosedesigner.jpeg',
-    alt:       'Designer Rose, Co-Founder of R&J Interiors',
+    alt:       'Rose, Co-Founder & Design Principal of R&J Interiors',
     objectPos: 'center',
   },
 ]
