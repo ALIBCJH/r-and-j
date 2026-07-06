@@ -279,18 +279,26 @@ export default function MobileStudio() {
     // Photo Match (default)
     if (!img) return
     drawScene(canvas, img, activeFabric?.hex ?? null, (showWindow && windowProfile) ? windowProfile : undefined)
-  }, [renderMode, studioPanels, wallColor, activeFabric, windowProfile, showWindow])
+    // imgReady is listed so redraw() is recreated once the photo finishes loading.
+  }, [renderMode, studioPanels, wallColor, activeFabric, windowProfile, showWindow, imgReady])
 
-  useEffect(() => {
-    if (phase === 'reveal' && imgReady) redraw()
-  }, [phase, imgReady, redraw])
-
-  useEffect(() => {
-    if (phase !== 'reveal') return
-    const ro = new ResizeObserver(redraw)
-    if (containerRef.current) ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [phase, redraw])
+  // Callback ref on the canvas container. Under AnimatePresence(mode="wait") the
+  // reveal canvas mounts AFTER `phase` flips, so a phase-change effect fires with
+  // null refs and never draws. A callback ref runs exactly when the node attaches,
+  // guaranteeing the first paint — and, because it depends on `redraw`, it re-runs
+  // (re-observe + repaint) whenever a control changes or the photo loads.
+  const resizeObs = useRef<ResizeObserver | null>(null)
+  const attachContainer = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node
+    resizeObs.current?.disconnect()
+    resizeObs.current = null
+    if (node) {
+      const ro = new ResizeObserver(() => redraw())
+      ro.observe(node)
+      resizeObs.current = ro
+      redraw()   // initial paint as soon as the canvas is in the DOM
+    }
+  }, [redraw])
 
   // Ambient background hue from selected wall colour
   const bgGlow = wallColor
@@ -313,7 +321,17 @@ export default function MobileStudio() {
         transition: 'background 0.9s ease',
       }} />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      {/* Mobile-first experience: cap to a phone-width column and centre it so
+          wider screens show a focused app instead of content pinned top-left. */}
+      <div style={{
+        position:    'relative',
+        zIndex:      1,
+        maxWidth:    480,
+        margin:      '0 auto',
+        minHeight:   '100svh',
+        borderLeft:  '1px solid rgba(255,255,255,0.04)',
+        borderRight: '1px solid rgba(255,255,255,0.04)',
+      }}>
         <AnimatePresence mode="wait">
 
           {/* ══ PHASE 1 — CONFIGURE ══════════════════════════════════════════ */}
@@ -658,7 +676,7 @@ export default function MobileStudio() {
             <motion.div key="reveal" initial={pageIn} animate={pageAnim} exit={pageOut}>
 
               {/* Canvas viewport */}
-              <div ref={containerRef} style={{ position: 'relative', background: '#0A0B10' }}>
+              <div ref={attachContainer} style={{ position: 'relative', background: '#0A0B10' }}>
 
                 {/* Live preview badge */}
                 <div style={{
