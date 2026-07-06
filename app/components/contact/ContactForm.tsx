@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { whatsappUrl, WHATSAPP_DISPLAY } from '@/app/lib/whatsapp'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
@@ -414,15 +415,25 @@ export default function ContactForm() {
               <PhoneIcon />
               <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px' }}>0797 942 186</span>
             </a>
-            <p style={{
-              fontFamily:  'var(--font-inter, sans-serif)',
-              fontSize:    '12px',
-              color:       '#6B7A8D',
-              marginTop:   '8px',
-              marginLeft:  '32px',
-            }}>
-              WhatsApp available on this number
-            </p>
+            <a
+              href={whatsappUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display:        'inline-block',
+                fontFamily:     'var(--font-inter, sans-serif)',
+                fontSize:       '12px',
+                color:          '#25D366',
+                marginTop:      '8px',
+                marginLeft:     '32px',
+                textDecoration: 'none',
+                transition:     'opacity 0.2s ease',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+            >
+              Chat on WhatsApp · {WHATSAPP_DISPLAY}
+            </a>
           </InfoCard>
 
           {/* Card 2 — Location */}

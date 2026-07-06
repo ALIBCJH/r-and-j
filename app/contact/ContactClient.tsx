@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { sendBooking } from '@/app/actions/sendBooking'
+import { whatsappUrl } from '@/app/lib/whatsapp'
 
 const GOLD = '#C9A84C'
 const ease = [0.22, 1, 0.36, 1] as const
@@ -739,8 +740,7 @@ function ConfirmationStep({ date, time, name }: { date: Date; time: string; name
   }, [])
 
   const calUrl = buildGoogleCalendarUrl(date, time)
-  const waMsg  = encodeURIComponent(`Hi R&J Interiors! I just booked a VR studio session for ${formatShortDate(date)} at ${time}. My name is ${name}.`)
-  const waUrl  = `https://wa.me/254700000000?text=${waMsg}`
+  const waUrl  = whatsappUrl(`Hi R&J Interiors! I just booked a VR studio session for ${formatShortDate(date)} at ${time}. My name is ${name}.`)
   const curtainTransition = { duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] as const }
 
   return (

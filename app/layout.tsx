@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import PageTransition from "./components/layout/PageTransition";
 import { CartProvider } from "./lib/cart";
 import CartDrawer from "./components/cart/CartDrawer";
+import WhatsAppFab from "./components/shared/WhatsAppFab";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -113,6 +114,7 @@ export default function RootLayout({
         <CartProvider>
           <ThemeProvider><PageTransition>{children}</PageTransition></ThemeProvider>
           <CartDrawer />
+          <WhatsAppFab />
         </CartProvider>
       </body>
     </html>
