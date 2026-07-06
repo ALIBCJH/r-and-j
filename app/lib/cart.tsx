@@ -15,6 +15,7 @@ type CartState = {
   items:          CartItem[]
   totalItems:     number
   totalKsh:       number
+  hydrated:       boolean
   drawerOpen:     boolean
   addToCart:      (item: Omit<CartItem, 'quantity'>, qty?: number) => void
   removeFromCart: (productId: number) => void
@@ -78,6 +79,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={{
       items, totalItems, totalKsh,
+      hydrated,
       drawerOpen,
       addToCart, removeFromCart, updateQty, clearCart,
       openDrawer:  () => setDrawerOpen(true),

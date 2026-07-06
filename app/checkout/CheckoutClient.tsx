@@ -75,7 +75,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function CheckoutClient() {
-  const { items, totalKsh, clearCart } = useCart()
+  const { items, totalKsh, clearCart, hydrated } = useCart()
   const router = useRouter()
 
   const [name,         setName]         = useState('')
@@ -87,9 +87,12 @@ export default function CheckoutClient() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Wait for the cart to hydrate from localStorage before deciding it's empty —
+  // otherwise a direct load / refresh of /checkout redirects away before the
+  // saved cart loads, kicking customers out with items still in their order.
   useEffect(() => {
-    if (items.length === 0 && stage === 'form') router.push('/catalog')
-  }, [items, stage, router])
+    if (hydrated && items.length === 0 && stage === 'form') router.push('/catalog')
+  }, [hydrated, items, stage, router])
 
   useEffect(() => {
     if (stage !== 'waiting' || !checkoutId) return
