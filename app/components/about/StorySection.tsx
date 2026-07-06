@@ -47,7 +47,7 @@ export default function StorySection() {
 
   return (
     <section style={{
-      background: '#07101E',
+      background: '#0D1B2E',
       padding:    m ? '88px 24px' : '140px 6vw',
       borderTop:  '1px solid rgba(201,168,76,0.12)',
     }}>
