@@ -44,7 +44,7 @@ const FOUNDERS: Founder[] = [
   },
   {
     badge:     'The Designer',
-    name:      'Rose',
+    name:      'Rose Kabathi',
     role:      'Co-Founder & Design Principal',
     story:
       "Rose brings years of expertise in fashion, textile design, and spatial aesthetics to R&J. She understands " +
@@ -53,7 +53,7 @@ const FOUNDERS: Founder[] = [
       "product delivered to their door.",
     signature: 'The right fabric does not cover a window. It changes the room.',
     img:       '/assets/rosedesigner.jpeg',
-    alt:       'Rose, Co-Founder & Design Principal of R&J Interiors',
+    alt:       'Rose Kabathi, Co-Founder & Design Principal of R&J Interiors',
     objectPos: 'center',
   },
 ]
