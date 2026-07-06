@@ -6,6 +6,7 @@ import { Search, Package, Wrench, Truck, CheckCircle, Clock, ArrowLeft } from 'l
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { API_URL } from '@/app/lib/api'
+import { whatsappUrl } from '@/app/lib/whatsapp'
 
 type OrderStatus = 'pending_payment' | 'confirmed' | 'in_production' | 'ready' | 'delivered'
 
@@ -25,11 +26,11 @@ type TrackResult = {
   }[]
 }
 
-const STEPS: { key: OrderStatus; label: string; icon: React.ElementType }[] = [
-  { key: 'confirmed',     label: 'Order Confirmed',    icon: CheckCircle },
-  { key: 'in_production', label: 'In Production',       icon: Wrench      },
-  { key: 'ready',         label: 'Ready for Delivery',  icon: Package     },
-  { key: 'delivered',     label: 'Delivered',           icon: Truck       },
+const STEPS: { key: OrderStatus; label: string; icon: React.ElementType; blurb: string }[] = [
+  { key: 'confirmed',     label: 'Order Confirmed',    icon: CheckCircle, blurb: 'Payment received — your order is booked and measurements scheduled.' },
+  { key: 'in_production', label: 'In Production',       icon: Wrench,      blurb: 'Your curtains are cut, sewn, and finished by hand to your dimensions.' },
+  { key: 'ready',         label: 'Ready for Delivery',  icon: Package,     blurb: 'Finished and packed — we call to arrange installation.' },
+  { key: 'delivered',     label: 'Delivered',           icon: Truck,       blurb: 'Installed in your space. Enjoy.' },
 ]
 
 const STATUS_ORDER: OrderStatus[] = ['pending_payment', 'confirmed', 'in_production', 'ready', 'delivered']
@@ -156,6 +157,55 @@ export default function TrackPage() {
             {loading ? 'Searching…' : 'Track Order'}
           </button>
         </form>
+
+        {/* Supporting content — shown before a search so the page isn't a lone
+            form stranded in empty space (and it tells the customer what to expect). */}
+        {!result && !loading && (
+          <div>
+            <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#6A7A88', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '20px' }}>
+              What you&apos;ll see
+            </p>
+
+            <div style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '8px', padding: 'clamp(20px, 3vw, 28px)', marginBottom: '28px' }}>
+              {STEPS.map((step, i) => {
+                const Icon = step.icon
+                return (
+                  <div key={step.key} style={{ display: 'flex', gap: '16px', marginBottom: i < STEPS.length - 1 ? '22px' : '0' }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
+                      background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Icon size={18} color="#C9A84C" />
+                    </div>
+                    <div style={{ paddingTop: '2px' }}>
+                      <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '16px', color: '#F0EBE0', marginBottom: '4px' }}>{step.label}</p>
+                      <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88', lineHeight: 1.6 }}>{step.blurb}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Help card */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.12)', borderRadius: '8px', padding: '20px 24px' }}>
+              <div>
+                <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '16px', color: '#F0EBE0', marginBottom: '4px' }}>Can&apos;t find your order?</p>
+                <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Your order number is in your confirmation. We&apos;re happy to look it up for you.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <a href={whatsappUrl('Hi R&J Interiors! I need help tracking my order.')} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', padding: '11px 18px', borderRadius: '4px', background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)', color: '#25D366', textDecoration: 'none', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  WhatsApp
+                </a>
+                <Link href="/contact"
+                  style={{ display: 'inline-flex', alignItems: 'center', padding: '11px 18px', borderRadius: '4px', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', textDecoration: 'none', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  Contact
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Result */}
         {result && (

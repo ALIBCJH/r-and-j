@@ -18,11 +18,6 @@ const LINKS = [
   { label: 'Contact',    href: '/contact'    },
 ]
 
-// Only shown in the mobile overlay menu
-const MOBILE_ONLY_LINKS = [
-  { label: 'Book a Consultation', href: '/contact' },
-]
-
 export default function LandingNavbar() {
   const [scrolled,    setScrolled]    = useState(false)
   const [menuOpen,    setMenuOpen]    = useState(false)
@@ -246,6 +241,36 @@ export default function LandingNavbar() {
                 )
               })}
             </nav>
+
+            {/* Utility row — cart + order tracking (both hidden behind the navbar while the menu is open) */}
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button
+                onClick={() => { setMenuOpen(false); openDrawer() }}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '12px', background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6,
+                  color: 'rgba(255,255,255,0.82)', cursor: 'pointer',
+                  fontFamily: 'var(--font-inter, sans-serif)', fontSize: 13, letterSpacing: '0.04em',
+                }}
+              >
+                <ShoppingBag size={16} />
+                Cart{totalItems > 0 ? ` (${totalItems})` : ''}
+              </button>
+              <Link
+                href="/track"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '12px', background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6,
+                  color: 'rgba(255,255,255,0.82)', textDecoration: 'none',
+                  fontFamily: 'var(--font-inter, sans-serif)', fontSize: 13, letterSpacing: '0.04em',
+                }}
+              >
+                Track Order
+              </Link>
+            </div>
 
             {/* Bottom CTAs */}
             <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>

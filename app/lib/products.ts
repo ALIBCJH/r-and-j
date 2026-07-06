@@ -108,7 +108,7 @@ export const PRODUCTS: Product[] = [
   {
     id:          7,
     slug:        'mombasa-mist-sheer',
-    image:       '/assets/curtain3.png',
+    image:       '/assets/windowpage.png',
     collection:  'Coastal Collection',
     name:        'Mombasa Mist Sheer',
     material:    'White Coastal Sheer',

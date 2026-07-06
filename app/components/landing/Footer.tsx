@@ -52,6 +52,7 @@ export default function LandingFooter() {
           <FLink href="/catalog">Catalog</FLink>
           <FLink href="/about">About</FLink>
           <FLink href="/contact">Contact</FLink>
+          <FLink href="/track">Track Order</FLink>
         </FooterCol>
 
         {/* Studio */}
