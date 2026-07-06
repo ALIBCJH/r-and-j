@@ -9,8 +9,8 @@ export default function AboutHero() {
   return (
     <section style={{
       position:       'relative',
-      height:         '62vh',
-      minHeight:      '520px',
+      height:         '85vh',
+      minHeight:      '580px',
       display:        'flex',
       flexDirection:  'column',
       justifyContent: 'center',
@@ -22,7 +22,7 @@ export default function AboutHero() {
       <div style={{
         position:      'absolute',
         inset:         0,
-        background:    'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%)',
+        background:    'radial-gradient(ellipse 50% 40% at 50% 55%, rgba(201,168,76,0.06) 0%, transparent 70%)',
         pointerEvents: 'none',
         zIndex:        1,
       }} />
@@ -34,110 +34,71 @@ export default function AboutHero() {
 
       {/* Content */}
       <div style={{
-        position:   'relative',
-        zIndex:     3,
-        textAlign:  'center',
-        padding:    '0 clamp(24px, 6vw, 80px)',
-        maxWidth:   '760px',
+        position:  'relative',
+        zIndex:    3,
+        textAlign: 'center',
+        padding:   '0 clamp(24px, 6vw, 80px)',
       }}>
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease, delay: 0.1 }}
           style={{
             fontFamily:    'var(--font-inter, sans-serif)',
             fontSize:      '11px',
             color:         '#C9A84C',
-            letterSpacing: '4px',
+            letterSpacing: '5px',
             textTransform: 'uppercase',
-            marginBottom:  '24px',
+            marginBottom:  '36px',
           }}
         >
           Our Story
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease, delay: 0.25 }}
+          transition={{ duration: 0.85, ease, delay: 0.25 }}
           style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(40px, 5.5vw, 64px)',
-            color:        '#FFFFFF',
-            fontWeight:   400,
-            lineHeight:   1.1,
-            marginBottom: 0,
+            fontFamily: 'var(--font-playfair, Georgia, serif)',
+            fontSize:   'clamp(56px, 8vw, 110px)',
+            color:      '#FFFFFF',
+            fontWeight: 400,
+            lineHeight: 1.0,
+            margin:     0,
           }}
         >
           Built by Two.
         </motion.h1>
 
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease, delay: 0.4 }}
+          transition={{ duration: 0.85, ease, delay: 0.45 }}
           style={{
-            fontFamily:   'var(--font-playfair, Georgia, serif)',
-            fontSize:     'clamp(40px, 5.5vw, 64px)',
-            color:        '#C9A84C',
-            fontStyle:    'italic',
-            fontWeight:   400,
-            lineHeight:   1.1,
-            marginBottom: '28px',
+            fontFamily: 'var(--font-playfair, Georgia, serif)',
+            fontSize:   'clamp(56px, 8vw, 110px)',
+            color:      '#C9A84C',
+            fontStyle:  'italic',
+            fontWeight: 400,
+            lineHeight: 1.0,
+            margin:     0,
           }}
         >
           Designed for All.
         </motion.h1>
 
-        {/* Company name */}
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 0.5 }}
+        <motion.div
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          transition={{ duration: 0.9, ease, delay: 0.7 }}
           style={{
-            fontFamily:    'var(--font-playfair, Georgia, serif)',
-            fontSize:      '15px',
-            color:         '#C9A84C',
-            letterSpacing: '6px',
-            textTransform: 'uppercase',
-            marginBottom:  '20px',
+            width:      'clamp(40px, 6vw, 80px)',
+            height:     '1px',
+            background: 'rgba(201,168,76,0.5)',
+            margin:     '40px auto 0',
           }}
-        >
-          R&amp;J Interiors
-        </motion.p>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease, delay: 0.6 }}
-          style={{
-            fontFamily:   'var(--font-inter, sans-serif)',
-            fontSize:     '17px',
-            color:        '#A8B2BE',
-            lineHeight:   1.75,
-            maxWidth:     '540px',
-            margin:       '0 auto 20px',
-          }}
-        >
-          Born from a simple question — why do people have to imagine what their
-          home will look like? We decided to answer it.
-        </motion.p>
-
-        {/* Motto */}
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease, delay: 0.75 }}
-          style={{
-            fontFamily:    'var(--font-playfair, Georgia, serif)',
-            fontSize:      '15px',
-            color:         '#C9A84C',
-            fontStyle:     'italic',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Bringing imagination into reality.
-        </motion.p>
+        />
       </div>
 
       {/* Bottom gold rule */}

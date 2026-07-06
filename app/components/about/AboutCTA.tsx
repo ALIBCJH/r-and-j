@@ -89,11 +89,10 @@ export default function AboutCTA() {
           fontSize:    '18px',
           color:       '#A8B2BE',
           lineHeight:  1.7,
-          maxWidth:    '480px',
+          maxWidth:    '420px',
           margin:      '0 auto 40px',
         }}>
-          Whether you are a homeowner ready to transform your space or a showroom
-          looking to partner — we would love to hear from you.
+          Homeowner or showroom partner — we would love to hear from you.
         </motion.p>
 
         {/* Button row */}
