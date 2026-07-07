@@ -82,16 +82,9 @@ export default function FoundingClient() {
               <Link
                 key={t.amount}
                 href={`/checkout?tier=${t.amount}`}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none',
-                  padding: '24px 16px', borderRadius: '10px',
-                  background: featured ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${featured ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.18)'}`,
-                  transition: 'transform 0.15s ease, border-color 0.2s ease',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = '#C9A84C' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = featured ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.18)' }}
+                className={`tier-card${featured ? ' tier-card-featured' : ''}`}
               >
+                {featured && <span className="tier-flag">Best value</span>}
                 <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: '#0A0F1C', background: 'linear-gradient(135deg, #F0D77A, #C9A84C)', padding: '4px 12px', borderRadius: '20px', marginBottom: '16px' }}>
                   {t.discountPct}% OFF
                 </span>
@@ -101,8 +94,8 @@ export default function FoundingClient() {
                 <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#6A7A88', marginBottom: '20px' }}>
                   credited to your order
                 </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: '#C9A84C', textTransform: 'uppercase' }}>
-                  Back this <ArrowRight size={13} />
+                <span className="tier-back">
+                  Back This <ArrowRight size={14} />
                 </span>
               </Link>
             )
@@ -119,6 +112,69 @@ export default function FoundingClient() {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 16px;
+        }
+        .tier-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-decoration: none;
+          cursor: pointer;
+          padding: 26px 16px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(201,168,76,0.18);
+          transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .tier-card-featured {
+          background: rgba(201,168,76,0.08);
+          border-color: rgba(201,168,76,0.5);
+        }
+        .tier-card:hover {
+          transform: translateY(-4px);
+          border-color: #C9A84C;
+          background: rgba(201,168,76,0.06);
+          box-shadow: 0 14px 32px rgba(0,0,0,0.38), 0 0 0 1px rgba(201,168,76,0.35);
+        }
+        .tier-card:active { transform: translateY(-1px); }
+        /* The CTA reads as a real button and fills gold when the card is hovered */
+        .tier-back {
+          width: 100%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          font-family: var(--font-inter, sans-serif);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: #C9A84C;
+          border: 1px solid rgba(201,168,76,0.5);
+          border-radius: 5px;
+          padding: 10px 16px;
+          transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .tier-card:hover .tier-back {
+          background: linear-gradient(135deg, #F0D77A, #C9A84C);
+          color: #0A0F1C;
+          border-color: transparent;
+        }
+        .tier-flag {
+          position: absolute;
+          top: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          white-space: nowrap;
+          font-family: var(--font-inter, sans-serif);
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: #0A0F1C;
+          background: linear-gradient(135deg, #F0D77A, #C9A84C);
+          padding: 3px 10px;
+          border-radius: 20px;
         }
         @media (max-width: 720px) {
           .tier-grid { grid-template-columns: repeat(2, 1fr); }
