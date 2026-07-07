@@ -54,7 +54,8 @@ export type Order = {
   instructions: string | null
   items: OrderItem[]
   total_ksh: number // full (would-be) order value — locked founding price
-  deposit_ksh: number // what was actually charged today
+  deposit_ksh: number // what was actually charged today (the backing amount)
+  discount_pct: number // launch discount unlocked by the backing tier (0 if none)
   is_founding: boolean // reserved via the founding pre-sale
   checkout_request_id: string
   mpesa_receipt: string | null
