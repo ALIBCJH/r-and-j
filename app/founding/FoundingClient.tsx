@@ -81,7 +81,7 @@ export default function FoundingClient() {
             return (
               <Link
                 key={t.amount}
-                href={`/checkout?join=1&tier=${t.amount}`}
+                href={`/checkout?tier=${t.amount}`}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none',
                   padding: '24px 16px', borderRadius: '10px',
