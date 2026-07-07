@@ -3,8 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { drawScene, WindowProfile } from './curtainRenderer'
-import { composeScene } from './fabricCompositor'
-import { CURTAIN_STYLES, loadPanelSet, type PanelSet } from './assetManifest'
 import { getRecommendations, hexToRgb } from '@/app/lib/colorEngine'
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
@@ -12,7 +10,6 @@ const C = {
   bg:        '#08090D',
   surface:   '#0D0F14',
   border:    'rgba(201,168,76,0.14)',
-  borderMid: 'rgba(201,168,76,0.30)',
   borderHi:  'rgba(201,168,76,0.58)',
   gold:      '#C9A84C',
   goldLight: '#E8C87A',
@@ -20,15 +17,17 @@ const C = {
   text:      '#F0EBE0',
   muted:     '#A09080',
   faint:     '#2A2420',
-  subtle:    'rgba(255,255,255,0.04)',
 } as const
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const WALL_COLORS = [
-  { id: 'off-white',  name: 'Off White',      hex: '#F5F0E8' },
+interface WallColor { id: string; name: string; hex: string }
+interface FabricOpt { id: string; label: string; hex: string; collection: string }
+
+const WALL_COLORS: WallColor[] = [
+  { id: 'off-white',  name: 'Off White',       hex: '#F5F0E8' },
   { id: 'warm-sand',  name: 'Warm Sand',       hex: '#E2D5BF' },
   { id: 'terracotta', name: 'Soft Terracotta', hex: '#C07455' },
   { id: 'ochre',      name: 'Deep Ochre',      hex: '#B8843A' },
@@ -40,71 +39,46 @@ const WALL_COLORS = [
   { id: 'midnight',   name: 'Midnight',        hex: '#1E3A5F' },
 ]
 
-const WINDOW_PROFILES: { id: WindowProfile; tag: string; name: string; desc: string }[] = [
-  {
-    id:   'minimalist',
-    tag:  'CONTEMPORARY',
-    name: 'Modern Minimalist',
-    desc: 'Floor-to-ceiling glass with a thick matte black industrial frame',
-  },
-  {
-    id:   'classic',
-    tag:  'TRADITIONAL',
-    name: 'French Classic',
-    desc: 'Elegant multi-pane grid with delicate white frame molding',
-  },
-  {
-    id:   'doubleHung',
-    tag:  'HERITAGE',
-    name: 'Double-Hung',
-    desc: 'Classic recessed wooden frame with heritage proportions',
-  },
+const WINDOW_PROFILES: { id: WindowProfile; name: string }[] = [
+  { id: 'minimalist', name: 'Modern' },
+  { id: 'classic',    name: 'French'  },
+  { id: 'doubleHung', name: 'Heritage' },
 ]
 
-const ROOM_TYPES = [
-  { id: 'sitting', label: 'Sitting Room' },
-  { id: 'bedroom', label: 'Bedroom' },
-]
+const TABS = [
+  { id: 'fabric', label: 'Fabric' },
+  { id: 'window', label: 'Window' },
+  { id: 'walls',  label: 'Walls'  },
+] as const
+type TabId = typeof TABS[number]['id']
 
-const PROCESSING_MSGS = [
-  'Analyzing architectural scale…',
-  'Computing geometric color harmonies…',
-  'Weaving custom textile layers…',
-]
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-type Phase = 'configure' | 'processing' | 'reveal'
-type Step  = 1 | 2 | 3
-// Reveal render engine: 'photo' = photo-match (drawScene), 'studio' = compositor scene.
-type RenderMode = 'photo' | 'studio'
-
-interface WallColor { id: string; name: string; hex: string }
-interface FabricOpt { id: string; label: string; hex: string; collection: string }
-
-// Default curtain style for studio mode (until a style picker exists).
-const STUDIO_STYLE = CURTAIN_STYLES[0].id
-// Map the chosen architectural profile onto the compositor's window-size axis.
-const PROFILE_SIZE: Record<WindowProfile, 'small' | 'medium' | 'large'> = {
-  minimalist: 'large',
-  classic:    'medium',
-  doubleHung: 'small',
+// Land on a fully-designed room. Defaults are resolved once at module load so the
+// very first paint already shows recoloured curtains — no blank state, no wizard.
+const DEFAULT_WALL   = WALL_COLORS[1]           // Warm Sand
+const DEFAULT_WINDOW: WindowProfile = 'classic' // French
+function fabricsFor(hex: string): FabricOpt[] {
+  const [r, g, b] = hexToRgb(hex)
+  return getRecommendations(r, g, b).map(rec => ({
+    id: rec.id, label: rec.label, hex: rec.hex, collection: rec.collection,
+  }))
 }
+const DEFAULT_FABRICS = fabricsFor(DEFAULT_WALL.hex)
 
-// ─── Window SVG icons ─────────────────────────────────────────────────────────
-function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
-  const stroke  = active ? C.gold : 'rgba(255,255,255,0.22)'
+// ─── Window icon ────────────────────────────────────────────────────────────
+function WindowSVG({ id, active, w = 60, h = 88 }: { id: WindowProfile; active: boolean; w?: number; h?: number }) {
+  const stroke  = active ? C.gold : 'rgba(255,255,255,0.45)'
   const fill    = 'rgba(180,215,245,0.07)'
-  const stroke2 = active ? C.goldLight : 'rgba(255,255,255,0.12)'
+  const stroke2 = active ? C.goldLight : 'rgba(255,255,255,0.25)'
 
   if (id === 'minimalist') return (
-    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+    <svg width={w} height={h} viewBox="0 0 60 88" fill="none">
       <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="5.5"/>
       <rect x="11" y="11" width="38" height="66" rx="0.5" stroke={stroke2} strokeWidth="1"/>
     </svg>
   )
 
   if (id === 'classic') return (
-    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+    <svg width={w} height={h} viewBox="0 0 60 88" fill="none">
       <rect x="3" y="3" width="54" height="82" rx="1" fill={fill} stroke={stroke} strokeWidth="3"/>
       <line x1="30" y1="3"  x2="30" y2="85"  stroke={stroke} strokeWidth="2.5"/>
       <line x1="3"  y1="33" x2="57" y2="33"  stroke={stroke} strokeWidth="2.5"/>
@@ -115,7 +89,7 @@ function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
   )
 
   return (
-    <svg width="60" height="88" viewBox="0 0 60 88" fill="none">
+    <svg width={w} height={h} viewBox="0 0 60 88" fill="none">
       <rect x="4" y="4" width="52" height="80" rx="2" fill={fill} stroke={stroke} strokeWidth="4.5"/>
       <line x1="4" y1="46" x2="56" y2="46" stroke={stroke} strokeWidth="4.5"/>
       <rect x="10" y="9"  width="40" height="32" rx="1" stroke={stroke2} strokeWidth="1.5"/>
@@ -124,170 +98,73 @@ function WindowSVG({ id, active }: { id: WindowProfile; active: boolean }) {
   )
 }
 
-// ─── Step progress bar ────────────────────────────────────────────────────────
-function StepBar({ current }: { current: Step }) {
-  return (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      {([1, 2, 3] as Step[]).map(s => (
-        <div key={s} style={{
-          height:       5,
-          width:        s === current ? 28 : s < current ? 16 : 16,
-          borderRadius: 999,
-          background:   s < current ? C.gold : s === current ? C.goldLight : 'rgba(255,255,255,0.13)',
-          transition:   'all 0.4s ease',
-          opacity:      s > current ? 0.5 : 1,
-        }} />
-      ))}
-      <span style={{
-        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
-        color: C.muted, letterSpacing: '0.14em', marginLeft: 6,
-      }}>
-        {current} / 3
-      </span>
-    </div>
-  )
-}
-
-// ─── Shared motion variants ───────────────────────────────────────────────────
-const pageIn  = { opacity: 0, y: 22 }
-const pageOut  = { opacity: 0, y: -14 }
-const pageAnim = { opacity: 1, y: 0, transition: { duration: 0.5, ease } }
-const stepIn   = { opacity: 0, x: 32 }
-const stepOut  = { opacity: 0, x: -24 }
-const stepAnim = { opacity: 1, x: 0, transition: { duration: 0.38, ease } }
-
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function MobileStudio() {
-  const [phase,          setPhase]          = useState<Phase>('configure')
-  const [step,           setStep]           = useState<Step>(1)
-  const [wallColor,      setWallColor]      = useState<WallColor | null>(null)
-  const [windowProfile,  setWindowProfile]  = useState<WindowProfile | null>(null)
-  const [roomType,       setRoomType]       = useState<string | null>(null)
-  const [msgIdx,         setMsgIdx]         = useState(0)
-  const [fabricOpts,     setFabricOpts]     = useState<FabricOpt[]>([])
-  const [activeFabric,   setActiveFabric]   = useState<FabricOpt | null>(null)
-  const [showWindow,     setShowWindow]     = useState(true)
-  const [renderMode,     setRenderMode]     = useState<RenderMode>('photo')
-  const [studioPanels,   setStudioPanels]   = useState<PanelSet | null>(null)
-  const [curtainStyle,   setCurtainStyle]   = useState<string>(STUDIO_STYLE)
+  const [wallColor,     setWallColor]     = useState<WallColor>(DEFAULT_WALL)
+  const [windowProfile, setWindowProfile] = useState<WindowProfile>(DEFAULT_WINDOW)
+  const [fabricOpts,    setFabricOpts]    = useState<FabricOpt[]>(DEFAULT_FABRICS)
+  const [activeFabric,  setActiveFabric]  = useState<FabricOpt | null>(DEFAULT_FABRICS[0] ?? null)
+  const [activeTab,     setActiveTab]     = useState<TabId>('fabric')
+  const [imgReady,      setImgReady]      = useState(false)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const imgRef       = useRef<HTMLImageElement | null>(null)
-  const [imgReady,   setImgReady]   = useState(false)
+  const offRef       = useRef<HTMLCanvasElement | null>(null)
+  const resizeObs    = useRef<ResizeObserver | null>(null)
 
-  // Preload room image once
+  // Preload the room photo once.
   useEffect(() => {
     const img = new Image()
     img.onload = () => { imgRef.current = img; setImgReady(true) }
     img.src = '/assets/sittingroom.png'
   }, [])
 
-  // Resolve compositor panels for the selected style whenever Studio mode is
-  // active or the style changes. loadPanelSet caches images, so re-selecting is
-  // cheap; falls back to the code placeholder until a render lands in /public/curtains.
-  useEffect(() => {
-    if (renderMode !== 'studio') return
-    let cancelled = false
-    loadPanelSet(curtainStyle, 'open').then(ps => { if (!cancelled) setStudioPanels(ps) })
-    return () => { cancelled = true }
-  }, [renderMode, curtainStyle])
-
-  // Auto-advance step handlers
-  function selectWallColor(c: WallColor) {
+  // A new wall colour re-derives the matched fabric palette (the wall in the photo
+  // stays fixed, but it drives which fabrics we recommend) and selects the top pick.
+  function selectWall(c: WallColor) {
     setWallColor(c)
-    setTimeout(() => setStep(2), 480)
+    const opts = fabricsFor(c.hex)
+    setFabricOpts(opts)
+    setActiveFabric(opts[0] ?? null)
   }
 
-  function selectWindowProfile(id: WindowProfile) {
-    setWindowProfile(id)
-    setTimeout(() => setStep(3), 480)
-  }
-
-  function selectRoomType(id: string) {
-    setRoomType(id)
-    setTimeout(() => setPhase('processing'), 580)
-  }
-
-  // Processing phase — cycles through messages twice then auto-reveals
-  useEffect(() => {
-    if (phase !== 'processing') return
-    setMsgIdx(0)
-    let count = 0
-    const LOOPS = 2
-    const TOTAL = PROCESSING_MSGS.length * LOOPS
-
-    const iv = setInterval(() => {
-      count++
-      if (count >= TOTAL) {
-        clearInterval(iv)
-        // Compute fabric recommendations from wall colour
-        if (wallColor) {
-          const [r, g, b] = hexToRgb(wallColor.hex)
-          const recs = getRecommendations(r, g, b)
-          const opts: FabricOpt[] = recs.map(rec => ({
-            id:         rec.id,
-            label:      rec.label,
-            hex:        rec.hex,
-            collection: rec.collection,
-          }))
-          setFabricOpts(opts)
-          setActiveFabric(opts[0] ?? null)
-        }
-        setTimeout(() => setPhase('reveal'), 380)
-        return
-      }
-      setMsgIdx(count % PROCESSING_MSGS.length)
-    }, 860)
-
-    return () => clearInterval(iv)
-  }, [phase, wallColor])
-
-  // Canvas draw
+  // Paint the live room: cover-crop the photo to fill the (tall) preview, then let
+  // drawScene lay the recoloured curtains + the chosen window frame over it.
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
     const cont   = containerRef.current
-    if (!canvas || !cont) return
-    const img = imgRef.current
+    const img    = imgRef.current
+    // imgReady gates the first paint and keeps it in redraw's deps so the callback
+    // ref re-fires once the photo finishes loading.
+    if (!canvas || !cont || !img || !imgReady) return
 
-    // Canvas box keeps the photo's aspect ratio for a consistent frame in both modes.
     const W = cont.clientWidth
-    const aspectH = img
-      ? Math.round(W * img.naturalHeight / img.naturalWidth)
-      : Math.round(W * 1.3)
-    const H = Math.min(aspectH, Math.round(window.innerHeight * 0.72))
-    const dpr           = window.devicePixelRatio || 1
-    canvas.width        = Math.round(W * dpr)
-    canvas.height       = Math.round(H * dpr)
+    const H = cont.clientHeight
+    if (!W || !H) return
+    const dpr = window.devicePixelRatio || 1
+    const nw  = Math.round(W * dpr)
+    const nh  = Math.round(H * dpr)
+    canvas.width        = nw
+    canvas.height       = nh
     canvas.style.width  = `${W}px`
     canvas.style.height = `${H}px`
 
-    if (renderMode === 'studio') {
-      if (!studioPanels) return   // panels still loading — draw effect re-runs when ready
-      composeScene(canvas, {
-        wallHex:    wallColor?.hex   ?? '#E2D5BF',
-        fabricHex:  activeFabric?.hex ?? '#D9C7A3',
-        leftPanel:  studioPanels.left,
-        rightPanel: studioPanels.right,
-        shadow:     studioPanels.shadow,
-        windowSize: windowProfile ? PROFILE_SIZE[windowProfile] : 'medium',
-        tintGain:   studioPanels.tintGain,
-      })
-      return
-    }
+    const off  = offRef.current ?? (offRef.current = document.createElement('canvas'))
+    off.width  = nw
+    off.height = nh
+    const octx = off.getContext('2d')
+    if (!octx) return
+    const scale = Math.max(nw / img.naturalWidth, nh / img.naturalHeight)
+    const dw = img.naturalWidth  * scale
+    const dh = img.naturalHeight * scale
+    octx.drawImage(img, (nw - dw) / 2, (nh - dh) / 2, dw, dh)
 
-    // Photo Match (default)
-    if (!img) return
-    drawScene(canvas, img, activeFabric?.hex ?? null, (showWindow && windowProfile) ? windowProfile : undefined)
-    // imgReady is listed so redraw() is recreated once the photo finishes loading.
-  }, [renderMode, studioPanels, wallColor, activeFabric, windowProfile, showWindow, imgReady])
+    drawScene(canvas, off as unknown as HTMLImageElement, activeFabric?.hex ?? null, windowProfile)
+  }, [activeFabric, windowProfile, imgReady])
 
-  // Callback ref on the canvas container. Under AnimatePresence(mode="wait") the
-  // reveal canvas mounts AFTER `phase` flips, so a phase-change effect fires with
-  // null refs and never draws. A callback ref runs exactly when the node attaches,
-  // guaranteeing the first paint — and, because it depends on `redraw`, it re-runs
-  // (re-observe + repaint) whenever a control changes or the photo loads.
-  const resizeObs = useRef<ResizeObserver | null>(null)
+  // Callback ref: draw the moment the canvas container mounts (avoids a null-ref
+  // race), and re-observe + repaint whenever a control changes or the photo loads.
   const attachContainer = useCallback((node: HTMLDivElement | null) => {
     containerRef.current = node
     resizeObs.current?.disconnect()
@@ -296,630 +173,248 @@ export default function MobileStudio() {
       const ro = new ResizeObserver(() => redraw())
       ro.observe(node)
       resizeObs.current = ro
-      redraw()   // initial paint as soon as the canvas is in the DOM
+      redraw()
     }
   }, [redraw])
 
-  // Ambient background hue from selected wall colour
-  const bgGlow = wallColor
-    ? `radial-gradient(ellipse at 50% -10%, ${wallColor.hex}22 0%, transparent 58%)`
-    : undefined
+  // Ambient background hue from the selected wall colour.
+  const bgGlow = `radial-gradient(ellipse at 50% -10%, ${wallColor.hex}22 0%, transparent 58%)`
 
-  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      minHeight:   '100svh',
-      paddingTop:  'var(--rj-navbar-height,60px)',
-      background:  C.bg,
-      position:    'relative',
-      overflowX:   'hidden',
+      minHeight:  '100svh',
+      paddingTop: 'var(--rj-navbar-height,60px)',
+      background: C.bg,
+      position:   'relative',
+      overflowX:  'hidden',
     }}>
       {/* Dynamic wall-colour glow */}
       <div style={{
-        position:   'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        background: bgGlow,
-        transition: 'background 0.9s ease',
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: bgGlow, transition: 'background 0.9s ease',
       }} />
 
-      {/* Mobile-first experience: cap to a phone-width column and centre it so
-          wider screens show a focused app instead of content pinned top-left. */}
-      <div style={{
-        position:    'relative',
-        zIndex:      1,
-        maxWidth:    480,
-        margin:      '0 auto',
-        minHeight:   '100svh',
-        borderLeft:  '1px solid rgba(255,255,255,0.04)',
-        borderRight: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <AnimatePresence mode="wait">
+      {/* Mobile-first: cap to a phone-width column, full height, controls docked. */}
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, ease }}
+        style={{
+          position:      'relative',
+          zIndex:        1,
+          maxWidth:      480,
+          margin:        '0 auto',
+          minHeight:     'calc(100svh - var(--rj-navbar-height, 60px))',
+          display:       'flex',
+          flexDirection: 'column',
+          borderLeft:    '1px solid rgba(255,255,255,0.04)',
+          borderRight:   '1px solid rgba(255,255,255,0.04)',
+        }}
+      >
+        {/* ── Live preview — grows to fill everything above the dock ───────── */}
+        <div ref={attachContainer} style={{ position: 'relative', background: '#0A0B10', flex: 1, minHeight: 0 }}>
+          {/* Live badge */}
+          <div style={{
+            position: 'absolute', top: 12, left: 12, zIndex: 10,
+            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+            borderRadius: 99, padding: '5px 12px',
+            display: 'flex', alignItems: 'center', gap: 6,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />
+            <span style={{
+              fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+              color: 'rgba(255,255,255,0.8)', letterSpacing: '0.16em',
+              textTransform: 'uppercase', fontWeight: 600,
+            }}>
+              Live Preview
+            </span>
+          </div>
 
-          {/* ══ PHASE 1 — CONFIGURE ══════════════════════════════════════════ */}
-          {phase === 'configure' && (
-            <motion.div key="configure"
-              initial={pageIn} animate={pageAnim} exit={pageOut}>
+          {/* Wall colour badge */}
+          <div style={{
+            position: 'absolute', top: 12, right: 12, zIndex: 10,
+            background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+            borderRadius: 8, padding: '5px 10px',
+            display: 'flex', alignItems: 'center', gap: 7,
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}>
+            <div style={{ width: 11, height: 11, borderRadius: 3, background: wallColor.hex, flexShrink: 0 }} />
+            <span style={{
+              fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
+              color: 'rgba(255,255,255,0.6)', letterSpacing: '0.14em', textTransform: 'uppercase',
+            }}>
+              {wallColor.name}
+            </span>
+          </div>
 
-              {/* Page header */}
-              <div style={{ padding: '20px 20px 0' }}>
-                <p style={{
-                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
-                  letterSpacing: '0.30em', color: C.gold, textTransform: 'uppercase', margin: '0 0 12px',
-                }}>
-                  Design Studio
-                </p>
-                <AnimatePresence mode="wait">
-                  <motion.h1
-                    key={step}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0, transition: { duration: 0.32, ease } }}
-                    exit={{ opacity: 0, y: -6, transition: { duration: 0.2 } }}
-                    style={{
-                      fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 24,
-                      color: C.text, fontWeight: 400, margin: '0 0 20px', lineHeight: 1.25,
-                    }}
-                  >
-                    {step === 1 && 'What colour are your walls?'}
-                    {step === 2 && 'Choose your window profile.'}
-                    {step === 3 && 'Which room is this for?'}
-                  </motion.h1>
-                </AnimatePresence>
-                <StepBar current={step} />
-              </div>
+          {/* Glass sheen */}
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9,
+            background: 'linear-gradient(135deg,rgba(255,255,255,0.025) 0%,transparent 50%)',
+          }} />
 
-              <div style={{ height: 12 }} />
+          <canvas ref={canvasRef} style={{ display: 'block', width: '100%' }} />
 
-              {/* ── Step content ─────────────────────────────────────────── */}
-              <AnimatePresence mode="wait">
+          {/* Loading spinner until the photo is ready */}
+          {!imgReady && (
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center', background: '#0D0F14',
+            }}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+                style={{ width: 26, height: 26, borderRadius: '50%', border: `2px solid ${C.faint}`, borderTop: `2px solid ${C.gold}` }}
+              />
+            </div>
+          )}
+        </div>
 
-                {/* Step 1 — Wall colour swatches */}
-                {step === 1 && (
-                  <motion.div key="step1"
-                    initial={stepIn} animate={stepAnim} exit={stepOut}>
-                    <div style={{
-                      display: 'flex', gap: 12, overflowX: 'auto',
-                      padding: '4px 24px 28px', scrollbarWidth: 'none',
-                      WebkitOverflowScrolling: 'touch',
-                    }}>
-                      {WALL_COLORS.map(c => {
-                        const active = wallColor?.id === c.id
-                        return (
-                          <button key={c.id} onClick={() => selectWallColor(c)}
-                            style={{
-                              flexShrink: 0, display: 'flex', flexDirection: 'column',
-                              alignItems: 'center', gap: 10, background: 'none',
-                              border: 'none', cursor: 'pointer', padding: 0,
-                            }}>
-                            <div style={{
-                              width: 58, height: 82, borderRadius: 10, background: c.hex,
-                              border:     `2.5px solid ${active ? C.gold : 'transparent'}`,
-                              boxShadow:  active
-                                ? `0 0 0 1px rgba(201,168,76,0.5), 0 14px 30px ${c.hex}55`
-                                : '0 4px 16px rgba(0,0,0,0.55)',
-                              position: 'relative', overflow: 'hidden',
-                              transform:  active ? 'scale(1.07)' : 'scale(1)',
-                              transition: 'all 0.25s ease',
-                            }}>
-                              {/* Woven texture */}
-                              <div style={{
-                                position: 'absolute', inset: 0,
-                                backgroundImage: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.07) 0px,rgba(255,255,255,0.07) 1px,transparent 1px,transparent 8px)',
-                              }} />
-                              {/* Sheen */}
-                              <div style={{
-                                position: 'absolute', inset: 0,
-                                background: 'linear-gradient(135deg,rgba(255,255,255,0.20) 0%,transparent 55%,rgba(0,0,0,0.14) 100%)',
-                              }} />
-                              {active && (
-                                <div style={{
-                                  position: 'absolute', bottom: 6, right: 6,
-                                  width: 18, height: 18, borderRadius: '50%',
-                                  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}>
-                                  <svg width="9" height="9" viewBox="0 0 12 12" fill="none"
-                                    stroke={C.gold} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M2 6l3 3 5-5"/>
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
+        {/* ── Control dock — tabs + the active tab's options ───────────────── */}
+        <div style={{ background: C.surface, borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+          {/* Tab row */}
+          <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}` }}>
+            {TABS.map(t => {
+              const on = activeTab === t.id
+              return (
+                <button key={t.id} onClick={() => setActiveTab(t.id)} aria-pressed={on}
+                  style={{
+                    flex: 1, padding: '13px 0', background: 'none', cursor: 'pointer',
+                    border: 'none', borderBottom: `2px solid ${on ? C.gold : 'transparent'}`,
+                    color: on ? C.goldLight : 'rgba(255,255,255,0.45)',
+                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                    fontWeight: on ? 600 : 500, letterSpacing: '0.14em', textTransform: 'uppercase',
+                    transition: 'color 0.2s, border-color 0.2s',
+                  }}>
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Options for the active tab */}
+          <div style={{ minHeight: 112, padding: '16px 0 8px', display: 'flex', alignItems: 'center' }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab}
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.22, ease }}
+                style={{ width: '100%' }}>
+
+                {/* Fabric pills */}
+                {activeTab === 'fabric' && (
+                  <div style={{ display: 'flex', gap: 9, overflowX: 'auto', padding: '0 16px 4px', scrollbarWidth: 'none' }}>
+                    {fabricOpts.map(f => {
+                      const on = activeFabric?.id === f.id
+                      return (
+                        <button key={f.id} onClick={() => setActiveFabric(f)}
+                          style={{
+                            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '10px 16px', borderRadius: 99,
+                            background: on ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.04)',
+                            border: `1.5px solid ${on ? C.gold : 'rgba(255,255,255,0.09)'}`,
+                            cursor: 'pointer', transition: 'all 0.22s ease',
+                            transform: on ? 'scale(1.04)' : 'scale(1)',
+                          }}>
+                          <span style={{
+                            width: 12, height: 12, borderRadius: '50%', background: f.hex, flexShrink: 0,
+                            boxShadow: on ? '0 0 0 2px rgba(201,168,76,0.35)' : 'none', transition: 'box-shadow 0.22s',
+                          }} />
+                          <span style={{
+                            fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
+                            fontWeight: on ? 600 : 400, letterSpacing: '0.04em',
+                            color: on ? C.goldLight : 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap',
+                          }}>
+                            {f.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Window chips — 3 across, tap to see it framed on the room */}
+                {activeTab === 'window' && (
+                  <div style={{ display: 'flex', gap: 10, padding: '0 16px' }}>
+                    {WINDOW_PROFILES.map(p => {
+                      const on = windowProfile === p.id
+                      return (
+                        <button key={p.id} onClick={() => setWindowProfile(p.id)}
+                          style={{
+                            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+                            padding: '12px 6px', borderRadius: 12, cursor: 'pointer',
+                            background: on ? 'rgba(201,168,76,0.10)' : 'rgba(255,255,255,0.03)',
+                            border: `1.5px solid ${on ? C.borderHi : 'rgba(255,255,255,0.08)'}`,
+                            transition: 'all 0.2s ease',
+                          }}>
+                          <WindowSVG id={p.id} active={on} w={30} h={44} />
+                          <span style={{
+                            fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
+                            fontWeight: on ? 600 : 500, letterSpacing: '0.06em',
+                            color: on ? C.goldLight : 'rgba(255,255,255,0.55)',
+                          }}>
+                            {p.name}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Wall swatches */}
+                {activeTab === 'walls' && (
+                  <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '0 16px 4px', scrollbarWidth: 'none' }}>
+                    {WALL_COLORS.map(c => {
+                      const on = wallColor.id === c.id
+                      return (
+                        <button key={c.id} onClick={() => selectWall(c)}
+                          style={{
+                            flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                          }}>
+                          <span style={{
+                            width: 46, height: 62, borderRadius: 8, background: c.hex,
+                            border: `2.5px solid ${on ? C.gold : 'transparent'}`,
+                            boxShadow: on ? '0 0 0 1px rgba(201,168,76,0.5)' : '0 4px 12px rgba(0,0,0,0.5)',
+                            position: 'relative', overflow: 'hidden',
+                            transform: on ? 'scale(1.06)' : 'scale(1)', transition: 'all 0.2s ease',
+                          }}>
                             <span style={{
-                              fontFamily:  'var(--font-inter,sans-serif)', fontSize: 9,
-                              letterSpacing: '0.12em', textTransform: 'uppercase',
-                              color:       active ? C.gold : 'rgba(255,255,255,0.28)',
-                              textAlign:   'center', maxWidth: 58, lineHeight: 1.35,
-                              transition:  'color 0.22s',
-                            }}>
-                              {c.name}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 2 — Window profile cards */}
-                {step === 2 && (
-                  <motion.div key="step2"
-                    initial={stepIn} animate={stepAnim} exit={stepOut}
-                    style={{ padding: '0 20px 32px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {WINDOW_PROFILES.map(p => {
-                        const active = windowProfile === p.id
-                        return (
-                          <button key={p.id} onClick={() => selectWindowProfile(p.id)}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 18,
-                              padding: '18px 20px', borderRadius: 14, cursor: 'pointer',
-                              background:  active ? 'rgba(201,168,76,0.07)' : C.subtle,
-                              border:      `1.5px solid ${active ? C.borderHi : C.border}`,
-                              textAlign:   'left',
-                              transform:   active ? 'scale(1.015)' : 'scale(1)',
-                              boxShadow:   active ? '0 10px 36px rgba(201,168,76,0.13)' : 'none',
-                              transition:  'all 0.25s ease',
-                            }}>
-                            <WindowSVG id={p.id} active={active} />
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{
-                                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                                letterSpacing: '0.24em', textTransform: 'uppercase',
-                                color: active ? C.gold : C.muted, margin: '0 0 5px',
-                              }}>
-                                {p.tag}
-                              </p>
-                              <p style={{
-                                fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 17,
-                                color: C.text, margin: '0 0 5px', fontWeight: 400,
-                              }}>
-                                {p.name}
-                              </p>
-                              <p style={{
-                                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                                color: C.muted, margin: 0, lineHeight: 1.62,
-                              }}>
-                                {p.desc}
-                              </p>
-                            </div>
-                            {/* Radio circle */}
-                            <div style={{
-                              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                              border: `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.2)'}`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'all 0.25s ease',
-                            }}>
-                              {active && (
-                                <div style={{ width: 9, height: 9, borderRadius: '50%', background: C.gold }} />
-                              )}
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 3 — Room type */}
-                {step === 3 && (
-                  <motion.div key="step3"
-                    initial={stepIn} animate={stepAnim} exit={stepOut}
-                    style={{ padding: '0 20px 32px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                      {ROOM_TYPES.map(r => {
-                        const active = roomType === r.id
-                        return (
-                          <button key={r.id} onClick={() => selectRoomType(r.id)}
-                            style={{
-                              padding: '34px 16px', borderRadius: 16,
-                              background: active ? 'rgba(201,168,76,0.09)' : C.subtle,
-                              border:     `1.5px solid ${active ? C.borderHi : C.border}`,
-                              cursor:     'pointer',
-                              display:    'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-                              transform:  active ? 'scale(1.03)' : 'scale(1)',
-                              boxShadow:  active ? '0 14px 44px rgba(201,168,76,0.16)' : 'none',
-                              transition: 'all 0.26s ease',
-                            }}>
-                            {r.id === 'sitting' ? (
-                              <svg width="44" height="36" viewBox="0 0 44 36" fill="none">
-                                <rect x="2" y="18" width="40" height="16" rx="3"
-                                  fill={active ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)'}
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
-                                <path d="M9 18V10a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8"
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
-                                <rect x="0" y="24" width="8" height="12" rx="2"
-                                  fill={active ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)'}
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.15)'} strokeWidth="1.5"/>
-                                <rect x="36" y="24" width="8" height="12" rx="2"
-                                  fill={active ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)'}
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.15)'} strokeWidth="1.5"/>
-                              </svg>
-                            ) : (
-                              <svg width="44" height="30" viewBox="0 0 44 30" fill="none">
-                                <rect x="2" y="14" width="40" height="14" rx="3"
-                                  fill={active ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)'}
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
-                                <path d="M7 14V7a2 2 0 0 1 2-2h26a2 2 0 0 1 2 2v7"
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.2)'} strokeWidth="1.5"/>
-                                <rect x="9" y="17" width="26" height="7" rx="1"
-                                  fill={active ? 'rgba(201,168,76,0.09)' : 'rgba(255,255,255,0.03)'}
-                                  stroke={active ? C.goldLight : 'rgba(255,255,255,0.1)'} strokeWidth="1"/>
-                                <line x1="2" y1="14" x2="42" y2="14"
-                                  stroke={active ? C.gold : 'rgba(255,255,255,0.18)'} strokeWidth="2"/>
-                              </svg>
-                            )}
-                            <p style={{
-                              fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 16,
-                              color: active ? C.goldLight : C.text, margin: 0, fontWeight: 400,
-                            }}>
-                              {r.label}
-                            </p>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-
-              </AnimatePresence>
-
-              {/* Back navigation */}
-              {step > 1 && (
-                <div style={{ padding: '0 24px 36px', display: 'flex', justifyContent: 'center' }}>
-                  <button
-                    onClick={() => setStep((step - 1) as Step)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
-                      color: C.muted, letterSpacing: '0.1em',
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      transition: 'color 0.2s',
-                    }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M19 12H5M12 5l-7 7 7 7"/>
-                    </svg>
-                    Back
-                  </button>
-                </div>
-              )}
-
-            </motion.div>
-          )}
-
-          {/* ══ PHASE 2 — CINEMATIC PROCESSING ══════════════════════════════ */}
-          {phase === 'processing' && (
-            <motion.div key="processing"
-              initial={pageIn} animate={pageAnim} exit={pageOut}
-              style={{
-                height:         '100svh',
-                display:        'flex',
-                flexDirection:  'column',
-                alignItems:     'center',
-                justifyContent: 'center',
-                padding:        '0 36px',
-                pointerEvents:  'none', // prevent any tap-through
-              }}>
-
-              {/* Counter-rotating ring spinner */}
-              <div style={{ position: 'relative', width: 76, height: 76, marginBottom: 44 }}>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
-                  style={{
-                    position: 'absolute', inset: 0, borderRadius: '50%',
-                    border: `2px solid rgba(201,168,76,0.14)`,
-                    borderTop: `2px solid ${C.gold}`,
-                  }}
-                />
-                <motion.div
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 2.1, repeat: Infinity, ease: 'linear' }}
-                  style={{
-                    position: 'absolute', inset: 12, borderRadius: '50%',
-                    border: `1.5px solid rgba(201,168,76,0.08)`,
-                    borderBottom: `1.5px solid ${C.goldLight}`,
-                  }}
-                />
-                {/* Centre dot */}
-                <div style={{
-                  position: 'absolute', inset: 0, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: '50%', background: C.gold,
-                    boxShadow: `0 0 10px ${C.gold}`,
-                  }} />
-                </div>
-              </div>
-
-              {/* Cycling status text */}
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={msgIdx}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0, transition: { duration: 0.38, ease } }}
-                  exit={{ opacity: 0, y: -10, transition: { duration: 0.26 } }}
-                  style={{
-                    fontFamily: 'var(--font-playfair,Georgia,serif)', fontSize: 21,
-                    color: C.text, textAlign: 'center', margin: 0, lineHeight: 1.4,
-                  }}>
-                  {PROCESSING_MSGS[msgIdx]}
-                </motion.p>
-              </AnimatePresence>
-
-              <p style={{
-                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10,
-                color: C.muted, textAlign: 'center', marginTop: 14,
-                letterSpacing: '0.20em', textTransform: 'uppercase',
-              }}>
-                Building your personalised canvas
-              </p>
-
-              {/* Message progress dots */}
-              <div style={{ display: 'flex', gap: 7, marginTop: 44 }}>
-                {PROCESSING_MSGS.map((_, i) => (
-                  <div key={i} style={{
-                    width:      i === msgIdx ? 22 : 6,
-                    height:     6,
-                    borderRadius: 999,
-                    background: i === msgIdx ? C.gold : 'rgba(255,255,255,0.11)',
-                    transition: 'all 0.38s ease',
-                  }} />
-                ))}
-              </div>
-
-            </motion.div>
-          )}
-
-          {/* ══ PHASE 3 — INTERACTIVE REVEAL ═════════════════════════════════ */}
-          {phase === 'reveal' && (
-            <motion.div key="reveal" initial={pageIn} animate={pageAnim} exit={pageOut}>
-
-              {/* Canvas viewport */}
-              <div ref={attachContainer} style={{ position: 'relative', background: '#0A0B10' }}>
-
-                {/* Live preview badge */}
-                <div style={{
-                  position: 'absolute', top: 12, left: 12, zIndex: 10,
-                  background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
-                  borderRadius: 99, padding: '5px 12px',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ADE80' }} />
-                  <span style={{
-                    fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                    color: 'rgba(255,255,255,0.8)', letterSpacing: '0.16em',
-                    textTransform: 'uppercase', fontWeight: 600,
-                  }}>
-                    Live Preview
-                  </span>
-                </div>
-
-                {/* Wall colour badge */}
-                {wallColor && (
-                  <div style={{
-                    position: 'absolute', top: 12, right: 12, zIndex: 10,
-                    background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
-                    borderRadius: 8, padding: '5px 10px',
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}>
-                    <div style={{
-                      width: 11, height: 11, borderRadius: 3,
-                      background: wallColor.hex, flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                      color: 'rgba(255,255,255,0.6)', letterSpacing: '0.14em', textTransform: 'uppercase',
-                    }}>
-                      {wallColor.name}
-                    </span>
+                              position: 'absolute', inset: 0, display: 'block',
+                              background: 'linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%,rgba(0,0,0,0.12) 100%)',
+                            }} />
+                          </span>
+                          <span style={{
+                            fontFamily: 'var(--font-inter,sans-serif)', fontSize: 8.5,
+                            letterSpacing: '0.08em', textTransform: 'uppercase',
+                            color: on ? C.gold : 'rgba(255,255,255,0.35)',
+                            maxWidth: 52, textAlign: 'center', lineHeight: 1.3,
+                          }}>
+                            {c.name}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
 
-                {/* Window toggle — Photo mode only (Studio always frames a window) */}
-                {windowProfile && renderMode === 'photo' && (
-                  <button
-                    onClick={() => setShowWindow(s => !s)}
-                    style={{
-                      position: 'absolute', bottom: 12, left: 12, zIndex: 10,
-                      background: showWindow ? 'rgba(0,0,0,0.70)' : 'rgba(0,0,0,0.82)',
-                      backdropFilter: 'blur(6px)',
-                      borderRadius: 99, padding: '5px 10px 5px 8px',
-                      display: 'flex', alignItems: 'center', gap: 7,
-                      border: `1px solid ${showWindow ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.10)'}`,
-                      cursor: 'pointer',
-                      transition: 'border-color 0.22s, background 0.22s',
-                    }}>
-                    {/* Mini toggle track */}
-                    <div style={{
-                      width: 22, height: 12, borderRadius: 6, position: 'relative', flexShrink: 0,
-                      background: showWindow ? C.gold : 'rgba(255,255,255,0.15)',
-                      transition: 'background 0.22s',
-                    }}>
-                      <div style={{
-                        position: 'absolute', top: 2,
-                        left: showWindow ? 12 : 2,
-                        width: 8, height: 8, borderRadius: '50%', background: '#fff',
-                        transition: 'left 0.22s',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-                      }} />
-                    </div>
-                    <span style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                      color: showWindow ? C.goldLight : 'rgba(255,255,255,0.35)',
-                      letterSpacing: '0.14em', textTransform: 'uppercase',
-                      transition: 'color 0.22s',
-                    }}>
-                      {showWindow
-                        ? WINDOW_PROFILES.find(p => p.id === windowProfile)?.name
-                        : 'Window Off'}
-                    </span>
-                  </button>
-                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
 
-                {!imgReady && (
-                  <div style={{
-                    width: '100%', height: 240,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: '#0D0F14',
-                  }}>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
-                      style={{
-                        width: 24, height: 24, borderRadius: '50%',
-                        border: `2px solid ${C.faint}`,
-                        borderTop: `2px solid ${C.gold}`,
-                      }}
-                    />
-                  </div>
-                )}
-
-                {/* Render-mode toggle — Photo Match ↔ Studio Room (compositor) */}
-                <div style={{
-                  position: 'absolute', bottom: 12, right: 12, zIndex: 10,
-                  display: 'flex', gap: 3, padding: 3,
-                  background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)',
-                  borderRadius: 99, border: '1px solid rgba(255,255,255,0.10)',
-                }}>
-                  {([['photo', 'Photo'], ['studio', 'Studio']] as [RenderMode, string][]).map(([m, label]) => {
-                    const on = renderMode === m
-                    return (
-                      <button key={m}
-                        onClick={() => setRenderMode(m)}
-                        style={{
-                          padding: '5px 12px', borderRadius: 99, cursor: 'pointer',
-                          border: 'none',
-                          background: on ? C.gold : 'transparent',
-                          color: on ? '#0A0F1C' : 'rgba(255,255,255,0.5)',
-                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                          fontWeight: on ? 700 : 500, letterSpacing: '0.14em',
-                          textTransform: 'uppercase', transition: 'all 0.2s ease',
-                        }}>
-                        {label}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Glass sheen overlay */}
-                <div style={{
-                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 9,
-                  background: 'linear-gradient(135deg,rgba(255,255,255,0.025) 0%,transparent 50%)',
-                }} />
-
-                <canvas ref={canvasRef} style={{ display: 'block', width: '100%' }} />
-              </div>
-
-              {/* ── Fabric control bar ──────────────────────────────────── */}
-              <div style={{
-                background:  C.surface,
-                borderTop:   `1px solid ${C.border}`,
-                padding:     '14px 0 16px',
-              }}>
-                {/* Curtain-style picker — Studio mode only */}
-                {renderMode === 'studio' && (
-                  <div style={{ padding: '0 20px 12px' }}>
-                    <p style={{
-                      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9,
-                      letterSpacing: '0.22em', textTransform: 'uppercase',
-                      color: C.muted, margin: '0 0 9px',
-                    }}>
-                      Curtain Style
-                    </p>
-                    <div style={{
-                      display: 'flex', gap: 9, overflowX: 'auto',
-                      paddingBottom: 2, scrollbarWidth: 'none',
-                    }}>
-                      {CURTAIN_STYLES.map(s => {
-                        const active = curtainStyle === s.id
-                        return (
-                          <button key={s.id}
-                            onClick={() => setCurtainStyle(s.id)}
-                            style={{
-                              flexShrink: 0, padding: '9px 16px', borderRadius: 99,
-                              background:  active ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.04)',
-                              border:      `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.09)'}`,
-                              cursor:      'pointer',
-                              transition:  'all 0.22s ease',
-                              transform:   active ? 'scale(1.04)' : 'scale(1)',
-                              boxShadow:   active ? '0 4px 16px rgba(201,168,76,0.15)' : 'none',
-                              fontFamily:  'var(--font-inter,sans-serif)', fontSize: 11,
-                              fontWeight:  active ? 600 : 400, letterSpacing: '0.08em',
-                              color:       active ? C.goldLight : 'rgba(255,255,255,0.42)',
-                              whiteSpace:  'nowrap',
-                            }}>
-                            {s.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Pill buttons — horizontal scroll */}
-                <div style={{
-                  display: 'flex', gap: 9, overflowX: 'auto',
-                  padding: '0 20px 2px', scrollbarWidth: 'none',
-                }}>
-                  {fabricOpts.map(f => {
-                    const active = activeFabric?.id === f.id
-                    return (
-                      <button key={f.id}
-                        onClick={() => setActiveFabric(f)}
-                        style={{
-                          flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8,
-                          padding: '9px 16px', borderRadius: 99,
-                          background:  active ? 'rgba(201,168,76,0.13)' : 'rgba(255,255,255,0.04)',
-                          border:      `1.5px solid ${active ? C.gold : 'rgba(255,255,255,0.09)'}`,
-                          cursor:      'pointer',
-                          transition:  'all 0.22s ease',
-                          transform:   active ? 'scale(1.04)' : 'scale(1)',
-                          boxShadow:   active ? '0 4px 16px rgba(201,168,76,0.15)' : 'none',
-                        }}>
-                        {/* Colour dot */}
-                        <div style={{
-                          width: 11, height: 11, borderRadius: '50%',
-                          background: f.hex, flexShrink: 0,
-                          boxShadow: active ? `0 0 0 2px rgba(201,168,76,0.3)` : 'none',
-                          transition: 'box-shadow 0.22s',
-                        }} />
-                        <span style={{
-                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11,
-                          fontWeight: active ? 600 : 400, letterSpacing: '0.08em',
-                          color:      active ? C.goldLight : 'rgba(255,255,255,0.42)',
-                          whiteSpace: 'nowrap',
-                          transition: 'all 0.22s',
-                        }}>
-                          {f.label}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Pay to Book CTA */}
-              <div style={{ padding: '12px 20px 44px', background: C.bg }}>
-                <a href="/checkout" style={{
-                  display: 'block', padding: '17px', borderRadius: 12,
-                  background: C.goldGrad, color: '#0A0F1C',
-                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
-                  fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase',
-                  textDecoration: 'none', textAlign: 'center',
-                  boxShadow: '0 6px 28px rgba(201,168,76,0.32)',
-                }}>
-                  Pay to Book
-                </a>
-              </div>
-
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
+        {/* ── Pay to Book ──────────────────────────────────────────────────── */}
+        <div style={{ padding: '12px 20px 28px', background: C.bg, flexShrink: 0 }}>
+          <a href="/checkout" style={{
+            display: 'block', padding: '17px', borderRadius: 12,
+            background: C.goldGrad, color: '#0A0F1C',
+            fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12,
+            fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase',
+            textDecoration: 'none', textAlign: 'center',
+            boxShadow: '0 6px 28px rgba(201,168,76,0.32)',
+          }}>
+            Pay to Book
+          </a>
+        </div>
+      </motion.div>
     </div>
   )
 }
