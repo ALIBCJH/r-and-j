@@ -310,7 +310,7 @@ export default function CartDrawer() {
                   color:        '#2A3A48',
                   marginBottom: '20px',
                 }}>
-                  Delivery &amp; installation included · Dimensions collected at checkout
+                  Reserve with a KSh 1,000 founding deposit · fully refundable · credited to your order
                 </p>
 
                 <Link
@@ -336,7 +336,7 @@ export default function CartDrawer() {
                     boxSizing:      'border-box' as const,
                   }}
                 >
-                  Proceed to Checkout
+                  Reserve Your Slot
                   <ArrowRight size={14} />
                 </Link>
 
