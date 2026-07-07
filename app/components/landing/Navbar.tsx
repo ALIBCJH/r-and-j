@@ -13,6 +13,7 @@ const LINKS = [
   { label: 'Experience', href: '/experience' },
   { label: 'Studio',     href: '/studio'     },
   { label: 'Catalog',    href: '/catalog'    },
+  { label: 'Founding',   href: '/founding'   },
   { label: 'About',      href: '/about'      },
   { label: 'Contact',    href: '/contact'    },
 ]
