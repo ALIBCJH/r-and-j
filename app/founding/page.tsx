@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import FoundingClient from './FoundingClient'
 
 export const metadata: Metadata = {
-  title:       'Become a Founding Client | R&J Interiors',
-  description: 'Reserve your curtains in our limited founding cohort with a small, fully-refundable M-Pesa deposit that locks your founding price.',
+  title:       'Pre-Launch Offer | R&J Interiors',
+  description: 'Back our launch: book your curtains before we open to the public with a small refundable deposit and lock in a huge founding discount. Limited spots.',
 }
 
 export default function FoundingPage() {

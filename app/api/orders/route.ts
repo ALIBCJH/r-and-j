@@ -32,6 +32,7 @@ type Body = {
   building?: string
   instructions?: string | null
   items?: OrderItem[]
+  kickstarter?: boolean // pre-launch "join" booking — no fabric picked yet
 }
 
 export async function POST(request: Request) {
@@ -54,6 +55,7 @@ export async function POST(request: Request) {
   const name = (body.name ?? '').trim()
   const phone = normalizePhone(body.phone ?? '')
   const items = Array.isArray(body.items) ? body.items : []
+  const kickstarter = body.kickstarter === true
 
   if (!name || !phone) {
     return NextResponse.json(
@@ -61,7 +63,9 @@ export async function POST(request: Request) {
       { status: 400 },
     )
   }
-  if (items.length === 0) {
+  // A pre-launch "join" booking has no fabric yet; an ordinary reservation must
+  // have items.
+  if (items.length === 0 && !kickstarter) {
     return NextResponse.json({ ok: false, error: 'Your cart is empty.' }, { status: 400 })
   }
 
@@ -76,9 +80,13 @@ export async function POST(request: Request) {
   }
 
   // Recompute the full order value server-side (the locked founding price we
-  // record), but only charge the flat founding deposit today.
+  // record), but only charge the flat founding deposit today. A kickstarter
+  // booking has no fabric yet, so its total is 0 (TBD on our call).
   const total = computeTotal(items)
-  if (total <= 0 || total > 5_000_000) {
+  if (!kickstarter && (total <= 0 || total > 5_000_000)) {
+    return NextResponse.json({ ok: false, error: 'Invalid order total.' }, { status: 400 })
+  }
+  if (total > 5_000_000) {
     return NextResponse.json({ ok: false, error: 'Invalid order total.' }, { status: 400 })
   }
   const deposit = FOUNDING_DEPOSIT_KSH

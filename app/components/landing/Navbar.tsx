@@ -7,15 +7,14 @@ import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-
 import { Menu, X, ShoppingBag } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useCart } from '@/app/lib/cart'
+import { CAMPAIGN } from '@/app/lib/campaign'
 
 const LINKS = [
-  { label: 'Home',       href: '/'           },
-  { label: 'Experience', href: '/experience' },
-  { label: 'Studio',     href: '/studio'     },
-  { label: 'Catalog',    href: '/catalog'    },
-  { label: 'Founding',   href: '/founding'   },
-  { label: 'About',      href: '/about'      },
-  { label: 'Contact',    href: '/contact'    },
+  { label: 'Home',            href: '/'           },
+  { label: 'Experience',      href: '/experience' },
+  { label: 'Catalog',         href: '/catalog'    },
+  { label: CAMPAIGN.navLabel, href: '/founding'   },
+  { label: 'About',           href: '/about'      },
 ]
 
 export default function LandingNavbar() {
