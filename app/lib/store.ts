@@ -95,3 +95,18 @@ export async function kvSetJson(
     memSet(key, raw, ttlSeconds)
   }
 }
+
+/**
+ * Atomically increment an integer counter and return the new value. Uses Redis
+ * INCR on real KV (race-free across instances); on the in-memory fallback it's
+ * a plain increment. The stored value is an integer string, which is also valid
+ * JSON — so kvGetJson<number> reads it back correctly.
+ */
+export async function kvIncr(key: string): Promise<number> {
+  if (hasKv()) {
+    return Number(await kvCommand(['INCR', key]))
+  }
+  const next = Number(memGet(key) ?? '0') + 1
+  memSet(key, String(next))
+  return next
+}

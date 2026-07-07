@@ -9,7 +9,21 @@
 // deposit (GateScreen) reuse the same STK-push + status machinery without an
 // order attached.
 
-import { kvGetJson, kvSetJson } from './store'
+import { kvGetJson, kvSetJson, kvIncr } from './store'
+
+// ── Founding-client pre-sale ────────────────────────────────────────────────
+// During validation we don't take full payment for a product that isn't built
+// yet. Instead a customer reserves a "founding slot" with a small, fully
+// creditable deposit that locks their founding price. Limited slots create
+// scarcity and give us a clean willingness-to-pay metric for investors.
+export const FOUNDING_DEPOSIT_KSH = 1000
+export const FOUNDING_SLOTS = 20
+const FOUNDING_COUNT_KEY = 'founding:count'
+
+/** How many founding slots have been reserved (paid deposits confirmed). */
+export async function getFoundingReserved(): Promise<number> {
+  return (await kvGetJson<number>(FOUNDING_COUNT_KEY)) ?? 0
+}
 
 export type OrderStatus =
   | 'pending_payment'
@@ -39,7 +53,9 @@ export type Order = {
   building: string
   instructions: string | null
   items: OrderItem[]
-  total_ksh: number
+  total_ksh: number // full (would-be) order value — locked founding price
+  deposit_ksh: number // what was actually charged today
+  is_founding: boolean // reserved via the founding pre-sale
   checkout_request_id: string
   mpesa_receipt: string | null
   created_at: string
@@ -142,6 +158,11 @@ async function markOrderPaid(orderNumber: string, receipt: string): Promise<void
   order.status = 'confirmed'
   order.mpesa_receipt = receipt
   await saveOrder(order)
+  // Count the founding slot only on the pending→confirmed transition (guarded
+  // above), so retries and the mock/callback both stay idempotent.
+  if (order.is_founding) {
+    await kvIncr(FOUNDING_COUNT_KEY)
+  }
 }
 
 /**

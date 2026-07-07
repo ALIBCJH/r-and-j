@@ -1,6 +1,7 @@
 // POST /api/orders
-// Creates an order, kicks off an M-Pesa STK push for the total, and returns the
-// order number + checkout id the client polls on. Called by CheckoutClient.
+// Reserves a founding slot: creates the order, kicks off an M-Pesa STK push for
+// the flat founding DEPOSIT (not the full price), and returns the order number +
+// checkout id the client polls on. Called by CheckoutClient.
 
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
@@ -10,8 +11,11 @@ import {
   type Order,
   type OrderItem,
   type Payment,
+  FOUNDING_DEPOSIT_KSH,
+  FOUNDING_SLOTS,
   computeTotal,
   generateOrderNumber,
+  getFoundingReserved,
   normalizePhone,
   saveOrder,
   savePayment,
@@ -61,18 +65,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'Your cart is empty.' }, { status: 400 })
   }
 
-  // Recompute the total server-side — never trust a client-sent amount.
+  // Stop taking reservations once the founding cohort is full. (Counts confirmed
+  // deposits; a small oversell is possible if several pay at the exact same
+  // moment — acceptable at this scale.)
+  if ((await getFoundingReserved()) >= FOUNDING_SLOTS) {
+    return NextResponse.json(
+      { ok: false, error: 'All founding slots are reserved. Join the waitlist and we’ll be in touch.', soldOut: true },
+      { status: 409 },
+    )
+  }
+
+  // Recompute the full order value server-side (the locked founding price we
+  // record), but only charge the flat founding deposit today.
   const total = computeTotal(items)
   if (total <= 0 || total > 5_000_000) {
     return NextResponse.json({ ok: false, error: 'Invalid order total.' }, { status: 400 })
   }
+  const deposit = FOUNDING_DEPOSIT_KSH
 
   const orderNumber = generateOrderNumber()
 
   let checkoutRequestId: string
   let mock: boolean
   try {
-    const stk = await initiateStkPush(phone, total, orderNumber)
+    const stk = await initiateStkPush(phone, deposit, orderNumber)
     checkoutRequestId = stk.checkoutRequestId
     mock = stk.mock
   } catch (err) {
@@ -97,6 +113,8 @@ export async function POST(request: Request) {
     instructions: body.instructions?.trim() || null,
     items,
     total_ksh: total,
+    deposit_ksh: deposit,
+    is_founding: true,
     checkout_request_id: checkoutRequestId,
     mpesa_receipt: null,
     created_at: now,
@@ -105,7 +123,7 @@ export async function POST(request: Request) {
   const payment: Payment = {
     checkout_request_id: checkoutRequestId,
     status: 'pending',
-    amount: total,
+    amount: deposit,
     phone,
     ref: null,
     order_number: orderNumber,
@@ -119,5 +137,6 @@ export async function POST(request: Request) {
     ok: true,
     order_number: orderNumber,
     checkout_request_id: checkoutRequestId,
+    deposit_ksh: deposit,
   })
 }
