@@ -129,8 +129,10 @@ export async function initiateStkPush(
       PartyB: c.shortcode,
       PhoneNumber: phone,
       CallBackURL: c.callbackUrl,
-      AccountReference: account.slice(0, 12),
-      TransactionDesc: 'R&J Interiors',
+      // Daraja converts the payload to XML internally, so strip anything that
+      // isn't alphanumeric/space (a raw '&' — as in "R&J" — breaks its parser).
+      AccountReference: account.replace(/[^A-Za-z0-9 ]/g, '').slice(0, 12),
+      TransactionDesc: 'RJ Interiors',
     }),
   })
 
