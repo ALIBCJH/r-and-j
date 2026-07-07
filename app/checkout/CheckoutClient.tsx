@@ -12,13 +12,14 @@ import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { useCart } from '@/app/lib/cart'
 import { API_URL } from '@/app/lib/api'
-import { CAMPAIGN } from '@/app/lib/campaign'
+import { CAMPAIGN, TIERS, tierForAmount, DEFAULT_TIER, type Tier } from '@/app/lib/campaign'
 
 type Stage = 'form' | 'processing' | 'waiting' | 'success' | 'error'
 type Slots = { reserved: number; total: number; remaining: number }
 
-// Flat, fully-creditable founding deposit (mirrors FOUNDING_DEPOSIT_KSH on the
-// server, which is the source of truth for what's actually charged).
+// Flat, fully-creditable founding deposit for the classic reserve flow (mirrors
+// FOUNDING_DEPOSIT_KSH on the server, which is the source of truth). The
+// kickstarter join flow charges the chosen backing tier instead.
 const DEPOSIT_KSH = 1000
 
 const base: React.CSSProperties = {
@@ -123,20 +124,28 @@ export default function CheckoutClient() {
   const [wlEmail,      setWlEmail]      = useState('')
   const [wlErr,        setWlErr]        = useState('')
 
-  // "Join the Kickstarter" entry (/checkout?join=1): a pre-launch booking that
-  // secures the founding discount without picking a fabric first.
-  const [joinMode,    setJoinMode]    = useState(false)
-  const [joinChecked, setJoinChecked] = useState(false)
+  // "Join the Kickstarter" entry (/checkout?join=1&tier=200): a pre-launch
+  // booking that secures a discount tier without picking a fabric first.
+  const [joinMode,     setJoinMode]     = useState(false)
+  const [joinChecked,  setJoinChecked]  = useState(false)
+  const [selectedTier, setSelectedTier] = useState<Tier>(DEFAULT_TIER)
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const balanceKsh = Math.max(0, totalKsh - DEPOSIT_KSH)
+  // Amount charged today: the chosen backing tier in join mode, else the flat
+  // founding deposit.
+  const depositAmount = joinMode ? selectedTier.amount : DEPOSIT_KSH
+  const balanceKsh = Math.max(0, totalKsh - depositAmount)
   // Kickstarter booking = arrived via the join CTA with an empty cart.
   const kickstarterBooking = joinMode && items.length === 0
 
-  // Detect join mode from the URL (read directly to avoid a Suspense boundary).
+  // Detect join mode + preselected tier from the URL (read directly to avoid a
+  // Suspense boundary).
   useEffect(() => {
-    setJoinMode(new URLSearchParams(window.location.search).get('join') === '1')
+    const params = new URLSearchParams(window.location.search)
+    setJoinMode(params.get('join') === '1')
+    const t = tierForAmount(Number(params.get('tier')))
+    if (t) setSelectedTier(t)
     setJoinChecked(true)
   }, [])
 
@@ -189,6 +198,7 @@ export default function CheckoutClient() {
           name, phone,
           email: '', county: '', town: '', building: '', instructions: null,
           kickstarter: joinMode,
+          amount: joinMode ? selectedTier.amount : undefined,
           items: items.map(i => ({
             product_id:   i.productId,
             product_name: i.name,
@@ -252,14 +262,14 @@ export default function CheckoutClient() {
             Check Your Phone
           </h2>
           <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: '#6A7A88', lineHeight: 1.7, marginBottom: '32px' }}>
-            We&apos;ve sent an M-Pesa request to <strong style={{ color: '#F0EBE0' }}>{phone}</strong> for your <strong style={{ color: '#F0EBE0' }}>{fmt(DEPOSIT_KSH)}</strong> founding deposit. Enter your PIN to reserve your slot.
+            We&apos;ve sent an M-Pesa request to <strong style={{ color: '#F0EBE0' }}>{phone}</strong> for your <strong style={{ color: '#F0EBE0' }}>{fmt(depositAmount)}</strong> {joinMode ? 'backing' : 'founding deposit'}. Enter your PIN to reserve your slot.
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
             <Loader2 size={18} color="#C9A84C" style={{ animation: 'spin 1s linear infinite' }} />
             <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#4A5A6A' }}>Waiting for payment…</span>
           </div>
           <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58' }}>
-            Order <strong style={{ color: '#C9A84C' }}>{orderNumber}</strong> · Deposit {fmt(DEPOSIT_KSH)}
+            Order <strong style={{ color: '#C9A84C' }}>{orderNumber}</strong> · {fmt(depositAmount)}
           </p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -281,7 +291,7 @@ export default function CheckoutClient() {
             Your Slot Is Reserved
           </h2>
           <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: '#6A7A88', lineHeight: 1.7, marginBottom: '32px' }}>
-            Thank you, {name.split(' ')[0]}. Your {fmt(DEPOSIT_KSH)} deposit is credited in full to your order and locks your founding price. We&apos;ll call within 24 hours to confirm measurements and your fitting slot.
+            Thank you, {name.split(' ')[0]}. Your {fmt(depositAmount)} backing is credited in full to your order{joinMode ? ` and locks ${selectedTier.discountPct}% off at launch` : ' and locks your founding price'}. We&apos;ll call within 24 hours to {joinMode ? 'help you choose your fabric and confirm the details' : 'confirm measurements and your fitting slot'}.
           </p>
           <div style={{ background: 'rgba(201,168,76,0.06)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '6px', padding: '20px 28px', marginBottom: '32px' }}>
             <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#6A7A88', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>Order Number</p>
@@ -362,7 +372,7 @@ export default function CheckoutClient() {
         </h1>
         <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: '#6A7A88', lineHeight: 1.7, maxWidth: '620px', marginBottom: '40px' }}>
           {kickstarterBooking
-            ? <>Lock in your founding discount with a fully-refundable {fmt(DEPOSIT_KSH)}{' '}deposit. We&apos;ll call to choose your fabric and confirm measurements — the deposit is credited in full to your order.</>
+            ? <>Choose your backing package — the more you back us with now, the bigger the discount you lock in at launch. Every shilling is fully refundable and credited in full to your order.</>
             : <>Secure a founding slot with a fully-refundable {fmt(DEPOSIT_KSH)}{' '}deposit. It&apos;s credited in full to your order, locks today&apos;s founding price, and the balance is only due once your curtains are installed.</>}
         </p>
 
@@ -383,11 +393,18 @@ export default function CheckoutClient() {
 
               {/* Reassurance / defensibility */}
               <div style={{ marginTop: '28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {[
-                  'Fully refundable — cancel any time before production.',
-                  'Credited in full toward your final order.',
-                  'Locks your founding price. Balance due on installation.',
-                ].map(t => (
+                {(joinMode
+                  ? [
+                      'Fully refundable — cancel any time before production.',
+                      'Credited in full toward your final order.',
+                      'Locks your launch discount, applied when we finalize your order.',
+                    ]
+                  : [
+                      'Fully refundable — cancel any time before production.',
+                      'Credited in full toward your final order.',
+                      'Locks your founding price. Balance due on installation.',
+                    ]
+                ).map(t => (
                   <div key={t} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                     <CheckCircle size={15} color="#4CAF82" style={{ marginTop: '2px', flexShrink: 0 }} />
                     <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#8A96A4', lineHeight: 1.6 }}>{t}</span>
@@ -401,21 +418,46 @@ export default function CheckoutClient() {
               <SectionLabel>{kickstarterBooking ? 'Your Pre-Launch Spot' : 'Your Reservation'}</SectionLabel>
 
               {kickstarterBooking ? (
-                // Simplified pre-launch booking — no fabric picked yet.
+                // Pre-launch booking — pick a backing tier; no fabric yet.
                 <div style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', padding: '20px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <Star size={16} color="#C9A84C" style={{ marginTop: '2px', flexShrink: 0 }} />
-                    <div>
-                      <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '16px', color: '#F0EBE0', marginBottom: '4px' }}>{CAMPAIGN.name} Pre-Launch Spot</p>
-                      <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#6A7A88', lineHeight: 1.6 }}>
-                        Locks your founding discount. We&apos;ll help you choose fabric &amp; confirm the price on our call.
-                      </p>
-                    </div>
+                  <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#6A7A88', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px' }}>
+                    Your Backing Package
+                  </p>
+
+                  {/* Tier selector */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    {TIERS.map(t => {
+                      const on = t.amount === selectedTier.amount
+                      return (
+                        <button
+                          key={t.amount}
+                          type="button"
+                          onClick={() => setSelectedTier(t)}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '12px 14px', borderRadius: '6px', cursor: 'pointer',
+                            background: on ? 'rgba(201,168,76,0.12)' : 'transparent',
+                            border: `1px solid ${on ? '#C9A84C' : 'rgba(201,168,76,0.2)'}`,
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0, border: `2px solid ${on ? '#C9A84C' : 'rgba(201,168,76,0.4)'}`, background: on ? '#C9A84C' : 'transparent' }} />
+                            <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: on ? '#F0EBE0' : '#8A96A4', fontWeight: on ? 600 : 400 }}>{fmt(t.amount)}</span>
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: on ? '#C9A84C' : '#6A7A88' }}>{t.discountPct}% OFF</span>
+                        </button>
+                      )
+                    })}
                   </div>
+
+                  <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#6A7A88', lineHeight: 1.6, marginBottom: '14px' }}>
+                    Locks <strong style={{ color: '#C9A84C' }}>{selectedTier.discountPct}% off</strong> your launch order. We&apos;ll help you choose fabric &amp; confirm the price on our call — your deposit is credited in full.
+                  </p>
                   <div style={{ height: '1px', background: 'rgba(201,168,76,0.1)', margin: '4px 0 14px' }} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0', fontWeight: 600 }}>Deposit due today</span>
-                    <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '24px', color: '#C9A84C' }}>{fmt(DEPOSIT_KSH)}</span>
+                    <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0', fontWeight: 600 }}>Due today</span>
+                    <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '24px', color: '#C9A84C' }}>{fmt(depositAmount)}</span>
                   </div>
                 </div>
               ) : (
@@ -477,7 +519,7 @@ export default function CheckoutClient() {
               >
                 {stage === 'processing'
                   ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing…</>
-                  : <>{joinMode ? CAMPAIGN.cta : 'Reserve My Slot'} · Pay {fmt(DEPOSIT_KSH)} <ArrowRight size={15} /></>
+                  : <>{joinMode ? CAMPAIGN.cta : 'Reserve My Slot'} · Pay {fmt(depositAmount)} <ArrowRight size={15} /></>
                 }
               </button>
 

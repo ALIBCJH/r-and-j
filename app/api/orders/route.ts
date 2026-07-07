@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { rateLimit } from '@/app/lib/security'
 import { initiateStkPush } from '@/app/lib/mpesa'
+import { tierForAmount } from '@/app/lib/campaign'
 import {
   type Order,
   type OrderItem,
@@ -33,6 +34,7 @@ type Body = {
   instructions?: string | null
   items?: OrderItem[]
   kickstarter?: boolean // pre-launch "join" booking — no fabric picked yet
+  amount?: number       // chosen backing tier (validated server-side)
 }
 
 export async function POST(request: Request) {
@@ -80,8 +82,8 @@ export async function POST(request: Request) {
   }
 
   // Recompute the full order value server-side (the locked founding price we
-  // record), but only charge the flat founding deposit today. A kickstarter
-  // booking has no fabric yet, so its total is 0 (TBD on our call).
+  // record), but only charge the backing amount today. A kickstarter booking has
+  // no fabric yet, so its total is 0 (TBD on our call).
   const total = computeTotal(items)
   if (!kickstarter && (total <= 0 || total > 5_000_000)) {
     return NextResponse.json({ ok: false, error: 'Invalid order total.' }, { status: 400 })
@@ -89,7 +91,21 @@ export async function POST(request: Request) {
   if (total > 5_000_000) {
     return NextResponse.json({ ok: false, error: 'Invalid order total.' }, { status: 400 })
   }
-  const deposit = FOUNDING_DEPOSIT_KSH
+
+  // The backing tier decides how much we charge and the discount it unlocks.
+  // Kickstarter bookings must pick a valid tier; the classic reserve flow uses
+  // the flat founding deposit. Never trust a raw client amount — validate it
+  // against the allowed tier list.
+  let deposit = FOUNDING_DEPOSIT_KSH
+  let discountPct = 0
+  if (kickstarter) {
+    const tier = tierForAmount(Number(body.amount))
+    if (!tier) {
+      return NextResponse.json({ ok: false, error: 'Please choose a valid backing package.' }, { status: 400 })
+    }
+    deposit = tier.amount
+    discountPct = tier.discountPct
+  }
 
   const orderNumber = generateOrderNumber()
 
@@ -122,6 +138,7 @@ export async function POST(request: Request) {
     items,
     total_ksh: total,
     deposit_ksh: deposit,
+    discount_pct: discountPct,
     is_founding: true,
     checkout_request_id: checkoutRequestId,
     mpesa_receipt: null,
@@ -146,5 +163,6 @@ export async function POST(request: Request) {
     order_number: orderNumber,
     checkout_request_id: checkoutRequestId,
     deposit_ksh: deposit,
+    discount_pct: discountPct,
   })
 }

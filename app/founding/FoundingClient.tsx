@@ -2,22 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Star, CheckCircle } from 'lucide-react'
+import { ArrowRight, Star } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { API_URL } from '@/app/lib/api'
-import { CAMPAIGN } from '@/app/lib/campaign'
+import { CAMPAIGN, TIERS } from '@/app/lib/campaign'
 
 type Slots = { reserved: number; total: number; remaining: number }
 
-const DEPOSIT_KSH = 1000
 const fmt = (n: number) => 'KSh ' + n.toLocaleString('en-KE')
-
-const BENEFITS = [
-  'A huge founding discount — locked in before we launch to the public.',
-  'Fully refundable — cancel any time before production.',
-  `Just ${fmt(DEPOSIT_KSH)} secures your spot, credited in full to your order.`,
-]
 
 export default function FoundingClient() {
   const [slots, setSlots] = useState<Slots | null>(null)
@@ -31,12 +24,14 @@ export default function FoundingClient() {
 
   const pct = slots && slots.total > 0 ? Math.min(100, (slots.reserved / slots.total) * 100) : 0
   const soldOut = slots ? slots.remaining <= 0 : false
+  // Flag the biggest-discount package as the standout.
+  const topTier = TIERS.reduce((a, b) => (b.discountPct > a.discountPct ? b : a), TIERS[0])
 
   return (
     <main style={{ background: '#0D1B2E', minHeight: '100vh' }}>
       <LandingNavbar />
 
-      <div style={{ paddingTop: 'calc(var(--rj-navbar-height) + 72px)', paddingLeft: '6vw', paddingRight: '6vw', maxWidth: '720px', margin: '0 auto', paddingBottom: '110px', textAlign: 'center' }}>
+      <div style={{ paddingTop: 'calc(var(--rj-navbar-height) + 72px)', paddingLeft: '6vw', paddingRight: '6vw', maxWidth: '860px', margin: '0 auto', paddingBottom: '110px', textAlign: 'center' }}>
 
         {/* Badge */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px', padding: '6px 16px', borderRadius: '20px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)' }}>
@@ -47,18 +42,19 @@ export default function FoundingClient() {
         {/* Headline */}
         <h1 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: 'clamp(34px, 6.5vw, 62px)', color: '#FFFFFF', fontWeight: 400, lineHeight: 1.07, marginBottom: '24px' }}>
           Back our launch.{' '}
-          <em style={{ color: '#C9A84C' }}>Lock a huge discount.</em>
+          <em style={{ color: '#C9A84C' }}>Lock a bigger discount.</em>
         </h1>
 
         {/* Statement */}
-        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 'clamp(16px, 2.2vw, 19px)', color: '#9AA6B4', lineHeight: 1.75, maxWidth: '600px', margin: '0 auto 40px' }}>
+        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: 'clamp(16px, 2.2vw, 19px)', color: '#9AA6B4', lineHeight: 1.75, maxWidth: '620px', margin: '0 auto 40px' }}>
           We&apos;re about to launch — and before we do, we&apos;re running a {CAMPAIGN.name}-style
-          pre-launch. Book your curtains now, ahead of the public opening, with a small
-          refundable deposit and lock in a founding discount you won&apos;t see again.
+          pre-launch. Pick a backing package below: the more you back us with now, the bigger the
+          discount you lock in at launch. Every shilling is refundable and credited in full to your
+          order.
         </p>
 
         {/* Live counter */}
-        <div style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px', padding: '18px 22px', marginBottom: '36px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
+        <div style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px', padding: '18px 22px', marginBottom: '44px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#C9A84C', letterSpacing: '2px', textTransform: 'uppercase' }}>Spots Taken</span>
             <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0' }}>
@@ -75,29 +71,62 @@ export default function FoundingClient() {
           )}
         </div>
 
-        {/* Benefits */}
-        <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '14px', textAlign: 'left', marginBottom: '44px' }}>
-          {BENEFITS.map(b => (
-            <div key={b} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', maxWidth: '480px' }}>
-              <CheckCircle size={18} color="#4CAF82" style={{ marginTop: '1px', flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: '#C6CFD8', lineHeight: 1.6 }}>{b}</span>
-            </div>
-          ))}
+        {/* Backing tiers */}
+        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#C9A84C', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: '24px' }}>
+          Choose Your Backing
+        </p>
+        <div className="tier-grid">
+          {TIERS.map(t => {
+            const featured = t.amount === topTier.amount
+            return (
+              <Link
+                key={t.amount}
+                href={`/checkout?join=1&tier=${t.amount}`}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', textDecoration: 'none',
+                  padding: '24px 16px', borderRadius: '10px',
+                  background: featured ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${featured ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.18)'}`,
+                  transition: 'transform 0.15s ease, border-color 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = '#C9A84C' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = featured ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.18)' }}
+              >
+                <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: '#0A0F1C', background: 'linear-gradient(135deg, #F0D77A, #C9A84C)', padding: '4px 12px', borderRadius: '20px', marginBottom: '16px' }}>
+                  {t.discountPct}% OFF
+                </span>
+                <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '28px', color: '#FFFFFF', lineHeight: 1, marginBottom: '6px', whiteSpace: 'nowrap' }}>
+                  {fmt(t.amount)}
+                </span>
+                <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#6A7A88', marginBottom: '20px' }}>
+                  credited to your order
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: '#C9A84C', textTransform: 'uppercase' }}>
+                  Back this <ArrowRight size={13} />
+                </span>
+              </Link>
+            )
+          })}
         </div>
 
-        {/* CTA */}
-        <div>
-          <Link
-            href="/checkout?join=1"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)', color: '#0A0F1C', padding: '17px 38px', borderRadius: '4px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '14px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', textDecoration: 'none', boxShadow: '0 0 32px rgba(201,168,76,0.25)' }}
-          >
-            {CAMPAIGN.cta} <ArrowRight size={16} />
-          </Link>
-          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58', marginTop: '16px' }}>
-            {fmt(DEPOSIT_KSH)} refundable deposit · secure M-Pesa · takes a minute
-          </p>
-        </div>
+        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58', marginTop: '28px' }}>
+          Fully refundable · secure M-Pesa · your discount is applied when we finalize your order
+        </p>
       </div>
+
+      <style>{`
+        .tier-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+        @media (max-width: 720px) {
+          .tier-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 380px) {
+          .tier-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
 
       <LandingFooter />
     </main>
