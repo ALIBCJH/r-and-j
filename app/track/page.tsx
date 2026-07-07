@@ -277,7 +277,9 @@ export default function TrackPage() {
                   <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '9px', color: '#C9A84C', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '3px' }}>{item.collection}</p>
                   <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '15px', color: '#F0EBE0', marginBottom: '4px' }}>{item.product_name}</p>
                   <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#4A5A6A' }}>
-                    {item.quantity} panel{item.quantity > 1 ? 's' : ''} · {item.width_cm} × {item.height_cm} cm · {fmt(item.price_ksh * item.quantity)}
+                    {item.quantity} panel{item.quantity > 1 ? 's' : ''}
+                    {item.width_cm > 0 && item.height_cm > 0 ? ` · ${item.width_cm} × ${item.height_cm} cm` : ''}
+                    {' · '}{fmt(item.price_ksh * item.quantity)}
                   </p>
                 </div>
               ))}
