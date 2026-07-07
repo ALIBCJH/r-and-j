@@ -27,6 +27,7 @@ export function hasKv(): boolean {
 // callback and the browser's status poll can see the same record.
 type Entry = { value: string; expiresAt: number | null }
 const mem = new Map<string, Entry>()
+const memLists = new Map<string, string[]>()
 
 function memGet(key: string): string | null {
   const hit = mem.get(key)
@@ -109,4 +110,23 @@ export async function kvIncr(key: string): Promise<number> {
   const next = Number(memGet(key) ?? '0') + 1
   memSet(key, String(next))
   return next
+}
+
+/** Append a value to the end of a list (Redis RPUSH). */
+export async function kvListPush(key: string, value: string): Promise<void> {
+  if (hasKv()) {
+    await kvCommand(['RPUSH', key, value])
+  } else {
+    const list = memLists.get(key) ?? []
+    list.push(value)
+    memLists.set(key, list)
+  }
+}
+
+/** Read a whole list, in insertion order (Redis LRANGE key 0 -1). */
+export async function kvListRange(key: string): Promise<string[]> {
+  if (hasKv()) {
+    return ((await kvCommand(['LRANGE', key, 0, -1])) as string[]) ?? []
+  }
+  return memLists.get(key) ?? []
 }

@@ -17,6 +17,7 @@ import {
   computeTotal,
   generateOrderNumber,
   getFoundingReserved,
+  indexOrder,
   normalizePhone,
   saveOrder,
   savePayment,
@@ -156,7 +157,7 @@ export async function POST(request: Request) {
     created_at: now,
   }
 
-  await Promise.all([saveOrder(order), savePayment(payment)])
+  await Promise.all([saveOrder(order), savePayment(payment), indexOrder(orderNumber)])
 
   return NextResponse.json({
     ok: true,
