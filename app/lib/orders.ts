@@ -9,7 +9,7 @@
 // deposit (GateScreen) reuse the same STK-push + status machinery without an
 // order attached.
 
-import { kvGetJson, kvSetJson, kvIncr } from './store'
+import { kvGetJson, kvSetJson, kvIncr, kvListPush, kvListRange } from './store'
 
 // ── Founding-client pre-sale ────────────────────────────────────────────────
 // During validation we don't take full payment for a product that isn't built
@@ -190,4 +190,44 @@ export async function handleCallback(
 // Guard against absurd carts before we ever touch M-Pesa.
 export function computeTotal(items: OrderItem[]): number {
   return items.reduce((sum, i) => sum + i.price_ksh * i.quantity, 0)
+}
+
+// ── Admin: index + listing + fulfillment ────────────────────────────────────
+// KV has no "list all keys" primitive we want to lean on, so we keep an explicit
+// index of every order number as it's created. The admin reads the index, then
+// fetches each order.
+const ORDERS_INDEX_KEY = 'orders:index'
+
+/** Record a newly-created order in the index (call once, at creation). */
+export async function indexOrder(orderNumber: string): Promise<void> {
+  await kvListPush(ORDERS_INDEX_KEY, orderNumber)
+}
+
+/** All orders, newest first. */
+export async function listOrders(): Promise<Order[]> {
+  const numbers = await kvListRange(ORDERS_INDEX_KEY)
+  const orders = await Promise.all(numbers.map(n => getOrder(n)))
+  return orders.filter((o): o is Order => o !== null).reverse()
+}
+
+export const FULFILLMENT_FLOW: OrderStatus[] = [
+  'confirmed',
+  'in_production',
+  'ready',
+  'delivered',
+]
+
+/** Update an order's fulfillment status (admin action). Returns the updated
+ *  order, or null if it doesn't exist. A paid order can't be moved back to
+ *  pending_payment. */
+export async function updateOrderStatus(
+  orderNumber: string,
+  status: OrderStatus,
+): Promise<Order | null> {
+  const order = await getOrder(orderNumber)
+  if (!order) return null
+  if (status === 'pending_payment') return order // never revert to unpaid
+  order.status = status
+  await saveOrder(order)
+  return order
 }
