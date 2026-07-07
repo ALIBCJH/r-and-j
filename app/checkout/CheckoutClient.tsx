@@ -12,6 +12,7 @@ import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { useCart } from '@/app/lib/cart'
 import { API_URL } from '@/app/lib/api'
+import { CAMPAIGN } from '@/app/lib/campaign'
 
 type Stage = 'form' | 'processing' | 'waiting' | 'success' | 'error'
 type Slots = { reserved: number; total: number; remaining: number }
@@ -86,10 +87,10 @@ function SlotsBar({ slots }: { slots: Slots }) {
     <div style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '8px', padding: '16px 18px', marginBottom: '36px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#C9A84C', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-          <Star size={13} /> Founding Client Release
+          <Star size={13} /> Pre-Launch Release
         </span>
         <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#F0EBE0' }}>
-          <strong style={{ color: '#C9A84C' }}>{slots.reserved}</strong> of {slots.total} slots reserved
+          <strong style={{ color: '#C9A84C' }}>{slots.reserved}</strong> of {slots.total} spots taken
         </span>
       </div>
       <div style={{ width: '100%', height: '5px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -97,8 +98,8 @@ function SlotsBar({ slots }: { slots: Slots }) {
       </div>
       <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#6A7A88', marginTop: '10px', lineHeight: 1.6 }}>
         {slots.remaining > 0
-          ? `Only ${slots.remaining} founding ${slots.remaining === 1 ? 'slot' : 'slots'} left at this price.`
-          : 'All founding slots are reserved — join the waitlist below.'}
+          ? `Only ${slots.remaining} ${slots.remaining === 1 ? 'spot' : 'spots'} left at this price.`
+          : 'All pre-launch spots are taken — join the waitlist below.'}
       </p>
     </div>
   )
@@ -122,9 +123,22 @@ export default function CheckoutClient() {
   const [wlEmail,      setWlEmail]      = useState('')
   const [wlErr,        setWlErr]        = useState('')
 
+  // "Join the Kickstarter" entry (/checkout?join=1): a pre-launch booking that
+  // secures the founding discount without picking a fabric first.
+  const [joinMode,    setJoinMode]    = useState(false)
+  const [joinChecked, setJoinChecked] = useState(false)
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const balanceKsh = Math.max(0, totalKsh - DEPOSIT_KSH)
+  // Kickstarter booking = arrived via the join CTA with an empty cart.
+  const kickstarterBooking = joinMode && items.length === 0
+
+  // Detect join mode from the URL (read directly to avoid a Suspense boundary).
+  useEffect(() => {
+    setJoinMode(new URLSearchParams(window.location.search).get('join') === '1')
+    setJoinChecked(true)
+  }, [])
 
   // Live founding-slots counter.
   useEffect(() => {
@@ -134,12 +148,14 @@ export default function CheckoutClient() {
       .catch(() => {})
   }, [])
 
-  // Wait for the cart to hydrate from localStorage before deciding it's empty —
-  // otherwise a direct load / refresh of /checkout redirects away before the
-  // saved cart loads, kicking customers out with items still in their order.
+  // Wait for the cart to hydrate before deciding it's empty — otherwise a direct
+  // load / refresh of /checkout redirects away before the saved cart loads. Skip
+  // the redirect entirely in join mode, where an empty cart is expected.
   useEffect(() => {
-    if (hydrated && items.length === 0 && stage === 'form') router.push('/catalog')
-  }, [hydrated, items, stage, router])
+    if (joinChecked && !joinMode && hydrated && items.length === 0 && stage === 'form') {
+      router.push('/catalog')
+    }
+  }, [joinChecked, joinMode, hydrated, items, stage, router])
 
   useEffect(() => {
     if (stage !== 'waiting' || !checkoutId) return
@@ -172,6 +188,7 @@ export default function CheckoutClient() {
         body: JSON.stringify({
           name, phone,
           email: '', county: '', town: '', building: '', instructions: null,
+          kickstarter: joinMode,
           items: items.map(i => ({
             product_id:   i.productId,
             product_name: i.name,
@@ -338,13 +355,15 @@ export default function CheckoutClient() {
 
         {/* Heading */}
         <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px', color: '#C9A84C', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: '12px' }}>
-          Become a Founding Client
+          {joinMode ? `${CAMPAIGN.name} · Pre-Launch` : 'Become a Founding Client'}
         </p>
         <h1 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '30px', color: '#FFFFFF', fontWeight: 400, marginBottom: '16px' }}>
-          Reserve Your Slot
+          {joinMode ? 'Secure Your Spot' : 'Reserve Your Slot'}
         </h1>
         <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '15px', color: '#6A7A88', lineHeight: 1.7, maxWidth: '620px', marginBottom: '40px' }}>
-          Secure a founding slot with a fully-refundable {fmt(DEPOSIT_KSH)}{' '}deposit. It&apos;s credited in full to your order, locks today&apos;s founding price, and the balance is only due once your curtains are installed.
+          {kickstarterBooking
+            ? <>Lock in your founding discount with a fully-refundable {fmt(DEPOSIT_KSH)}{' '}deposit. We&apos;ll call to choose your fabric and confirm measurements — the deposit is credited in full to your order.</>
+            : <>Secure a founding slot with a fully-refundable {fmt(DEPOSIT_KSH)}{' '}deposit. It&apos;s credited in full to your order, locks today&apos;s founding price, and the balance is only due once your curtains are installed.</>}
         </p>
 
         {slots && <SlotsBar slots={slots} />}
@@ -379,50 +398,72 @@ export default function CheckoutClient() {
 
             {/* ── Right column: sticky order summary ───────────────────────── */}
             <div style={{ position: 'sticky', top: 'calc(var(--rj-navbar-height, 72px) + 24px)', alignSelf: 'start' }}>
-              <SectionLabel>Your Reservation</SectionLabel>
+              <SectionLabel>{kickstarterBooking ? 'Your Pre-Launch Spot' : 'Your Reservation'}</SectionLabel>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                {items.map(item => (
-                  <div key={item.productId} style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ display: 'flex', gap: '14px', padding: '14px' }}>
-                      <div style={{ position: 'relative', width: '56px', aspectRatio: '2/3', flexShrink: 0, borderRadius: '2px', overflow: 'hidden' }}>
-                        <Image src={item.image} alt={item.name} fill sizes="56px" style={{ objectFit: 'cover' }} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '9px', color: '#C9A84C', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{item.collection}</p>
-                        <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '15px', color: '#F0EBE0', marginBottom: '4px' }}>{item.name}</p>
-                        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#4A5A6A' }}>
-                          {item.quantity} panel{item.quantity > 1 ? 's' : ''} ·{' '}
-                          <span style={{ color: '#F0EBE0' }}>KSh {(item.priceKsh * item.quantity).toLocaleString('en-KE')}</span>
-                        </p>
-                      </div>
+              {kickstarterBooking ? (
+                // Simplified pre-launch booking — no fabric picked yet.
+                <div style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', padding: '20px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <Star size={16} color="#C9A84C" style={{ marginTop: '2px', flexShrink: 0 }} />
+                    <div>
+                      <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '16px', color: '#F0EBE0', marginBottom: '4px' }}>{CAMPAIGN.name} Pre-Launch Spot</p>
+                      <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#6A7A88', lineHeight: 1.6 }}>
+                        Locks your founding discount. We&apos;ll help you choose fabric &amp; confirm the price on our call.
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div style={{ height: '1px', background: 'rgba(201,168,76,0.1)', margin: '4px 0 14px' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0', fontWeight: 600 }}>Deposit due today</span>
+                    <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '24px', color: '#C9A84C' }}>{fmt(DEPOSIT_KSH)}</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                    {items.map(item => (
+                      <div key={item.productId} style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', gap: '14px', padding: '14px' }}>
+                          <div style={{ position: 'relative', width: '56px', aspectRatio: '2/3', flexShrink: 0, borderRadius: '2px', overflow: 'hidden' }}>
+                            <Image src={item.image} alt={item.name} fill sizes="56px" style={{ objectFit: 'cover' }} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '9px', color: '#C9A84C', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: '4px' }}>{item.collection}</p>
+                            <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '15px', color: '#F0EBE0', marginBottom: '4px' }}>{item.name}</p>
+                            <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#4A5A6A' }}>
+                              {item.quantity} panel{item.quantity > 1 ? 's' : ''} ·{' '}
+                              <span style={{ color: '#F0EBE0' }}>KSh {(item.priceKsh * item.quantity).toLocaleString('en-KE')}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-              {/* Price breakdown */}
-              <div style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', padding: '20px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Order value (founding price)</span>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0' }}>{fmt(totalKsh)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Delivery &amp; Installation</span>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#4CAF82' }}>Included</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Balance (due on installation)</span>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#8A96A4' }}>{fmt(balanceKsh)}</span>
-                </div>
-                <div style={{ height: '1px', background: 'rgba(201,168,76,0.1)', margin: '12px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0', fontWeight: 600 }}>Deposit due today</span>
-                  <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '24px', color: '#C9A84C' }}>
-                    {fmt(DEPOSIT_KSH)}
-                  </span>
-                </div>
-              </div>
+                  {/* Price breakdown */}
+                  <div style={{ border: '1px solid rgba(201,168,76,0.12)', borderRadius: '4px', padding: '20px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Order value (founding price)</span>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0' }}>{fmt(totalKsh)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Delivery &amp; Installation</span>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#4CAF82' }}>Included</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>Balance (due on installation)</span>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#8A96A4' }}>{fmt(balanceKsh)}</span>
+                    </div>
+                    <div style={{ height: '1px', background: 'rgba(201,168,76,0.1)', margin: '12px 0' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#F0EBE0', fontWeight: 600 }}>Deposit due today</span>
+                      <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '24px', color: '#C9A84C' }}>
+                        {fmt(DEPOSIT_KSH)}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {errMsg && (
                 <div style={{ background: 'rgba(224,85,85,0.1)', border: '1px solid rgba(224,85,85,0.3)', borderRadius: '4px', padding: '12px 16px', marginBottom: '14px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#E07070' }}>
@@ -436,7 +477,7 @@ export default function CheckoutClient() {
               >
                 {stage === 'processing'
                   ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Processing…</>
-                  : <>Reserve My Slot · Pay {fmt(DEPOSIT_KSH)} <ArrowRight size={15} /></>
+                  : <>{joinMode ? CAMPAIGN.cta : 'Reserve My Slot'} · Pay {fmt(DEPOSIT_KSH)} <ArrowRight size={15} /></>
                 }
               </button>
 
