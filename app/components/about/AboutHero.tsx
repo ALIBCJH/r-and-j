@@ -16,7 +16,7 @@ export default function AboutHero() {
       justifyContent: 'center',
       alignItems:     'center',
       overflow:       'hidden',
-      background:     '#0A0F1C',
+      background:     '#0D1B2E',
     }}>
       {/* Radial gold glow */}
       <div style={{
