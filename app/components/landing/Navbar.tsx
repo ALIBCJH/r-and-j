@@ -43,11 +43,11 @@ export default function LandingNavbar() {
         className={`rj-landing-nav${isHome ? ' rj-nav-home' : ''} fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10`}
         style={{
           height:         'var(--rj-navbar-height)',
-          borderBottom:   scrolled ? '1px solid rgba(201,168,76,0.18)' : '1px solid rgba(201,168,76,0.15)',
-          background:     scrolled ? 'rgba(10,18,36,0.6)' : 'transparent',
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
-          transition:     'background 0.4s ease, border-color 0.4s ease',
+          borderBottom:   scrolled ? '1px solid rgba(201,168,76,0.10)' : '1px solid transparent',
+          background:     scrolled ? 'rgba(13,20,34,0.45)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(22px) saturate(125%)' : 'blur(8px)',
+          WebkitBackdropFilter: scrolled ? 'blur(22px) saturate(125%)' : 'blur(8px)',
+          transition:     'background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease',
         }}
       >
         {/* Logo */}
@@ -71,7 +71,7 @@ export default function LandingNavbar() {
 
         {/* Center nav */}
         <div
-          className="hidden md:flex items-center gap-12"
+          className="hidden md:flex items-center gap-8"
           onMouseLeave={() => setHoveredLink(null)}
         >
           {LINKS.map(l => {
@@ -342,15 +342,15 @@ function NavLink({
           color: lit
             ? '#E8C96D'
             : anyHovered
-              ? 'rgba(255,255,255,0.38)'
-              : 'rgba(255,255,255,0.82)',
+              ? 'rgba(255,255,255,0.30)'
+              : 'rgba(255,255,255,0.60)',
           y: isHovered ? -1 : 0,
         }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
         style={{
           fontFamily:    'var(--font-inter, sans-serif)',
-          fontSize:      '16px',
-          letterSpacing: '0.04em',
+          fontSize:      '13.5px',
+          letterSpacing: '0.08em',
           display:       'block',
           fontWeight:    lit ? 500 : 400,
         }}

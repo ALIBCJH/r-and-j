@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import LandingNavbar        from '../components/landing/Navbar'
 import HeroSection          from '../components/landing/HeroSection'
 import CurtainConfigurator  from '../components/landing/CurtainConfigurator'
-import ProcessSection       from '../components/landing/ProcessSection'
-import StatsSection       from '../components/landing/StatsSection'
 import TextilesShowcase   from '../components/landing/TextilesShowcase'
 import TestimonialSection from '../components/landing/TestimonialSection'
 import CTABanner          from '../components/landing/CTABanner'
@@ -48,19 +46,19 @@ export default function LandingPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
+      {/* A cinematic five-act homepage — each section answers one question:
+          Hero (what is this?) → Design Without Guesswork (why different?) →
+          Portfolio (can I trust them?) → Testimonials (did it work?) →
+          CTA (how do I begin?). */}
       <LandingNavbar />
       <HeroSection />
-      <SectionDivider from="#0D1B2E" to="#0D1B2E" />
+      <SectionDivider />
       <CurtainConfigurator />
-      <SectionDivider from="#0D1B2E" to="#0F1117" />
-      <ProcessSection />
-      <SectionDivider from="#0F1117" to="#0F1117" />
-      <StatsSection />
-      <SectionDivider from="#0F1117" to="#0A0C12" />
+      <SectionDivider />
       <TextilesShowcase />
-      <SectionDivider from="#0A0C12" to="#0F1117" />
+      <SectionDivider />
       <TestimonialSection />
-      <SectionDivider from="#0F1117" to="#0F1117" />
+      <SectionDivider />
       <CTABanner />
       <LandingFooter />
     </div>

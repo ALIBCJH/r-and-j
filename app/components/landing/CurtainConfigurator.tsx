@@ -89,44 +89,45 @@ export default function CurtainConfigurator() {
   return (
     <section style={{
       background: '#0D1B2E',
-      padding:    '120px 6vw',
+      padding:    '150px 6vw',
       borderTop:  '1px solid rgba(201,168,76,0.12)',
     }}>
       <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
 
-        {/* Header */}
-        <div className="text-center" style={{ marginBottom: '64px' }}>
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.8, ease }}
-            style={{
-              fontFamily:    'var(--font-inter, sans-serif)',
-              fontSize:      'var(--rj-font-label)',
-              color:         '#C9A84C',
-              letterSpacing: '5px',
-              textTransform: 'uppercase',
-              marginBottom:  '20px',
-            }}
-          >
-            Real-Time Configurator
-          </motion.p>
-
+        {/* Header — one idea: why this is different. Title + a single quiet line. */}
+        <div className="text-center" style={{ marginBottom: '84px' }}>
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.8, ease, delay: 0.1 }}
+            transition={{ duration: 0.9, ease }}
             style={{
-              fontFamily: 'var(--font-playfair, Georgia, serif)',
-              fontSize:   'var(--rj-font-h2)',
-              color:      '#FFFFFF',
-              lineHeight: 1.1,
+              fontFamily:    'var(--font-playfair, Georgia, serif)',
+              fontSize:      'clamp(40px, 5vw, 68px)',
+              color:         '#FFFFFF',
+              lineHeight:    1.08,
+              letterSpacing: '-0.01em',
             }}
           >
-            Change the fabric. Watch the room respond.
+            Design Without Guesswork
           </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.9, ease, delay: 0.12 }}
+            style={{
+              fontFamily: 'var(--font-inter, sans-serif)',
+              fontSize:   'clamp(16px, 1.5vw, 19px)',
+              color:      'rgba(240,235,224,0.66)',
+              lineHeight: 1.7,
+              maxWidth:   '460px',
+              margin:     '24px auto 0',
+            }}
+          >
+            Experience every curtain, fabric and finish before production begins.
+          </motion.p>
 
           <motion.div
             initial={{ opacity: 0, scaleX: 0 }}
@@ -137,7 +138,7 @@ export default function CurtainConfigurator() {
               width:           '48px',
               height:          '2px',
               background:      'linear-gradient(90deg, #C9A84C, #E8C96D)',
-              margin:          '20px auto 0',
+              margin:          '32px auto 0',
               transformOrigin: 'center',
             }}
           />
@@ -146,14 +147,15 @@ export default function CurtainConfigurator() {
         <style>{`
           .config-stage {
             position: relative;
-            border: 1px solid rgba(201,168,76,0.18);
-            box-shadow: 0 40px 120px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 24px;
+            box-shadow: 0 50px 140px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
             overflow: hidden;
           }
           .config-preview {
             position: relative;
             width: 100%;
-            height: clamp(380px, 58vh, 580px);
+            height: clamp(400px, 60vh, 600px);
             overflow: hidden;
             background: #0a1019;
           }
@@ -165,12 +167,15 @@ export default function CurtainConfigurator() {
               linear-gradient(180deg, rgba(8,12,22,0.45) 0%, transparent 25%, transparent 65%, rgba(8,12,22,0.55) 100%);
           }
           .config-badge {
-            position: absolute; top: 22px; left: 22px; z-index: 3;
+            position: absolute; top: 24px; left: 24px; z-index: 3;
             display: inline-flex; align-items: center; gap: 8px;
-            padding: 7px 14px;
-            background: rgba(8,12,22,0.55);
-            border: 1px solid rgba(201,168,76,0.35);
-            backdrop-filter: blur(6px);
+            padding: 8px 16px;
+            border-radius: 100px;
+            background: rgba(18,26,42,0.42);
+            border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(18px) saturate(130%);
+            -webkit-backdrop-filter: blur(18px) saturate(130%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
             font-family: var(--font-inter, sans-serif);
             font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
             color: #E8C96D;
@@ -180,16 +185,23 @@ export default function CurtainConfigurator() {
             background: #E8C96D; box-shadow: 0 0 8px rgba(232,201,109,0.9);
           }
 
-          /* Control panel — floats over the preview on desktop */
+          /* Control panel — a frosted glass slab floating over the room,
+             Apple Vision Pro style: deep blur, soft shadow, a bright top edge
+             and a faint gold rim for depth. */
           .config-panel {
             position: absolute; z-index: 4;
-            top: 50%; right: 28px; transform: translateY(-50%);
-            width: 340px;
-            padding: 28px;
-            background: rgba(13,20,34,0.74);
-            border: 1px solid rgba(201,168,76,0.35);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+            top: 50%; right: 32px; transform: translateY(-50%);
+            width: 348px;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(18,26,42,0.42);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(30px) saturate(135%);
+            -webkit-backdrop-filter: blur(30px) saturate(135%);
+            box-shadow:
+              0 30px 80px rgba(0,0,0,0.55),
+              inset 0 1px 0 rgba(255,255,255,0.16),
+              inset 0 0 0 1px rgba(201,168,76,0.08);
           }
           .config-panel-label {
             font-family: var(--font-inter, sans-serif);
@@ -204,6 +216,7 @@ export default function CurtainConfigurator() {
             display: flex; align-items: flex-start; gap: 14px;
             width: 100%; text-align: left;
             padding: 14px 14px;
+            border-radius: 12px;
             background: transparent;
             border: 1px solid transparent;
             border-left: 2px solid transparent;
@@ -242,26 +255,31 @@ export default function CurtainConfigurator() {
           .config-cta {
             display: inline-flex; align-items: center; gap: 10px;
             width: 100%; justify-content: center;
-            margin-top: 24px; padding: 15px 24px;
+            margin-top: 26px; padding: 16px 24px;
+            border-radius: 10px;
             background: linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%);
             color: #0A0F1C;
             font-family: var(--font-inter, sans-serif);
             font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-            box-shadow: 0 0 18px rgba(232,201,109,0.25);
-            transition: filter 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35), 0 0 18px rgba(232,201,109,0.25);
+            transition: filter 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
           }
           .config-cta:hover {
             filter: brightness(1.08);
-            box-shadow: 0 0 26px rgba(232,201,109,0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 26px rgba(232,201,109,0.4);
           }
 
           /* Mobile — panel drops below the preview */
           @media (max-width: 768px) {
-            .config-preview { height: 320px; }
+            .config-preview { height: 340px; }
             .config-panel {
               position: static; transform: none;
               width: 100%; border-top: none;
-              backdrop-filter: none;
+              border-radius: 0;
+              border-left: none; border-right: none; border-bottom: none;
+              backdrop-filter: none; -webkit-backdrop-filter: none;
+              box-shadow: none;
               background: rgba(13,20,34,0.96);
             }
           }
@@ -289,7 +307,7 @@ export default function CurtainConfigurator() {
 
           {/* Control panel */}
           <div className="config-panel">
-            <p className="config-panel-label">Curtain Visualizer</p>
+            <p className="config-panel-label">Live Preview</p>
             <p className="config-panel-title">Choose your fabric</p>
 
             {FABRICS.map((f, i) => (
@@ -309,7 +327,7 @@ export default function CurtainConfigurator() {
             ))}
 
             <Link href="/studio" className="config-cta">
-              Open VR Studio
+              Start Your Design
               <ArrowRight size={15} />
             </Link>
           </div>

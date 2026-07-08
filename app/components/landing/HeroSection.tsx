@@ -56,6 +56,9 @@ export default function HeroSection() {
             letter-spacing: 2px !important;
             box-shadow: 0 0 16px rgba(232,201,109,0.28) !important;
           }
+          /* Keep the mobile hero image-led — the baked-in messaging carries it,
+             so the supporting line only shows on larger screens. */
+          .hero-support { display: none !important; }
         }
       `}</style>
 
@@ -113,36 +116,53 @@ export default function HeroSection() {
       >
 
         {/* ── Text + CTA ── */}
-        <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '560px', minWidth: 0 }}>
+        <div className="hero-text-col" style={{ flex: '0 0 auto', maxWidth: '620px', minWidth: 0 }}>
 
-          {/* Single page H1 — two animated lines as spans so the document keeps
+          {/* Single page H1 — three monumental lines as spans so the document keeps
               exactly one heading (better for SEO & accessibility). */}
           <h1 className="hero-mantra" style={{
-            fontFamily: 'var(--font-playfair, Georgia, serif)',
-            fontSize:   'clamp(38px, 4.4vw, 76px)',
-            lineHeight: 1.05,
-            margin:     '0 0 40px',
+            fontFamily:    'var(--font-playfair, Georgia, serif)',
+            fontSize:      'clamp(44px, 5.4vw, 94px)',
+            fontWeight:    400,
+            lineHeight:    1.02,
+            letterSpacing: '-0.015em',
+            margin:        '0 0 30px',
           }}>
-            <motion.span {...fadeUp(0.35)} style={{
-              display:    'block',
-              color:      '#FFFFFF',
-              textShadow: '0 2px 24px rgba(0,0,0,0.55)',
+            <motion.span {...fadeUp(0.3)} style={{
+              display: 'block', color: '#FFFFFF', textShadow: '0 2px 24px rgba(0,0,0,0.55)',
             }}>
-              See it
+              See It.
             </motion.span>
-            <motion.span {...fadeUp(0.5)} style={{ display: 'block' }}>
+            <motion.span {...fadeUp(0.45)} style={{
+              display: 'block', color: '#FFFFFF', textShadow: '0 2px 24px rgba(0,0,0,0.55)',
+            }}>
+              Perfect It.
+            </motion.span>
+            <motion.span {...fadeUp(0.6)} style={{ display: 'block' }}>
               <em style={{
                 color:      '#E8C96D',
                 fontStyle:  'italic',
                 textShadow: '0 0 48px rgba(232,201,109,0.35), 0 2px 24px rgba(0,0,0,0.55)',
               }}>
-                before it&rsquo;s real.
+                We&rsquo;ll Build It.
               </em>
             </motion.span>
           </h1>
 
+          {/* One quiet supporting line — luxury breathes, no paragraphs. */}
+          <motion.p {...fadeUp(0.75)} className="hero-support" style={{
+            fontFamily: 'var(--font-inter, sans-serif)',
+            fontSize:   'clamp(15px, 1.3vw, 18px)',
+            color:      'rgba(240,235,224,0.72)',
+            lineHeight: 1.7,
+            maxWidth:   '440px',
+            margin:     '0 0 44px',
+          }}>
+            Step into your finished home before a single curtain is cut.
+          </motion.p>
+
           <motion.div
-            {...fadeUp(0.65)}
+            {...fadeUp(0.9)}
             style={{ display: 'flex' }}
           >
             <Link
@@ -167,7 +187,7 @@ export default function HeroSection() {
                 e.currentTarget.style.boxShadow = '0 0 18px rgba(232,201,109,0.28), 0 0 44px rgba(201,168,76,0.12)'
               }}
             >
-              Experience VR Studio
+              Explore Your Space
             </Link>
           </motion.div>
         </div>
