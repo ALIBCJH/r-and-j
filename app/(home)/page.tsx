@@ -27,7 +27,7 @@ const jsonLd = {
   url:         'https://rjinteriors.co.ke',
   email:       'info@rjinteriors.co.ke',
   image:       'https://rjinteriors.co.ke/assets/hero3.png',
-  logo:        'https://rjinteriors.co.ke/assets/r_j_interiors_final_premium_logo.png',
+  logo:        'https://rjinteriors.co.ke/logo24.png',
   priceRange:  '$$$',
   address: {
     '@type':         'PostalAddress',
