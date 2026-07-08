@@ -12,6 +12,26 @@ export const CAMPAIGN = {
   name: 'Kickstarter',
 } as const
 
+// ⚠️ SET THIS to your real public-launch date. The founding discounts and the
+// countdown timer both expire here, so it must be honest — a fake deadline that
+// keeps resetting erodes exactly the trust we're trying to build.
+// ISO 8601, with the +03:00 offset for East Africa Time.
+export const LAUNCH_DATE = '2026-08-31T23:59:59+03:00'
+
+/** Milliseconds remaining until launch, never negative. Pass Date.now(). */
+export function msUntilLaunch(now: number): number {
+  return Math.max(0, new Date(LAUNCH_DATE).getTime() - now)
+}
+
+/** Pre-filled message a backer sends a friend when sharing the pre-launch. */
+export function referralMessage(url: string): string {
+  return (
+    "I'm backing R&J Interiors' launch — you get to see your curtains in your " +
+    'actual room before you pay a shilling, and founding backers lock a launch ' +
+    'discount. Spots are limited and pricing ends soon 👉 ' + url
+  )
+}
+
 // Backing packages: how much a customer pledges now, and the launch discount it
 // unlocks. The pledge is credited in full to their eventual order. This list is
 // the single source of truth — the server validates the chosen amount against

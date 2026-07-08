@@ -19,3 +19,12 @@ const DEFAULT_MESSAGE =
 export function whatsappUrl(message: string = DEFAULT_MESSAGE): string {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`
 }
+
+/**
+ * Build a WhatsApp *share* link with no fixed recipient — opens WhatsApp so the
+ * sender can pick which contact(s) to forward the message to. Used for the
+ * "tell a friend" referral nudge.
+ */
+export function whatsappShareUrl(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`
+}
