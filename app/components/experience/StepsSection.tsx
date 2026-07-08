@@ -68,7 +68,7 @@ function StepPanel({ step, index }: { step: typeof STEPS[number]; index: number 
         {step.number}
       </div>
 
-      <div style={{
+      <div className="exp-step-grid" style={{
         position: 'relative', zIndex: 2,
         display: 'grid',
         gridTemplateColumns: '220px 1fr',
@@ -154,6 +154,18 @@ export default function StepsSection() {
 
   return (
     <section ref={sectionRef} id="how-it-works" style={{ background: '#0D1B2E', position: 'relative' }}>
+
+      {/* On mobile the fixed "220px 1fr" step layout starves the text column and
+          spills the heading/body off-screen — stack it into one column instead. */}
+      <style>{`
+        @media (max-width: 768px) {
+          .exp-step-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+            align-items: start !important;
+          }
+        }
+      `}</style>
 
       {/* Section header */}
       <div style={{
