@@ -145,6 +145,13 @@ export default function FeaturesSection() {
         </motion.h2>
       </div>
 
+      {/* On mobile the cards stack to one column — drop the right-edge divider. */}
+      <style>{`
+        @media (max-width: 768px) {
+          .exp-feature-card { border-right: none !important; }
+        }
+      `}</style>
+
       {/* Feature grid */}
       <div style={{
         display:             'grid',
@@ -155,6 +162,7 @@ export default function FeaturesSection() {
         {FEATURES.map((f, i) => (
           <motion.div
             key={f.kicker}
+            className="exp-feature-card"
             {...fadeUp(0.08 * i)}
             style={{
               padding:      'clamp(40px, 5vw, 64px) clamp(28px, 4vw, 48px)',
