@@ -32,7 +32,7 @@ export default function LandingFooter() {
         {/* Brand */}
         <div>
           <Link href="/" className="flex items-center gap-3" style={{ marginBottom: '16px' }}>
-            <Image src="/assets/r_j_interiors_final_premium_logo.png" alt="R&J Interiors" width={38} height={38} className="object-contain" />
+            <Image src="/logo24.png" alt="R&J Interiors" width={38} height={38} className="object-contain" />
             <span style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '17px', color: '#C9A84C', letterSpacing: '0.05em' }}>
               R&amp;J INTERIORS
             </span>

@@ -69,7 +69,7 @@ export default function Navbar() {
         {/* Logo + wordmark */}
         <Link href="/" className="flex items-center gap-3 shrink-0 group">
           <img
-            src="/assets/r_j_interiors_final_premium_logo.png"
+            src="/logo24.png"
             alt="R&J Interiors"
             className="w-9 h-9 rounded-full object-cover transition-transform duration-300 group-hover:scale-105"
             style={{ outline: '1px solid rgba(201,168,76,0.35)', outlineOffset: '2px' }}

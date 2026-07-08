@@ -43,7 +43,7 @@ export default function LandingNavbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
           <Image
-            src="/assets/r_j_interiors_final_premium_logo.png"
+            src="/logo24.png"
             alt="R&J Interiors"
             width={40}
             height={40}
@@ -175,7 +175,7 @@ export default function LandingNavbar() {
             {/* Header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 60, flexShrink: 0 }}>
               <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }} onClick={() => setMenuOpen(false)}>
-                <Image src="/assets/r_j_interiors_final_premium_logo.png" alt="" width={28} height={28} style={{ borderRadius: '50%' }} />
+                <Image src="/logo24.png" alt="" width={28} height={28} style={{ borderRadius: '50%' }} />
                 <span style={{ fontFamily: 'var(--font-playfair)', color: '#E8C96D', fontSize: 15, letterSpacing: '0.06em' }}>
                   R&amp;J INTERIORS
                 </span>
