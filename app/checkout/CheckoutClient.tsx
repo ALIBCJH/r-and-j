@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft, ArrowRight, Loader2, CheckCircle,
-  Phone, AlertCircle, Star, Bell,
+  Phone, AlertCircle, Star, Bell, ShieldCheck,
 } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
@@ -93,6 +93,26 @@ function SlotsBar({ slots }: { slots: Slots }) {
           ? `Only ${slots.remaining} ${slots.remaining === 1 ? 'spot' : 'spots'} left at this price.`
           : 'All pre-launch spots are taken — join the waitlist below.'}
       </p>
+    </div>
+  )
+}
+
+// The single loudest promise on the page: pay nothing you can't get back.
+// This is the #1 lever pre-launch — the fear is "what if I pay and they vanish".
+function GuaranteeBanner() {
+  return (
+    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(76,175,130,0.08)', border: '1px solid rgba(76,175,130,0.4)', borderRadius: '10px', padding: '18px 22px', marginBottom: '36px' }}>
+      <div style={{ width: '46px', height: '46px', flexShrink: 0, borderRadius: '50%', background: 'rgba(76,175,130,0.14)', border: '1px solid rgba(76,175,130,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <ShieldCheck size={24} color="#4CAF82" />
+      </div>
+      <div>
+        <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '19px', color: '#FFFFFF', fontWeight: 400, marginBottom: '4px' }}>
+          You risk nothing — 100% money-back guarantee
+        </p>
+        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13.5px', color: '#A8C4B4', lineHeight: 1.6 }}>
+          Back us from <strong style={{ color: '#F0EBE0' }}>KSh 100</strong>. It&apos;s <strong style={{ color: '#F0EBE0' }}>fully refundable</strong> — cancel any time before production — and every shilling comes off your final order.
+        </p>
+      </div>
     </div>
   )
 }
@@ -326,6 +346,8 @@ export default function CheckoutClient() {
           Choose your backing package — the more you back us with now, the bigger the discount you
           lock in at launch. Every shilling is fully refundable and credited in full to your order.
         </p>
+
+        <GuaranteeBanner />
 
         {slots && <SlotsBar slots={slots} />}
 
