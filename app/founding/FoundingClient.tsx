@@ -34,13 +34,12 @@ const FOUNDERS = [
   },
 ]
 
-// Real pieces we've made — proof we can actually deliver something beautiful.
-// TODO: swap these for genuine before/after photos of installed work as they come in.
+// Proof we can deliver something beautiful — real Kenyan homes, everyday spaces.
 const PROOF = [
-  { src: '/assets/sittingroom.png',         alt: 'Living room styled with R&J curtains' },
-  { src: '/assets/windowpage.png',          alt: 'Warm linen curtains framing a city window' },
-  { src: '/assets/morning_light_sheer.png', alt: 'Sheer curtains catching the morning light' },
-  { src: '/assets/catalog1.png',            alt: 'Finished R&J curtain installation' },
+  { src: '/assets/image4.png', alt: 'Neutral linen curtains and sheers in a bright living room' },
+  { src: '/assets/image2.png', alt: 'Sage-green curtains framing a sunlit bedroom window' },
+  { src: '/assets/image8.png', alt: 'Warm terracotta curtains in a living room with African decor' },
+  { src: '/assets/image5.png', alt: 'Rust curtains and sheers in a cozy dining corner at dusk' },
 ]
 
 export default function FoundingClient() {
