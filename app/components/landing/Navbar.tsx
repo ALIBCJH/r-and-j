@@ -24,13 +24,23 @@ export default function LandingNavbar() {
   const { scrollY } = useScroll()
   const pathname    = usePathname()
   const { totalItems, openDrawer } = useCart()
+  const isHome = pathname === '/'
 
   useMotionValueEvent(scrollY, 'change', (v) => setScrolled(v > 80))
 
   return (
     <>
+      {/* On the home page the hero image sits behind the transparent navbar, so on
+          mobile the navbar picks up the image's colour. Force the same solid navy
+          the other pages already show behind their navbar. Desktop keeps the
+          immersive transparent-over-hero look. */}
+      <style>{`
+        @media (max-width: 768px) {
+          .rj-landing-nav.rj-nav-home { background: #0D1B2E !important; }
+        }
+      `}</style>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10"
+        className={`rj-landing-nav${isHome ? ' rj-nav-home' : ''} fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10`}
         style={{
           height:         'var(--rj-navbar-height)',
           borderBottom:   scrolled ? '1px solid rgba(201,168,76,0.18)' : '1px solid rgba(201,168,76,0.15)',
