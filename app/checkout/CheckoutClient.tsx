@@ -9,7 +9,9 @@ import {
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { API_URL } from '@/app/lib/api'
-import { CAMPAIGN, TIERS, tierForAmount, DEFAULT_TIER, type Tier } from '@/app/lib/campaign'
+import { CAMPAIGN, TIERS, tierForAmount, DEFAULT_TIER, referralMessage, type Tier } from '@/app/lib/campaign'
+import { whatsappShareUrl } from '@/app/lib/whatsapp'
+import LaunchCountdown from '@/app/components/founding/LaunchCountdown'
 
 type Stage = 'form' | 'processing' | 'waiting' | 'success' | 'error'
 type Slots = { reserved: number; total: number; remaining: number }
@@ -270,6 +272,23 @@ export default function CheckoutClient() {
             <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '28px', color: '#C9A84C', letterSpacing: '3px' }}>{orderNumber}</p>
             <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58', marginTop: '6px' }}>Save this — you&apos;ll need it to track your order</p>
           </div>
+          {/* Word-of-mouth is the highest-converting channel pre-launch — make it
+              one tap to bring a friend right at the moment of highest excitement. */}
+          <div style={{ background: 'rgba(76,175,130,0.06)', border: '1px solid rgba(76,175,130,0.25)', borderRadius: '8px', padding: '18px 20px', marginBottom: '24px' }}>
+            <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13.5px', color: '#A8C4B4', lineHeight: 1.6, marginBottom: '14px' }}>
+              Know someone who&apos;d love this? Founding spots are limited — bring a friend before they&apos;re gone.
+            </p>
+            <a
+              href={whatsappShareUrl(referralMessage(typeof window !== 'undefined' ? `${window.location.origin}/founding` : 'https://www.rjinteriors.studio/founding'))}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', background: '#25D366', color: '#0A2A18', padding: '14px', borderRadius: '6px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none' }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.29-.15-1.72-.85-1.98-.94-.27-.1-.46-.15-.65.14-.19.29-.75.94-.92 1.13-.17.19-.34.22-.63.07-.29-.15-1.23-.45-2.34-1.44-.86-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.15-.65-1.57-.89-2.15-.24-.56-.48-.48-.65-.49-.17-.01-.36-.01-.56-.01-.19 0-.51.07-.77.36-.27.29-1.01.99-1.01 2.42 0 1.43 1.04 2.81 1.18 3-.14.19-2.03 3.1-4.92 4.35-.69.3-1.22.47-1.64.6-.69.22-1.32.19-1.81.12-.55-.08-1.72-.7-1.96-1.38-.24-.68-.24-1.26-.17-1.38.07-.12.26-.19.55-.34z"/><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.004c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.85 9.85 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24"/></svg>
+              Share on WhatsApp
+            </a>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Link href="/track" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #F0D77A, #C9A84C)', color: '#0A0F1C', padding: '16px', borderRadius: '4px', fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
               Track My Order <ArrowRight size={14} />
@@ -346,6 +365,10 @@ export default function CheckoutClient() {
           Choose your backing package — the more you back us with now, the bigger the discount you
           lock in at launch. Every shilling is fully refundable and credited in full to your order.
         </p>
+
+        <div style={{ marginBottom: '32px' }}>
+          <LaunchCountdown variant="compact" />
+        </div>
 
         <GuaranteeBanner />
 

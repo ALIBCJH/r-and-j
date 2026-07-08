@@ -8,6 +8,7 @@ import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { API_URL } from '@/app/lib/api'
 import { CAMPAIGN, TIERS, DEFAULT_TIER } from '@/app/lib/campaign'
+import LaunchCountdown from '@/app/components/founding/LaunchCountdown'
 
 type Slots = { reserved: number; total: number; remaining: number }
 
@@ -83,6 +84,13 @@ export default function FoundingClient() {
           order.
         </p>
 
+        {/* Desire before the ask — let them see it on their own window first, free. */}
+        <div style={{ marginBottom: '44px' }}>
+          <Link href="/studio" className="fnd-ghost-cta">
+            See your window transformed — free <ArrowRight size={15} />
+          </Link>
+        </div>
+
         {/* Live counter */}
         <div style={{ background: 'rgba(201,168,76,0.05)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '10px', padding: '18px 22px', marginBottom: '44px', maxWidth: '440px', marginLeft: 'auto', marginRight: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -99,6 +107,11 @@ export default function FoundingClient() {
               {soldOut ? 'All pre-launch spots are taken.' : `Only ${slots.remaining} ${slots.remaining === 1 ? 'spot' : 'spots'} left at this price.`}
             </p>
           )}
+        </div>
+
+        {/* Urgency — founding pricing expires at launch. */}
+        <div style={{ marginBottom: '44px' }}>
+          <LaunchCountdown />
         </div>
 
         {/* Backing tiers */}
