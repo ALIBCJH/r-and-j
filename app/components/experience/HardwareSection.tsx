@@ -45,7 +45,7 @@ export default function HardwareSection() {
           }}>
             <Image
               src="/assets/metaquest3.png"
-              alt="Meta Quest 3 VR headset experience"
+              alt="A Meta Quest 3 headset — the hardware behind R&J's in-development immersive visualization"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               style={{ objectFit: 'cover', objectPosition: 'center top' }}
@@ -76,7 +76,7 @@ export default function HardwareSection() {
             textTransform: 'uppercase',
             marginBottom:  '20px',
           }}>
-            The Hardware
+            The Hardware · In Development
           </p>
 
           <h2 style={{
@@ -87,7 +87,7 @@ export default function HardwareSection() {
             lineHeight:   1.1,
             marginBottom: '8px',
           }}>
-            Powered by Meta Quest 3
+            Built for Meta Quest 3
           </h2>
 
           <p style={{
@@ -97,7 +97,7 @@ export default function HardwareSection() {
             fontStyle:    'italic',
             marginBottom: '32px',
           }}>
-            The headset that makes it real.
+            The headset that will make it real.
           </p>
 
           <div style={{
@@ -114,11 +114,11 @@ export default function HardwareSection() {
             lineHeight:   1.8,
             marginBottom: '40px',
           }}>
-            The Meta Quest 3 delivers the most advanced standalone VR experience
-            available — pancake lenses for crystal-clear color accuracy, full hand
-            tracking for natural interaction, and mixed reality passthrough that
-            anchors virtual curtains to your real windows. No wires. No complexity.
-            Just put it on and step inside.
+            We are building the R&amp;J immersive visualization for the Meta Quest 3 —
+            pancake lenses for crystal-clear colour accuracy, full hand tracking for
+            natural interaction, and mixed-reality passthrough to anchor virtual
+            curtains to your real windows. This experience is in development and not
+            yet available to book — our online fabric studio is what ships today.
           </p>
 
           {/* Spec bullets */}

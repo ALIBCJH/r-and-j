@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Loader2, Lock, LogOut, RefreshCw, Users, Wallet, Clock } from 'lucide-react'
+import { Loader2, Lock, LogOut, RefreshCw, Users, Wallet, Clock, ClipboardList } from 'lucide-react'
 import { API_URL } from '@/app/lib/api'
 
 type OrderStatus = 'pending_payment' | 'confirmed' | 'in_production' | 'ready' | 'delivered'
@@ -20,6 +20,14 @@ type Order = {
 }
 
 type Totals = { backers: number; collected_ksh: number; pending: number }
+
+type Reservation = {
+  name: string
+  phone: string
+  email: string
+  product_name: string
+  created_at: string
+}
 
 const FLOW: OrderStatus[] = ['confirmed', 'in_production', 'ready', 'delivered']
 
@@ -48,6 +56,7 @@ export default function AdminClient() {
   const [authed,  setAuthed]  = useState<boolean | null>(null) // null = checking
   const [orders,  setOrders]  = useState<Order[]>([])
   const [totals,  setTotals]  = useState<Totals | null>(null)
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(false)
 
   // Login form
@@ -58,14 +67,22 @@ export default function AdminClient() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`${API_URL}/admin/orders`, { cache: 'no-store' })
-      if (res.status === 401) { setAuthed(false); return }
-      const data = await res.json()
+      const [oRes, wRes] = await Promise.all([
+        fetch(`${API_URL}/admin/orders`,   { cache: 'no-store' }),
+        fetch(`${API_URL}/admin/waitlist`, { cache: 'no-store' }),
+      ])
+      if (oRes.status === 401) { setAuthed(false); return }
+      const data = await oRes.json()
       if (data.ok) {
         setOrders(data.orders)
         setTotals(data.totals)
         setAuthed(true)
-      } else setAuthed(false)
+      } else { setAuthed(false); return }
+      // Reservations (Founding-Customers list) — best-effort; never blocks orders.
+      try {
+        const wData = await wRes.json()
+        if (wData.ok) setReservations(wData.reservations)
+      } catch { /* ignore */ }
     } catch {
       setAuthed(false)
     } finally {
@@ -96,7 +113,7 @@ export default function AdminClient() {
 
   async function logout() {
     await fetch(`${API_URL}/admin/logout`, { method: 'POST' }).catch(() => {})
-    setAuthed(false); setOrders([]); setTotals(null)
+    setAuthed(false); setOrders([]); setTotals(null); setReservations([])
   }
 
   async function setStatus(orderNumber: string, status: OrderStatus) {
@@ -175,6 +192,7 @@ export default function AdminClient() {
           <StatCard icon={<Users size={18} color="#4CAF82" />} label="Backers" value={String(totals.backers)} />
           <StatCard icon={<Wallet size={18} color="#C9A84C" />} label="Collected" value={fmt(totals.collected_ksh)} />
           <StatCard icon={<Clock size={18} color="#E0A050" />} label="Pending" value={String(totals.pending)} />
+          <StatCard icon={<ClipboardList size={18} color="#5AA9E6" />} label="Reservations" value={String(reservations.length)} />
         </div>
       )}
 
@@ -222,6 +240,38 @@ export default function AdminClient() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Founding-Customer reservations (free "Reserve Your Place" list) ── */}
+      <div style={{ marginTop: '40px' }}>
+        <h2 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '22px', color: '#FFFFFF', fontWeight: 400, margin: '0 0 16px' }}>
+          Reservations{' '}
+          <span style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#6A7A88' }}>· Founding Customers</span>
+        </h2>
+        <div style={{ overflowX: 'auto', border: '1px solid rgba(201,168,76,0.12)', borderRadius: '10px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '680px' }}>
+            <thead>
+              <tr>
+                {['Name', 'Contact', 'Package', 'Date'].map(h => (
+                  <th key={h} style={th}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {reservations.length === 0 && (
+                <tr><td colSpan={4} style={{ ...td, textAlign: 'center', color: '#4A5A6A', padding: '32px' }}>No reservations yet.</td></tr>
+              )}
+              {reservations.map((r, i) => (
+                <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <td style={{ ...td, color: '#F0EBE0' }}>{r.name}</td>
+                  <td style={{ ...td, color: '#C6CFD8', fontSize: '13px' }}>{r.email || r.phone || '—'}</td>
+                  <td style={td}>{r.product_name || '—'}</td>
+                  <td style={{ ...td, color: '#6A7A88', fontSize: '12px', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

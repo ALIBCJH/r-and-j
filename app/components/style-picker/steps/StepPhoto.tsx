@@ -46,7 +46,7 @@ export function StepPhoto({ value, onChange }: Props) {
         lineHeight: 1.65,
         margin:     '0 0 20px',
       }}>
-        A photo helps us show you curtains in your actual light. You can skip if you prefer.
+        A photo of your room helps our team understand your space and light before your consultation. You can skip if you prefer.
       </p>
 
       {preview ? (

@@ -21,7 +21,7 @@ const jsonLd = {
   '@type':    'LocalBusiness',
   '@id':      'https://rjinteriors.co.ke/#business',
   name:        'R&J Interiors',
-  description: "East Africa's first vertically integrated luxury curtain design house. See your curtains in your actual room before you spend a single shilling.",
+  description: "East Africa's first vertically integrated luxury curtain house. Preview fabrics and colours online, then we measure, make, and install — so you commit with confidence.",
   url:         'https://rjinteriors.co.ke',
   email:       'info@rjinteriors.co.ke',
   image:       'https://rjinteriors.co.ke/assets/hero3.png',

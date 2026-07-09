@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import ExperienceClient from './ExperienceClient'
 
 export const metadata: Metadata = {
-  title:       'The VR Experience | R&J Interiors',
-  description: 'See your curtains at full scale in your actual room before committing to a single fabric or color.',
+  title:       'The Experience — Our Vision | R&J Interiors',
+  description: 'The immersive home visualization we are building toward — our long-term vision. Available today: our online fabric studio to preview colours and fabrics before you commit.',
 }
 
 export default function ExperiencePage() {

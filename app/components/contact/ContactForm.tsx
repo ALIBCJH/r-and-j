@@ -513,7 +513,7 @@ export default function ContactForm() {
             </h3>
             {[
               { step: '01', label: 'You reach out' },
-              { step: '02', label: 'We visualise your space in VR' },
+              { step: '02', label: 'We consult, measure & preview fabrics' },
               { step: '03', label: 'You approve the design' },
               { step: '04', label: 'We manufacture your curtains' },
               { step: '05', label: 'We deliver & install' },

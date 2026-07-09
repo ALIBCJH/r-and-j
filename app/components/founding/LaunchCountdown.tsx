@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { LAUNCH_DATE, msUntilLaunch } from '@/app/lib/campaign'
 
 /**
- * Honest urgency: a live countdown to the public launch, when founding pricing
- * expires. `full` renders a row of glass cells; `compact` renders one inline
- * line. Nothing is shown until mounted (avoids a hydration mismatch on the
- * ticking value) and, once the date passes, it states plainly that it's closed.
+ * Honest urgency: a live countdown to the public launch, when booking opens.
+ * `full` renders a row of glass cells; `compact` renders one inline line.
+ * Nothing is shown until mounted (avoids a hydration mismatch on the ticking
+ * value) and, once the date passes, it states plainly that we're open.
  */
 export default function LaunchCountdown({ variant = 'full' }: { variant?: 'full' | 'compact' }) {
   const [ms, setMs] = useState<number | null>(null)
@@ -36,8 +36,8 @@ export default function LaunchCountdown({ variant = 'full' }: { variant?: 'full'
         fontSize: '12.5px', color: '#C9A84C', letterSpacing: '0.04em',
       }}>
         {ended
-          ? 'Founding pricing has closed.'
-          : <>Founding pricing ends in <strong style={{ color: '#F0D77A' }}>{d}d {pad(h)}h {pad(m)}m {pad(s)}s</strong></>}
+          ? "We're now open."
+          : <>Booking opens in <strong style={{ color: '#F0D77A' }}>{d}d {pad(h)}h {pad(m)}m {pad(s)}s</strong></>}
       </p>
     )
   }
@@ -50,7 +50,7 @@ export default function LaunchCountdown({ variant = 'full' }: { variant?: 'full'
         borderRadius: '10px', padding: '16px 20px', textAlign: 'center',
         fontFamily: 'var(--font-inter, sans-serif)', fontSize: '13px', color: '#9AA6B4',
       }}>
-        Founding pricing has closed — we&apos;ve launched.
+        We&apos;re now open — booking is live.
       </div>
     )
   }
@@ -63,7 +63,7 @@ export default function LaunchCountdown({ variant = 'full' }: { variant?: 'full'
         fontFamily: 'var(--font-inter, sans-serif)', fontSize: '11px',
         color: '#C9A84C', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '14px',
       }}>
-        Founding pricing ends in
+        Booking opens in
       </p>
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
         {cells.map(([label, val]) => (

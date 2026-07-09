@@ -216,7 +216,7 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
               margin:        '0 0 6px',
               lineHeight:    1.2,
             }}>
-              Your room is ready.
+              Your preview is ready.
             </p>
             <p style={{
               fontFamily: 'var(--font-inter, sans-serif)',
@@ -401,7 +401,7 @@ export function GateScreen({ photo, colorId, onSuccess, onPayStart, onPayError, 
                 border:        '1px solid #E2DDD6',
               }}>
                 {[
-                  'Full-resolution curtain preview on your room photo',
+                  'Full-resolution curtain preview in your chosen colour',
                   'Guided studio session with our consultant',
                   'Zero pressure — change your mind before ordering',
                 ].map((item, i) => (

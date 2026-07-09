@@ -16,7 +16,7 @@ const CHAPTERS = [
     number:  '02',
     eyebrow: 'The Breakthrough',
     heading: 'So We Built a Better Way.',
-    body:    'What if you could stand in your finished room before a single thread was cut? We paired a curtain atelier with a VR studio — so you walk through your own space, drape every window, and watch the fabric fall under real light. You no longer imagine the result. You see it, then we make exactly that.',
+    body:    'What if you could see the fabric and colour before a single thread was cut? Our online studio lets you preview curtain colours and fabrics on a styled room, matched to your wall colour — so you choose with a clear eye instead of a guess. Then we measure, make, and install exactly what you approved. A fully immersive walk-through of your own home is the vision we are building toward — see the Experience page.',
   },
   {
     number:  '03',

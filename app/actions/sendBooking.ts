@@ -52,11 +52,11 @@ export async function sendBooking(data: {
       from:    'R&J Interiors <contact@rjinteriors.studio>',
       to:      'simonjuma465@gmail.com',
       replyTo: email,
-      subject: stripNewlines(`VR Studio Booking — ${date} at ${time} — ${name}`),
+      subject: stripNewlines(`Studio Booking — ${date} at ${time} — ${name}`),
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#FAFAF8;color:#1A1A1D">
           <div style="border-bottom:2px solid #C9A84C;padding-bottom:20px;margin-bottom:28px">
-            <h1 style="margin:0;font-size:22px;color:#0D1F3C">New VR Studio Booking</h1>
+            <h1 style="margin:0;font-size:22px;color:#0D1F3C">New Studio Booking</h1>
           </div>
           <table style="width:100%;border-collapse:collapse">
             <tr><td style="padding:8px 0;color:#706860;font-size:13px;width:100px">Name</td><td style="padding:8px 0;font-size:14px">${e.name}</td></tr>
@@ -80,7 +80,7 @@ export async function sendBooking(data: {
     await resend.emails.send({
       from:    'R&J Interiors <contact@rjinteriors.studio>',
       to:      email,
-      subject: stripNewlines(`Your VR Studio session is confirmed — ${date}`),
+      subject: stripNewlines(`Your studio session is confirmed — ${date}`),
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#FAFAF8;color:#1A1A1D">
           <div style="border-bottom:2px solid #C9A84C;padding-bottom:20px;margin-bottom:28px">
@@ -88,7 +88,7 @@ export async function sendBooking(data: {
           </div>
           <p style="font-size:16px;line-height:1.7">Hi ${e.first},</p>
           <p style="font-size:15px;line-height:1.7;color:#3A4A5A">
-            We've received your booking request for the VR Studio session below. Our consultant will
+            We've received your booking request for the studio session below. Our consultant will
             contact you within 24 hours to confirm your slot.
           </p>
           <div style="margin:28px 0;padding:24px;border:1px solid #E0D8C8;border-radius:6px;background:#FFFFFF">

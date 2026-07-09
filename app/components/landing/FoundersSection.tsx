@@ -49,7 +49,7 @@ const FOUNDERS: Founder[] = [
     story:
       "Rose brings years of expertise in fashion, textile design, and spatial aesthetics to R&J. She understands " +
       "exactly how fabrics behave, catch light, and transform a room. Rose handles product curation and user " +
-      "experience, ensuring that what customers see on their screens perfectly matches the high-quality physical " +
+      "experience, ensuring that what customers see on their screens closely matches the high-quality physical " +
       "product delivered to their door.",
     signature: 'The right fabric does not cover a window. It changes the room.',
     img:       '/assets/rosedesigner.jpeg',

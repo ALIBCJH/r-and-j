@@ -62,14 +62,13 @@ export default function HeroSection() {
         }
       `}</style>
 
-      {/* ── Background image — VR curtain styling experience ──
-           Desktop gets the wide scene (hero3); phones get the portrait
-           composition (hero4) so the VR person stays in frame. ── */}
+      {/* ── Background image — hero3 (wide desktop) / hero4 (portrait mobile).
+           Concept image of R&J's in-development immersive visualization. ── */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <Image
           className="hero-bg-desktop"
           src="/assets/hero3.png"
-          alt="A client previewing curtain styles in immersive VR inside a luxury living room"
+          alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
           quality={90}
@@ -79,7 +78,7 @@ export default function HeroSection() {
         <Image
           className="hero-bg-mobile"
           src="/assets/hero4.png"
-          alt="A client previewing curtain styles in immersive VR inside a luxury living room"
+          alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
           quality={90}
@@ -158,7 +157,7 @@ export default function HeroSection() {
             maxWidth:   '440px',
             margin:     '0 0 44px',
           }}>
-            Step into your finished home before a single curtain is cut.
+            Preview fabrics and colours before a single curtain is cut.
           </motion.p>
 
           <motion.div

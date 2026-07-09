@@ -163,9 +163,9 @@ export default function ExperienceHero() {
               lineHeight: 1.9, maxWidth: 420, marginBottom: 48,
             }}
           >
-            Your fabrics. Your room. Every drape seen at full scale —
-            in a virtual home that feels exactly like yours.
-            Before a single shilling is spent.
+            An immersive home you can walk through, choosing every drape
+            before a shilling is spent — the experience we are building toward.
+            Available today: our online fabric studio.
           </motion.p>
 
           <motion.div

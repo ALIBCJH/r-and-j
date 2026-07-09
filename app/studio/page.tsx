@@ -3,7 +3,7 @@ import StudioClient from './StudioClient'
 
 export const metadata: Metadata = {
   title: 'Photo Match | R&J Interiors',
-  description: 'Point your camera at your window wall. We match the perfect curtain to your space.',
+  description: 'Preview curtain fabrics and colours on a styled room, and see options matched to your chosen wall colour.',
 }
 
 export default function StudioPage() {
