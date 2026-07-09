@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowRight, Star, Check } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
@@ -15,35 +14,6 @@ const PACKAGES = [
   '1.2 Metre Curtain — From KES 6,000',
   '1.6 Metre Curtain — From KES 7,500',
   '2.0 Metre Curtain — From KES 8,500',
-]
-
-// Who a founding customer is trusting. Faces + a one-line "why" convert a
-// hesitant visitor better than any amount of feature copy.
-const FOUNDERS = [
-  {
-    name: 'Rose Kabathi',
-    role: 'Co-Founder & Design Principal',
-    why: 'Every home deserves fabric that changes the room — not just covers a window.',
-    img: '/assets/rosedesigner.jpeg',
-    alt: 'Rose Kabathi, Co-Founder & Design Principal of R&J Interiors',
-    objectPos: 'center',
-  },
-  {
-    name: 'Simon Juma',
-    role: 'Co-Founder & Tech Lead',
-    why: 'We built the studio so you can preview fabrics and colours before you spend a shilling.',
-    img: '/assets/jumafounder.jpeg',
-    alt: 'Simon Juma, Co-Founder & Tech Lead of R&J Interiors',
-    objectPos: 'center top',
-  },
-]
-
-// Proof we can deliver something beautiful — real Kenyan homes, everyday spaces.
-const PROOF = [
-  { src: '/assets/image4.png', alt: 'Neutral linen curtains and sheers in a bright living room' },
-  { src: '/assets/image2.png', alt: 'Sage-green curtains framing a sunlit bedroom window' },
-  { src: '/assets/image8.png', alt: 'Warm terracotta curtains in a living room with African decor' },
-  { src: '/assets/image5.png', alt: 'Rust curtains and sheers in a cozy dining corner at dusk' },
 ]
 
 // ── Reserve-your-place form ───────────────────────────────────────────────────
@@ -141,7 +111,7 @@ export default function FoundingClient() {
     <main style={{ background: '#0D1B2E', minHeight: '100vh' }}>
       <LandingNavbar />
 
-      <div style={{ paddingTop: 'calc(var(--rj-navbar-height) + 72px)', paddingLeft: '6vw', paddingRight: '6vw', maxWidth: '860px', margin: '0 auto', paddingBottom: '110px', textAlign: 'center' }}>
+      <div style={{ paddingTop: 'calc(var(--rj-navbar-height) + 72px)', paddingLeft: '6vw', paddingRight: '6vw', maxWidth: '860px', margin: '0 auto', paddingBottom: '120px', textAlign: 'center' }}>
 
         {/* Badge */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px', padding: '6px 16px', borderRadius: '20px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)' }}>
@@ -185,75 +155,8 @@ export default function FoundingClient() {
 
       </div>
 
-      {/* ── Who you're joining ─────────────────────────────────────────────── */}
-      <section className="fnd-block">
-        <div className="fnd-inner">
-          <p className="fnd-eyebrow">Who You&apos;re Joining</p>
-          <h2 className="fnd-h2">Two founders from Nyeri. <em>One promise.</em></h2>
-          <p className="fnd-lead">
-            R&amp;J is Rose &amp; Juma — a designer and an engineer betting everything on one idea:
-            that buying beautiful curtains should feel certain, not risky. Join our founding customers
-            today and you&apos;re first in line when we open — measured, made, and installed by the two
-            people whose name is on the door.
-          </p>
-
-          <div className="fnd-founders">
-            {FOUNDERS.map(f => (
-              <div key={f.name} className="fnd-founder">
-                <div className="fnd-portrait">
-                  <Image
-                    src={f.img} alt={f.alt} fill
-                    sizes="(max-width: 720px) 100vw, 320px"
-                    style={{ objectFit: 'cover', objectPosition: f.objectPos }}
-                  />
-                </div>
-                <p className="fnd-founder-name">{f.name}</p>
-                <p className="fnd-founder-role">{f.role}</p>
-                <p className="fnd-founder-why">&ldquo;{f.why}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Proof we can make this ─────────────────────────────────────────── */}
-      <section className="fnd-block fnd-block-alt">
-        <div className="fnd-inner">
-          <p className="fnd-eyebrow">Our Work</p>
-          <h2 className="fnd-h2">See it before you spend a shilling.</h2>
-          <p className="fnd-lead">
-            Real fabric, real rooms, real craft. And with our online studio you can preview curtain
-            fabrics and colours <em>before</em> we launch — so you know the kind of work you&apos;re
-            reserving.
-          </p>
-
-          <div className="fnd-proof-grid">
-            {PROOF.map(p => (
-              <div key={p.src} className="fnd-proof-item">
-                <Image src={p.src} alt={p.alt} fill sizes="(max-width: 720px) 50vw, 260px" style={{ objectFit: 'cover' }} />
-              </div>
-            ))}
-          </div>
-
-          <Link href="/studio" className="fnd-ghost-cta">
-            Open the studio <ArrowRight size={15} />
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Final CTA ──────────────────────────────────────────────────────── */}
-      <section className="fnd-final">
-        <h2 className="fnd-h2">Ready to reserve your place?</h2>
-        <a href="#reserve" className="fnd-final-cta">
-          Reserve my spot <ArrowRight size={16} />
-        </a>
-        <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58', marginTop: '18px' }}>
-          Free to join · No payment required · We&apos;ll notify you when booking opens
-        </p>
-      </section>
-
       <style>{`
-        /* ── Reserve-your-place form ─────────────────────────────────────── */
+        /* ── Reserve-your-place card (glows to draw the eye) ─────────────── */
         .rsv-wrap {
           position: relative;
           max-width: 520px; margin: 0 auto; text-align: left;
@@ -367,62 +270,7 @@ export default function FoundingClient() {
           color: #9AA6B4; line-height: 1.7; max-width: 360px; margin: 0 auto;
         }
 
-        /* ── Trust / proof / final-CTA sections ─────────────────────────── */
-        .fnd-block {
-          padding: 84px 6vw;
-          border-top: 1px solid rgba(201,168,76,0.12);
-        }
-        .fnd-block-alt { background: rgba(255,255,255,0.015); }
-        .fnd-inner { max-width: 1080px; margin: 0 auto; text-align: center; }
-        .fnd-eyebrow {
-          font-family: var(--font-inter, sans-serif);
-          font-size: 11px; color: #C9A84C; letter-spacing: 4px;
-          text-transform: uppercase; margin-bottom: 16px;
-        }
-        .fnd-h2 {
-          font-family: var(--font-playfair, Georgia, serif);
-          font-size: clamp(28px, 4.4vw, 44px); color: #FFFFFF;
-          font-weight: 400; line-height: 1.14; margin-bottom: 20px;
-        }
-        .fnd-h2 em { color: #C9A84C; font-style: italic; }
-        .fnd-lead {
-          font-family: var(--font-inter, sans-serif);
-          font-size: clamp(15px, 1.9vw, 17px); color: #9AA6B4;
-          line-height: 1.75; max-width: 620px; margin: 0 auto 52px;
-        }
-        .fnd-founders {
-          display: grid; grid-template-columns: repeat(2, 1fr);
-          gap: 40px; max-width: 720px; margin: 0 auto;
-        }
-        .fnd-founder { display: flex; flex-direction: column; align-items: center; }
-        .fnd-portrait {
-          position: relative; width: 100%; aspect-ratio: 4/5;
-          max-width: 320px; border-radius: 12px; overflow: hidden;
-          border: 1px solid rgba(201,168,76,0.22);
-          box-shadow: 0 22px 54px rgba(0,0,0,0.45); margin-bottom: 22px;
-        }
-        .fnd-founder-name {
-          font-family: var(--font-playfair, Georgia, serif);
-          font-size: 24px; color: #FFFFFF; font-weight: 400; margin-bottom: 4px;
-        }
-        .fnd-founder-role {
-          font-family: var(--font-inter, sans-serif);
-          font-size: 12px; color: #8A96A4; letter-spacing: 1px; margin-bottom: 16px;
-        }
-        .fnd-founder-why {
-          font-family: var(--font-playfair, Georgia, serif);
-          font-size: 17px; color: #C9A84C; font-style: italic;
-          line-height: 1.5; max-width: 30ch;
-        }
-        .fnd-proof-grid {
-          display: grid; grid-template-columns: repeat(4, 1fr);
-          gap: 14px; max-width: 940px; margin: 0 auto 40px;
-        }
-        .fnd-proof-item {
-          position: relative; width: 100%; aspect-ratio: 3/4;
-          border-radius: 10px; overflow: hidden;
-          border: 1px solid rgba(201,168,76,0.18);
-        }
+        /* ── Ghost CTA (used by the hero "preview — free" link) ─────────── */
         .fnd-ghost-cta {
           display: inline-flex; align-items: center; gap: 8px;
           font-family: var(--font-inter, sans-serif);
@@ -434,31 +282,6 @@ export default function FoundingClient() {
         .fnd-ghost-cta:hover {
           background: linear-gradient(135deg, #F0D77A, #C9A84C);
           color: #0A0F1C; border-color: transparent;
-        }
-        .fnd-final {
-          padding: 96px 6vw; text-align: center;
-          border-top: 1px solid rgba(201,168,76,0.12);
-        }
-        .fnd-final-cta {
-          display: inline-flex; align-items: center; gap: 10px;
-          font-family: var(--font-inter, sans-serif);
-          font-size: 14px; font-weight: 700; letter-spacing: 1px;
-          text-transform: uppercase; color: #0A0F1C; text-decoration: none;
-          background: linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%);
-          border-radius: 5px; padding: 18px 34px; margin-top: 12px;
-          box-shadow: 0 0 32px rgba(201,168,76,0.22);
-          transition: transform 0.18s ease, box-shadow 0.2s ease;
-        }
-        .fnd-final-cta:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 14px 34px rgba(201,168,76,0.3);
-        }
-        @media (max-width: 720px) {
-          .fnd-proof-grid { grid-template-columns: repeat(2, 1fr); }
-          .fnd-founders { gap: 32px; }
-        }
-        @media (max-width: 440px) {
-          .fnd-founders { grid-template-columns: 1fr; max-width: 300px; }
         }
       `}</style>
 
