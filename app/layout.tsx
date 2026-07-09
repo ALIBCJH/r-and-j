@@ -68,10 +68,10 @@ export const metadata: Metadata = {
     locale:      "en_KE",
     images: [
       {
-        url:    "/assets/curtain1.png",
-        width:  600,
-        height: 775,
-        alt:    "A styled living room dressed with R&J made-to-measure curtains",
+        url:    "/assets/hero3.png",
+        width:  1536,
+        height: 1024,
+        alt:    "A concept image of R&J's in-development immersive visualization experience",
       },
     ],
   },
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     card:        "summary_large_image",
     title:       "R&J Interiors — Visualize Before You Buy",
     description: SITE_DESCRIPTION,
-    images:      ["/assets/curtain1.png"],
+    images:      ["/assets/hero3.png"],
   },
   robots: {
     index:  true,

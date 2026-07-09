@@ -62,13 +62,13 @@ export default function HeroSection() {
         }
       `}</style>
 
-      {/* ── Background image — a styled room dressed with R&J curtains ──
-           Desktop gets the wide crop; phones get the same portrait image. ── */}
+      {/* ── Background image — hero3 (wide desktop) / hero4 (portrait mobile).
+           Concept image of R&J's in-development immersive visualization. ── */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <Image
           className="hero-bg-desktop"
-          src="/assets/curtain1.png"
-          alt="A styled living room dressed with R&J made-to-measure curtains"
+          src="/assets/hero3.png"
+          alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
           quality={90}
@@ -77,8 +77,8 @@ export default function HeroSection() {
         />
         <Image
           className="hero-bg-mobile"
-          src="/assets/curtain1.png"
-          alt="A styled living room dressed with R&J made-to-measure curtains"
+          src="/assets/hero4.png"
+          alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
           quality={90}
