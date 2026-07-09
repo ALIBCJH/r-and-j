@@ -97,6 +97,16 @@ export async function kvSetJson(
   }
 }
 
+/** Delete a key (Redis DEL). No-op if the key is absent. */
+export async function kvDel(key: string): Promise<void> {
+  if (hasKv()) {
+    await kvCommand(['DEL', key])
+  } else {
+    mem.delete(key)
+    memLists.delete(key)
+  }
+}
+
 /**
  * Atomically increment an integer counter and return the new value. Uses Redis
  * INCR on real KV (race-free across instances); on the in-memory fallback it's

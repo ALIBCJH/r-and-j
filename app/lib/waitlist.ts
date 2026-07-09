@@ -6,7 +6,7 @@
 //
 // This module is the read side the admin dashboard uses to list them.
 
-import { kvGetJson } from './store'
+import { kvGetJson, kvDel } from './store'
 
 export type WaitlistEntry = {
   name: string
@@ -31,4 +31,15 @@ export async function listWaitlist(): Promise<WaitlistEntry[]> {
   const ns = Array.from({ length: count }, (_, i) => i + 1)
   const entries = await Promise.all(ns.map(n => kvGetJson<WaitlistEntry>(entryKey(n))))
   return entries.filter((e): e is WaitlistEntry => e !== null).reverse()
+}
+
+/** Wipe every reservation and the counter — a clean slate. Returns count removed. */
+export async function clearWaitlist(): Promise<number> {
+  const count = await getWaitlistCount()
+  if (count > 0) {
+    const ns = Array.from({ length: count }, (_, i) => i + 1)
+    await Promise.all(ns.map(n => kvDel(entryKey(n))))
+  }
+  await kvDel(COUNT_KEY)
+  return count
 }

@@ -9,7 +9,7 @@
 // deposit (GateScreen) reuse the same STK-push + status machinery without an
 // order attached.
 
-import { kvGetJson, kvSetJson, kvIncr, kvListPush, kvListRange } from './store'
+import { kvGetJson, kvSetJson, kvIncr, kvListPush, kvListRange, kvDel } from './store'
 
 // ── Founding-client pre-sale ────────────────────────────────────────────────
 // During validation we don't take full payment for a product that isn't built
@@ -208,6 +208,19 @@ export async function listOrders(): Promise<Order[]> {
   const numbers = await kvListRange(ORDERS_INDEX_KEY)
   const orders = await Promise.all(numbers.map(n => getOrder(n)))
   return orders.filter((o): o is Order => o !== null).reverse()
+}
+
+/**
+ * Wipe every order, the order index, and the founding counter — a clean slate.
+ * Returns how many orders were removed. (Payment records are keyed by checkout
+ * id with a 30-day TTL and simply expire; they are not shown in the admin.)
+ */
+export async function clearAllOrders(): Promise<number> {
+  const numbers = await kvListRange(ORDERS_INDEX_KEY)
+  await Promise.all(numbers.map(n => kvDel(orderKey(n))))
+  await kvDel(ORDERS_INDEX_KEY)
+  await kvDel(FOUNDING_COUNT_KEY)
+  return numbers.length
 }
 
 export const FULFILLMENT_FLOW: OrderStatus[] = [
