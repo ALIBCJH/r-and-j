@@ -255,10 +255,35 @@ export default function FoundingClient() {
       <style>{`
         /* ── Reserve-your-place form ─────────────────────────────────────── */
         .rsv-wrap {
+          position: relative;
           max-width: 520px; margin: 0 auto; text-align: left;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(201,168,76,0.22);
-          border-radius: 14px; padding: 32px 28px;
+          background: linear-gradient(180deg, rgba(201,168,76,0.07) 0%, rgba(255,255,255,0.02) 42%);
+          border: 1px solid rgba(201,168,76,0.45);
+          border-radius: 16px; padding: 34px 30px;
+          box-shadow:
+            0 0 0 1px rgba(201,168,76,0.12),
+            0 0 34px rgba(201,168,76,0.20),
+            0 24px 60px rgba(0,0,0,0.5);
+          animation: rsvGlow 3.4s ease-in-out infinite;
+        }
+        @keyframes rsvGlow {
+          0%, 100% {
+            box-shadow:
+              0 0 0 1px rgba(201,168,76,0.12),
+              0 0 28px rgba(201,168,76,0.16),
+              0 24px 60px rgba(0,0,0,0.5);
+            border-color: rgba(201,168,76,0.38);
+          }
+          50% {
+            box-shadow:
+              0 0 0 1px rgba(201,168,76,0.22),
+              0 0 48px rgba(201,168,76,0.36),
+              0 24px 60px rgba(0,0,0,0.5);
+            border-color: rgba(201,168,76,0.68);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .rsv-wrap { animation: none; }
         }
         .rsv-eyebrow {
           font-family: var(--font-inter, sans-serif);
