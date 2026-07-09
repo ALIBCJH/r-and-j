@@ -81,6 +81,19 @@ export default function AdminClient() {
     } catch { /* ignore — a reload will resync */ }
   }
 
+  // One-time cleanup: delete legacy backing/order records. Keeps reservations.
+  async function purgeBackings() {
+    if (!window.confirm('Delete all legacy backing records? Your reservations are kept. This cannot be undone.')) return
+    try {
+      const res = await fetch(`${API_URL}/admin/purge-orders`, { method: 'POST' })
+      const data = await res.json()
+      if (data.ok) {
+        window.alert(`Removed ${data.cleared.orders} legacy backing record(s). Reservations kept.`)
+        await load()
+      }
+    } catch { /* ignore */ }
+  }
+
   // ── Checking ──────────────────────────────────────────────────────────────
   if (authed === null) {
     return (
@@ -134,6 +147,7 @@ export default function AdminClient() {
           <button onClick={load} style={ghostBtn}>
             <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : undefined} /> Refresh
           </button>
+          <button onClick={purgeBackings} style={dangerBtn}><Trash2 size={14} /> Purge backings</button>
           <button onClick={resetAll} style={dangerBtn}><Trash2 size={14} /> Clear data</button>
           <button onClick={logout} style={ghostBtn}><LogOut size={14} /> Sign out</button>
         </div>
