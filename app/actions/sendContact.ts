@@ -60,7 +60,7 @@ export async function sendContact(data: {
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#FAFAF8;color:#1A1A1D">
           <div style="border-bottom:2px solid #C9A84C;padding-bottom:20px;margin-bottom:28px">
-            <h1 style="margin:0;font-size:22px;color:#0D1F3C">New enquiry via Curtain VR</h1>
+            <h1 style="margin:0;font-size:22px;color:#0D1F3C">New curtain enquiry</h1>
           </div>
           <table style="width:100%;border-collapse:collapse">
             <tr><td style="padding:8px 0;color:#706860;font-size:13px;width:120px">Name</td><td style="padding:8px 0;font-size:14px">${e.name}</td></tr>

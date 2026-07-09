@@ -1,5 +1,5 @@
 // POST /api/mpesa/stk-push
-// Standalone STK push for the KES 2,500 VR-studio booking deposit — no order
+// Standalone STK push for the KES 2,500 studio booking deposit — no order
 // attached. Called by GateScreen. Returns the checkout id it then polls on.
 
 import { NextResponse } from 'next/server'

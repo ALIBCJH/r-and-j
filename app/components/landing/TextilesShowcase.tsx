@@ -14,8 +14,8 @@ const FEATURED = [
     image:       '/assets/catalog1.png',
     collection:  'The Classic',
     name:        'Ivory Linen & Sheer Duo',
-    price:       'From KSh 18,500',
-    priceNote:   'per window · pair included',
+    price:       'KSh 8,500',
+    priceNote:   'per panel · pair included',
     badge:       'Best Seller',
   },
   {
@@ -23,7 +23,7 @@ const FEATURED = [
     image:       '/assets/catalog2.png',
     collection:  'The Bold Contrast',
     name:        'Mustard & Charcoal Weave',
-    price:       'From KSh 14,500',
+    price:       'KSh 7,000',
     priceNote:   'per panel · standard lining',
     badge:       'New',
   },
@@ -32,7 +32,7 @@ const FEATURED = [
     image:       '/assets/catalog3.png',
     collection:  'The Coastal',
     name:        'Teal, Ivory & Cream Trio',
-    price:       'From KSh 16,500',
+    price:       'KSh 9,500',
     priceNote:   'per panel · tri-layer set',
     badge:       null,
   },
@@ -41,7 +41,7 @@ const FEATURED = [
     image:       '/assets/catalog4.png',
     collection:  'The Metropolitan',
     name:        'Steel Textured Drape',
-    price:       'From KSh 12,000',
+    price:       'KSh 6,500',
     priceNote:   'per panel · blackout lining',
     badge:       null,
   },
@@ -101,7 +101,7 @@ export default function TextilesShowcase() {
             }}
           >
             A curated cross-section of our fabric library.
-            Every textile is available for 3D VR preview in the studio
+            Every textile can be previewed in our online studio
             before you commit to a single metre.
           </motion.p>
         </div>

@@ -26,8 +26,8 @@ export function msUntilLaunch(now: number): number {
 /** Pre-filled message a backer sends a friend when sharing the pre-launch. */
 export function referralMessage(url: string): string {
   return (
-    "I'm backing R&J Interiors' launch — you get to see your curtains in your " +
-    'actual room before you pay a shilling, and founding backers lock a launch ' +
+    "I'm backing R&J Interiors' launch — you can preview curtain fabrics and " +
+    'colours before you pay a shilling, and founding backers lock a launch ' +
     'discount. Spots are limited and pricing ends soon 👉 ' + url
   )
 }

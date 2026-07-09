@@ -184,7 +184,7 @@ export default function StepsSection() {
               color: '#C9A84C', letterSpacing: '0.38em', textTransform: 'uppercase', marginBottom: 20,
             }}
           >
-            The Journey
+            The Journey · Our Vision
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
@@ -211,6 +211,7 @@ export default function StepsSection() {
         >
           From your front door to your bedroom window —
           the whole home, at full scale, in a single session.
+          This is the immersive experience we are building toward.
         </motion.p>
 
         {/* Animated progress line */}

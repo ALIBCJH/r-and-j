@@ -81,7 +81,7 @@ function buildGoogleCalendarUrl(date: Date, timeStr: string) {
   const endMin   = hour * 60 + min + 90
   const endStr   = `${y}${mo}${d}T${p(Math.floor(endMin / 60))}${p(endMin % 60)}00`
 
-  return `https://calendar.google.com/calendar/r/eventedit?text=R%26J+Interiors+%E2%80%94+VR+Studio+Session&dates=${startStr}/${endStr}&details=VR+Curtain+Visualization+Consultation.+Deposit%3A+KES+2%2C500+payable+at+arrival.&location=R%26J+Interiors+Studio%2C+Nairobi`
+  return `https://calendar.google.com/calendar/r/eventedit?text=R%26J+Interiors+%E2%80%94+Studio+Session&dates=${startStr}/${endStr}&details=Curtain+Design+Consultation.+Deposit%3A+KES+2%2C500+payable+at+arrival.&location=R%26J+Interiors+Studio%2C+Nairobi`
 }
 
 function StepIndicator({ step }: { step: number }) {
@@ -740,7 +740,7 @@ function ConfirmationStep({ date, time, name }: { date: Date; time: string; name
   }, [])
 
   const calUrl = buildGoogleCalendarUrl(date, time)
-  const waUrl  = whatsappUrl(`Hi R&J Interiors! I just booked a VR studio session for ${formatShortDate(date)} at ${time}. My name is ${name}.`)
+  const waUrl  = whatsappUrl(`Hi R&J Interiors! I just booked a studio session for ${formatShortDate(date)} at ${time}. My name is ${name}.`)
   const curtainTransition = { duration: 1.5, ease: [0.25, 0.46, 0.45, 0.94] as const }
 
   return (

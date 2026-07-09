@@ -39,7 +39,7 @@ const inter = Inter({
 // Change this one line if the live domain differs.
 const SITE_URL = "https://rjinteriors.co.ke";
 const SITE_DESCRIPTION =
-  "East Africa's first vertically integrated luxury curtain design house. See your space in immersive 3D before you spend a single shilling.";
+  "East Africa's first vertically integrated luxury curtain house. Preview fabrics and colours online, then we measure, make, and install — so you commit with confidence.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     "curtains Nyeri",
     "interior design Kenya",
     "made-to-measure curtains",
-    "VR curtain visualizer",
+    "online curtain visualizer",
     "drapery",
     "R&J Interiors",
   ],
@@ -68,10 +68,10 @@ export const metadata: Metadata = {
     locale:      "en_KE",
     images: [
       {
-        url:    "/assets/hero3.png",
-        width:  1536,
-        height: 1024,
-        alt:    "A client previewing curtain styles in immersive VR inside a luxury living room",
+        url:    "/assets/curtain1.png",
+        width:  600,
+        height: 775,
+        alt:    "A styled living room dressed with R&J made-to-measure curtains",
       },
     ],
   },
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     card:        "summary_large_image",
     title:       "R&J Interiors — Visualize Before You Buy",
     description: SITE_DESCRIPTION,
-    images:      ["/assets/hero3.png"],
+    images:      ["/assets/curtain1.png"],
   },
   robots: {
     index:  true,

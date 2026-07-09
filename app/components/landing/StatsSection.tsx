@@ -6,9 +6,9 @@ import { motion, useInView } from 'framer-motion'
 const ease = [0.25, 0.1, 0.25, 1] as const
 
 const STATS = [
-  { value: 150, suffix: '+', label: 'Fabric Options' },
-  { value: 500, suffix: '+', label: 'Color Combinations' },
-  { value: 100, suffix: '%', label: 'Immersive Experience' },
+  { value: 14,  suffix: '',  label: 'Curated Colours' },
+  { value: 4,   suffix: '',  label: 'Signature Fabrics' },
+  { value: 100, suffix: '%', label: 'Made to Measure' },
 ]
 
 function CountUp({ to, suffix, active }: { to: number; suffix: string; active: boolean }) {
