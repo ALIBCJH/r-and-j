@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Loader2, Lock, LogOut, RefreshCw, Users, Wallet, Clock, ClipboardList } from 'lucide-react'
+import { Loader2, Lock, LogOut, RefreshCw, Users, Wallet, Clock, ClipboardList, Trash2 } from 'lucide-react'
 import { API_URL } from '@/app/lib/api'
 
 type OrderStatus = 'pending_payment' | 'confirmed' | 'in_production' | 'ready' | 'delivered'
@@ -116,6 +116,17 @@ export default function AdminClient() {
     setAuthed(false); setOrders([]); setTotals(null); setReservations([])
   }
 
+  // Destructive: wipe every order + reservation for a clean slate. Double-gated.
+  async function resetAll() {
+    if (!window.confirm('This permanently deletes ALL orders and reservations. This cannot be undone. Continue?')) return
+    if (!window.confirm('Are you absolutely sure? Everything in the admin panel will be wiped for a clean slate.')) return
+    try {
+      const res = await fetch(`${API_URL}/admin/reset`, { method: 'POST' })
+      const data = await res.json()
+      if (data.ok) await load()
+    } catch { /* ignore — a reload will resync */ }
+  }
+
   async function setStatus(orderNumber: string, status: OrderStatus) {
     // Optimistic update
     setOrders(prev => prev.map(o => o.order_number === orderNumber ? { ...o, status } : o))
@@ -182,6 +193,7 @@ export default function AdminClient() {
           <button onClick={load} style={ghostBtn}>
             <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : undefined} /> Refresh
           </button>
+          <button onClick={resetAll} style={dangerBtn}><Trash2 size={14} /> Clear data</button>
           <button onClick={logout} style={ghostBtn}><LogOut size={14} /> Sign out</button>
         </div>
       </div>
@@ -302,6 +314,12 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 const ghostBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: '7px',
   background: 'transparent', border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C',
+  padding: '9px 14px', borderRadius: '6px', cursor: 'pointer',
+  fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 600,
+}
+const dangerBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: '7px',
+  background: 'transparent', border: '1px solid rgba(224,112,112,0.4)', color: '#E07070',
   padding: '9px 14px', borderRadius: '6px', cursor: 'pointer',
   fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', fontWeight: 600,
 }
