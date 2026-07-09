@@ -12,11 +12,11 @@ export const CAMPAIGN = {
   name: 'Kickstarter',
 } as const
 
-// ⚠️ SET THIS to your real public-launch date. The founding discounts and the
-// countdown timer both expire here, so it must be honest — a fake deadline that
-// keeps resetting erodes exactly the trust we're trying to build.
+// ⚠️ SET THIS to your real public-launch date — the countdown on the founding
+// page ticks down to it and flips to "we're open" once it passes. Keep it
+// honest: a fake deadline that keeps resetting erodes the trust we're building.
 // ISO 8601, with the +03:00 offset for East Africa Time.
-export const LAUNCH_DATE = '2026-08-31T23:59:59+03:00'
+export const LAUNCH_DATE = '2026-09-07T23:59:59+03:00'
 
 /** Milliseconds remaining until launch, never negative. Pass Date.now(). */
 export function msUntilLaunch(now: number): number {
