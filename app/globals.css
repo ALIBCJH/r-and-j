@@ -73,7 +73,6 @@
   --color-foreground: var(--navy);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-cormorant: var(--font-cormorant);
 }
 
 body {

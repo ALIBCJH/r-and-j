@@ -71,7 +71,7 @@ export default function HeroSection() {
           alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
-          quality={90}
+          quality={75}
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center right' }}
         />
@@ -81,7 +81,7 @@ export default function HeroSection() {
           alt="A concept image of R&J's in-development immersive visualization experience"
           fill
           priority
-          quality={90}
+          quality={75}
           sizes="100vw"
           style={{ objectFit: 'cover', objectPosition: 'center top' }}
         />

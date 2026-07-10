@@ -40,7 +40,7 @@ export default function LandingFooter() {
           <p style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '14px', color: '#C9A84C', fontStyle: 'italic', marginBottom: '16px' }}>
             Visualize. Design. Transform.
           </p>
-          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '14px', color: '#506070', lineHeight: 1.75, maxWidth: '280px' }}>
+          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '14px', color: '#A8B5C2', lineHeight: 1.75, maxWidth: '280px' }}>
             Crafting cinematic atmospheres through the fusion of traditional craftsmanship
             and bleeding-edge virtual technology.
           </p>
@@ -75,7 +75,7 @@ export default function LandingFooter() {
           alignItems:     'center',
           justifyContent: 'space-between',
         }}>
-          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#3A4A58' }}>
+          <p style={{ fontFamily: 'var(--font-inter, sans-serif)', fontSize: '12px', color: '#8B99A8' }}>
             © 2026 R&amp;J Interiors. Crafting Cinematic Atmospheres.
           </p>
 
@@ -85,9 +85,9 @@ export default function LandingFooter() {
                 key={label}
                 href="#"
                 aria-label={label}
-                style={{ color: '#3A4A58', transition: 'color 0.2s ease' }}
+                style={{ color: '#8B99A8', transition: 'color 0.2s ease' }}
                 onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3A4A58')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#8B99A8')}
               >
                 <Icon />
               </a>
@@ -107,7 +107,7 @@ function FooterCol({ heading, children }: { heading: string; children: React.Rea
         fontSize:      '11px',
         letterSpacing: '3px',
         textTransform: 'uppercase',
-        color:         '#506070',
+        color:         '#A8B5C2',
         marginBottom:  '20px',
       }}>
         {heading}
@@ -124,13 +124,13 @@ function FLink({ href, children }: { href: string; children: React.ReactNode }) 
       style={{
         fontFamily:  'var(--font-inter, sans-serif)',
         fontSize:    '14px',
-        color:       '#506070',
+        color:       '#A8B5C2',
         textDecoration: 'none',
         lineHeight:  2.4,
         transition:  'color 0.2s ease',
       }}
       onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
-      onMouseLeave={e => (e.currentTarget.style.color = '#506070')}
+      onMouseLeave={e => (e.currentTarget.style.color = '#A8B5C2')}
     >
       {children}
     </Link>

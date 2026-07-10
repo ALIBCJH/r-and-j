@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import LandingNavbar        from '../components/landing/Navbar'
 import HeroSection          from '../components/landing/HeroSection'
-import CurtainConfigurator  from '../components/landing/CurtainConfigurator'
+import CurtainConfigurator  from '../components/landing/CurtainConfiguratorLazy'
 import TextilesShowcase   from '../components/landing/TextilesShowcase'
 import TestimonialSection from '../components/landing/TestimonialSection'
 import CTABanner          from '../components/landing/CTABanner'
