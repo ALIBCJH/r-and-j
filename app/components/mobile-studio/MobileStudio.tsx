@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { drawScene, WindowProfile } from './curtainRenderer'
 import { getRecommendations, hexToRgb } from '@/app/lib/colorEngine'
+import { nextImageSrc } from '@/app/lib/nextImageSrc'
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -117,7 +118,8 @@ export default function MobileStudio() {
   useEffect(() => {
     const img = new Image()
     img.onload = () => { imgRef.current = img; setImgReady(true) }
-    img.src = '/assets/sittingroom.png'
+    // Optimized (AVIF/WebP + resized) source instead of the raw 1.17 MB PNG.
+    img.src = nextImageSrc('/assets/sittingroom.png', 1200, 75)
   }, [])
 
   // A new wall colour re-derives the matched fabric palette (the wall in the photo

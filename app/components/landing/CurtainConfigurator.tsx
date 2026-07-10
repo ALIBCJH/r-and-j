@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { drawScene } from '@/app/components/mobile-studio/curtainRenderer'
+import { nextImageSrc } from '@/app/lib/nextImageSrc'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
@@ -18,7 +19,10 @@ const FABRICS = [
   { id: 'charcoal',   name: 'Charcoal',        desc: 'Dramatic depth and quiet luxury',             hex: '#3C3C3C' },
 ]
 
-const ROOM_SRC = '/assets/sittingroom.png'
+// Pull the room photo through the Next optimizer (AVIF/WebP + resize) rather than
+// the raw 1.17 MB PNG — this is a <canvas> source, so we can't use <Image>, but we
+// can still request the optimized asset. Same-origin output keeps the canvas clean.
+const ROOM_SRC = nextImageSrc('/assets/sittingroom.png', 1200, 75)
 
 export default function CurtainConfigurator() {
   const [active,   setActive]   = useState(0)
