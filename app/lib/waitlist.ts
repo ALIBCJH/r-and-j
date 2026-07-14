@@ -13,6 +13,7 @@ export type WaitlistEntry = {
   phone: string
   email: string
   product_name: string
+  message?: string
   created_at: string
 }
 

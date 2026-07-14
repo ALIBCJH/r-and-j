@@ -18,7 +18,10 @@ type Body = {
   phone?: string
   email?: string
   product_name?: string
+  message?: string
 }
+
+const MESSAGE_MAX = 500
 
 export async function POST(request: Request) {
   const ip = (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -37,6 +40,7 @@ export async function POST(request: Request) {
   const phone = normalizePhone(body.phone ?? '')
   const email = (body.email ?? '').trim()
   const productName = (body.product_name ?? '').trim()
+  const message = (body.message ?? '').trim().slice(0, MESSAGE_MAX)
 
   // Need at least a name and one reachable contact.
   if (!name || (!phone && !email)) {
@@ -54,6 +58,7 @@ export async function POST(request: Request) {
     phone: phone ?? (body.phone ?? '').trim(),
     email,
     product_name: productName,
+    message,
     created_at: new Date().toISOString(),
   }
 
@@ -75,6 +80,7 @@ export async function POST(request: Request) {
             <tr><td style="padding:6px 0;color:#706860">Phone</td><td>${escapeHtml(entry.phone)}</td></tr>
             <tr><td style="padding:6px 0;color:#706860">Email</td><td>${escapeHtml(email)}</td></tr>
             <tr><td style="padding:6px 0;color:#706860">Interested in</td><td>${escapeHtml(productName) || '—'}</td></tr>
+            <tr><td style="padding:6px 0;color:#706860;vertical-align:top">Message</td><td>${escapeHtml(message).replace(/\n/g, '<br>') || '—'}</td></tr>
           </table>
         </div>`,
     })

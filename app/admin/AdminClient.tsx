@@ -9,6 +9,7 @@ type Reservation = {
   phone: string
   email: string
   product_name: string
+  message?: string
   created_at: string
 }
 
@@ -160,23 +161,24 @@ export default function AdminClient() {
 
       {/* Reservations table */}
       <div style={{ overflowX: 'auto', border: '1px solid rgba(201,168,76,0.12)', borderRadius: '10px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '680px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '820px' }}>
           <thead>
             <tr>
-              {['Name', 'Contact', 'Package', 'Date'].map(h => (
+              {['Name', 'Contact', 'Package', 'Message', 'Date'].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {reservations.length === 0 && (
-              <tr><td colSpan={4} style={{ ...td, textAlign: 'center', color: '#4A5A6A', padding: '32px' }}>No reservations yet.</td></tr>
+              <tr><td colSpan={5} style={{ ...td, textAlign: 'center', color: '#4A5A6A', padding: '32px' }}>No reservations yet.</td></tr>
             )}
             {reservations.map((r, i) => (
               <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                 <td style={{ ...td, color: '#F0EBE0' }}>{r.name}</td>
                 <td style={{ ...td, color: '#C6CFD8', fontSize: '13px' }}>{r.email || r.phone || '—'}</td>
                 <td style={td}>{r.product_name || '—'}</td>
+                <td style={{ ...td, color: '#C6CFD8', fontSize: '13px', maxWidth: '280px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{r.message || '—'}</td>
                 <td style={{ ...td, color: '#6A7A88', fontSize: '12px', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
               </tr>
             ))}
