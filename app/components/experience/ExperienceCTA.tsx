@@ -142,7 +142,7 @@ export default function ExperienceCTA() {
           {...fadeUp(0.62)}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}
         >
-          <Link href="/contact" style={{
+          <Link href="/founding" style={{
             display: 'inline-flex', alignItems: 'center', gap: 10,
             background: 'linear-gradient(135deg, #B8922A 0%, #E8C87A 50%, #C9A84C 100%)',
             color: '#0A0A10', padding: '18px 52px', borderRadius: 3,

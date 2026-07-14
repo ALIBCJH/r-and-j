@@ -138,7 +138,7 @@ export default function LandingNavbar() {
           )}
 
           <Link
-            href="/contact"
+            href="/founding"
             className="hidden md:inline-flex items-center rounded-sm font-semibold transition-all duration-300"
             style={{
               background:    'linear-gradient(135deg, #F0D77A 0%, #C9A84C 50%, #A67C2E 100%)',
@@ -285,7 +285,7 @@ export default function LandingNavbar() {
                 Fabric Studio
               </Link>
               <Link
-                href="/contact"
+                href="/founding"
                 onClick={() => setMenuOpen(false)}
                 style={{
                   display:       'block',

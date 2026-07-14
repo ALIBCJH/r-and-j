@@ -251,7 +251,7 @@ export default function StepsSection() {
         }}>
           Ready to start your four steps?
         </p>
-        <a href="/contact" style={{
+        <a href="/founding" style={{
           display: 'inline-flex', alignItems: 'center', gap: 10,
           background: 'linear-gradient(135deg,#B8922A,#E8C87A,#C9A84C)',
           color: '#0A0A10', padding: '14px 32px', borderRadius: 3,

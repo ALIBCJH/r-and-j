@@ -57,7 +57,7 @@ export default function LandingFooter() {
 
         {/* Studio */}
         <FooterCol heading="Studio">
-          <FLink href="/contact">Book Consultation</FLink>
+          <FLink href="/founding">Book Consultation</FLink>
           <FLink href="/studio">Try Studio</FLink>
           <FLink href="#">Privacy Policy</FLink>
         </FooterCol>
