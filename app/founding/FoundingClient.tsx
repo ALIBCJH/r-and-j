@@ -23,8 +23,11 @@ function ReserveForm() {
   const [name,    setName]    = useState('')
   const [contact, setContact] = useState('')
   const [pkg,     setPkg]     = useState('')
+  const [message, setMessage] = useState('')
   const [status,  setStatus]  = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [error,   setError]   = useState('')
+
+  const MESSAGE_MAX = 500
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,6 +48,7 @@ function ReserveForm() {
           email:        isEmail ? contact.trim() : '',
           phone:        isEmail ? '' : contact.trim(),
           product_name: pkg,
+          message:      message.trim(),
         }),
       })
       const data = await res.json()
@@ -92,6 +96,21 @@ function ReserveForm() {
           </label>
         ))}
       </div>
+
+      <label className="rsv-label" htmlFor="rsv-message">
+        Tell us about your windows <span className="rsv-optional">(optional — but it helps us plan)</span>
+      </label>
+      <textarea
+        id="rsv-message" className="rsv-input rsv-textarea" value={message}
+        onChange={e => setMessage(e.target.value.slice(0, MESSAGE_MAX))}
+        rows={4} maxLength={MESSAGE_MAX}
+        placeholder={
+          'e.g. "Living room + 2 bedrooms in Kilimani — 3 large windows.\n' +
+          'Want warm neutral tones. Hoping to book within a month.\n' +
+          'What’s slowed me down before is not knowing the final price."'
+        }
+      />
+      <p className="rsv-charcount">{message.length}/{MESSAGE_MAX}</p>
 
       {error && <p className="rsv-error">{error}</p>}
 
@@ -212,6 +231,18 @@ export default function FoundingClient() {
         }
         .rsv-input::placeholder { color: #5A6A78; }
         .rsv-input:focus { border-color: #C9A84C; }
+        .rsv-textarea {
+          resize: vertical; min-height: 76px; line-height: 1.55;
+          margin-bottom: 6px;
+        }
+        .rsv-optional {
+          color: #5A6A78; letter-spacing: 0; text-transform: none;
+          font-weight: 400;
+        }
+        .rsv-charcount {
+          font-family: var(--font-inter, sans-serif); font-size: 11px;
+          color: #3A4A58; text-align: right; margin: 0 0 20px;
+        }
         .rsv-radios { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
         .rsv-radio {
           display: flex; align-items: center; gap: 12px; cursor: pointer;
