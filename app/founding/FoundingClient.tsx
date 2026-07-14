@@ -98,16 +98,17 @@ function ReserveForm() {
       </div>
 
       <label className="rsv-label" htmlFor="rsv-message">
-        Tell us about your windows <span className="rsv-optional">(optional — but it helps us plan)</span>
+        Why R&amp;J? What won you over? <span className="rsv-optional">(optional — but it helps us)</span>
       </label>
       <textarea
         id="rsv-message" className="rsv-input rsv-textarea" value={message}
         onChange={e => setMessage(e.target.value.slice(0, MESSAGE_MAX))}
         rows={4} maxLength={MESSAGE_MAX}
         placeholder={
-          'e.g. "Living room + 2 bedrooms in Kilimani — 3 large windows.\n' +
-          'Want warm neutral tones. Hoping to book within a month.\n' +
-          'What’s slowed me down before is not knowing the final price."'
+          'e.g. "I’m tired of stiff shop curtains that look the same in\n' +
+          'every house. I want something made for MY windows — and the\n' +
+          'fact that you come to my home to measure and advise is what\n' +
+          'sold me."'
         }
       />
       <p className="rsv-charcount">{message.length}/{MESSAGE_MAX}</p>

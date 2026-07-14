@@ -164,7 +164,7 @@ export default function AdminClient() {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '820px' }}>
           <thead>
             <tr>
-              {['Name', 'Contact', 'Package', 'Message', 'Date'].map(h => (
+              {['Name', 'Contact', 'Package', 'Why R&J', 'Date'].map(h => (
                 <th key={h} style={th}>{h}</th>
               ))}
             </tr>
