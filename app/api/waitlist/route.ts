@@ -80,7 +80,7 @@ export async function POST(request: Request) {
             <tr><td style="padding:6px 0;color:#706860">Phone</td><td>${escapeHtml(entry.phone)}</td></tr>
             <tr><td style="padding:6px 0;color:#706860">Email</td><td>${escapeHtml(email)}</td></tr>
             <tr><td style="padding:6px 0;color:#706860">Interested in</td><td>${escapeHtml(productName) || '—'}</td></tr>
-            <tr><td style="padding:6px 0;color:#706860;vertical-align:top">Message</td><td>${escapeHtml(message).replace(/\n/g, '<br>') || '—'}</td></tr>
+            <tr><td style="padding:6px 0;color:#706860;vertical-align:top">Why R&amp;J</td><td>${escapeHtml(message).replace(/\n/g, '<br>') || '—'}</td></tr>
           </table>
         </div>`,
     })
