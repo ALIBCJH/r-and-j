@@ -80,7 +80,7 @@ export default function CTABanner() {
           style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
         >
           <Link
-            href="/contact"
+            href="/founding"
             className="inline-flex items-center"
             style={{
               fontFamily:    'var(--font-inter, sans-serif)',

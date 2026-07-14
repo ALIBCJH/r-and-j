@@ -383,7 +383,7 @@ export default function CatalogClient() {
             the exact fabrics and combinations that will work. No commitment required.
           </p>
           <Link
-            href="/contact"
+            href="/founding"
             style={{
               fontFamily:     'var(--font-inter, sans-serif)',
               fontSize:       '14px',

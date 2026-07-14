@@ -141,7 +141,7 @@ export function SummaryScreen({ selections, onReset }: Props) {
         >
           {/* PRIMARY CTA — PAYMENT/WHATSAPP SLOT: replace this button's onClick */}
           <a
-            href="/contact"
+            href="/founding"
             style={{
               display:        'flex',
               alignItems:     'center',

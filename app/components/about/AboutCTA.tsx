@@ -107,7 +107,7 @@ export default function AboutCTA() {
           }}
         >
           <Link
-            href="/contact"
+            href="/founding"
             style={{
               display:        'inline-flex',
               alignItems:     'center',
