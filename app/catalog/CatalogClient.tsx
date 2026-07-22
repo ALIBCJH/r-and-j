@@ -9,6 +9,8 @@ import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
 import { PRODUCTS } from '@/app/lib/products'
 import type { Product } from '@/app/lib/products'
+import PricingModal from '@/app/components/pricing/PricingModal'
+import { type PricingConfig, startingFrom, formatKes } from '@/app/lib/pricing'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
@@ -54,8 +56,19 @@ function Pill({ label, selected, onClick }: { label: string; selected: boolean; 
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
-function ProductCard({ product, index }: { product: Product; index: number }) {
+function ProductCard({
+  product,
+  index,
+  pricing,
+  onViewPricing,
+}: {
+  product: Product
+  index: number
+  pricing: PricingConfig
+  onViewPricing: (p: Product) => void
+}) {
   const [hovered, setHovered] = useState(false)
+  const from = startingFrom(pricing, product.id)
 
   return (
     <motion.div
@@ -165,53 +178,69 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
               marginBottom: '16px',
             }} />
 
-            {/* Price */}
+            {/* Starting-from price */}
+            <p style={{
+              fontFamily:    'var(--font-inter, sans-serif)',
+              fontSize:      '10px',
+              color:         '#6A7A88',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              marginBottom:  '5px',
+            }}>
+              Starting From
+            </p>
             <p style={{
               fontFamily:   'var(--font-playfair, Georgia, serif)',
-              fontSize:     '20px',
+              fontSize:     '22px',
               color:        '#F0EBE0',
               fontWeight:   400,
               lineHeight:   1,
-              marginBottom: '4px',
+              marginBottom: '5px',
             }}>
-              {product.price}
+              {from ? formatKes(from.amount) : 'On request'}
             </p>
-
-            {/* Price note */}
             <p style={{
               fontFamily:   'var(--font-inter, sans-serif)',
               fontSize:     '11px',
               color:        '#4A5A6A',
               marginBottom: '18px',
             }}>
-              {product.priceNote}
+              {from ? `${from.sizeLabel} Window · ${from.packageName} Package` : 'Book a consultation'}
             </p>
 
-            {/* View Details CTA */}
-            <div style={{
-              display:    'flex',
-              alignItems: 'center',
-              gap:        '6px',
-              color:      hovered ? '#E8C96D' : '#C9A84C',
-              transition: 'color 0.25s ease',
-            }}>
-              <span style={{
+            {/* View Pricing — opens the modal without following the card link */}
+            <button
+              type="button"
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onViewPricing(product) }}
+              style={{
+                width:         '100%',
+                display:       'flex',
+                alignItems:    'center',
+                justifyContent:'center',
+                gap:           '7px',
+                background:    hovered ? 'rgba(201,168,76,0.10)' : 'transparent',
+                border:        '1px solid rgba(201,168,76,0.4)',
+                color:         hovered ? '#E8C96D' : '#C9A84C',
+                padding:       '11px 16px',
+                borderRadius:  '4px',
+                cursor:        'pointer',
                 fontFamily:    'var(--font-inter, sans-serif)',
                 fontSize:      '11px',
                 fontWeight:    600,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
-              }}>
-                View Details
-              </span>
+                transition:    'all 0.25s ease',
+              }}
+            >
+              View Pricing
               <ArrowRight
                 size={12}
                 style={{
-                  transform:  hovered ? 'translateX(4px)' : 'translateX(0)',
+                  transform:  hovered ? 'translateX(3px)' : 'translateX(0)',
                   transition: 'transform 0.25s ease',
                 }}
               />
-            </div>
+            </button>
 
           </div>
         </article>
@@ -222,8 +251,9 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function CatalogClient() {
+export default function CatalogClient({ pricing }: { pricing: PricingConfig }) {
   const [activePalette, setActivePalette] = useState('All')
+  const [modalProduct,  setModalProduct]  = useState<Product | null>(null)
 
   const filtered = activePalette === 'All'
     ? PRODUCTS
@@ -338,7 +368,13 @@ export default function CatalogClient() {
               className="catalog-product-grid"
             >
               {filtered.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={i}
+                  pricing={pricing}
+                  onViewPricing={setModalProduct}
+                />
               ))}
             </motion.div>
           </AnimatePresence>
@@ -419,6 +455,12 @@ export default function CatalogClient() {
       `}</style>
 
       <LandingFooter />
+
+      <PricingModal
+        product={modalProduct}
+        pricing={pricing}
+        onClose={() => setModalProduct(null)}
+      />
     </div>
   )
 }

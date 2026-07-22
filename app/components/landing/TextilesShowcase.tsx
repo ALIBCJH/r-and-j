@@ -1,54 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import { PRODUCTS, type Product } from '@/app/lib/products'
+import { API_URL } from '@/app/lib/api'
+import PricingModal from '@/app/components/pricing/PricingModal'
+import { type PricingConfig, DEFAULT_PRICING_CONFIG, startingFrom, formatKes } from '@/app/lib/pricing'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-const FEATURED = [
-  {
-    id:          1,
-    image:       '/assets/catalog1.png',
-    collection:  'The Classic',
-    name:        'Ivory Linen & Sheer Duo',
-    price:       'KSh 8,500',
-    priceNote:   'per panel · pair included',
-    badge:       'Best Seller',
-  },
-  {
-    id:          2,
-    image:       '/assets/catalog2.png',
-    collection:  'The Bold Contrast',
-    name:        'Mustard & Charcoal Weave',
-    price:       'KSh 7,000',
-    priceNote:   'per panel · standard lining',
-    badge:       'New',
-  },
-  {
-    id:          3,
-    image:       '/assets/catalog3.png',
-    collection:  'The Coastal',
-    name:        'Teal, Ivory & Cream Trio',
-    price:       'KSh 9,500',
-    priceNote:   'per panel · tri-layer set',
-    badge:       null,
-  },
-  {
-    id:          4,
-    image:       '/assets/catalog4.png',
-    collection:  'The Metropolitan',
-    name:        'Steel Textured Drape',
-    price:       'KSh 6,500',
-    priceNote:   'per panel · blackout lining',
-    badge:       null,
-  },
-]
+// One source of truth — the first four catalog products. No duplicated pricing.
+const FEATURED = PRODUCTS.slice(0, 4)
 
 export default function TextilesShowcase() {
+  const [modalProduct, setModalProduct] = useState<Product | null>(null)
+  // Seed with the ship-time defaults so the section renders instantly (it's
+  // below the fold — no LCP cost) and swaps to live admin prices on fetch. The
+  // homepage itself stays static; only this client fetch is dynamic.
+  const [pricing, setPricing] = useState<PricingConfig>(DEFAULT_PRICING_CONFIG)
+
+  useEffect(() => {
+    let alive = true
+    fetch(`${API_URL}/pricing`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { if (alive && d?.ok && d.config) setPricing(d.config) })
+      .catch(() => { /* keep defaults */ })
+    return () => { alive = false }
+  }, [])
+
   return (
+    <>
     <section
       id="catalog"
       style={{ background: '#0D1B2E', padding: '120px 6vw', borderTop: '1px solid rgba(201,168,76,0.12)' }}
@@ -109,7 +93,13 @@ export default function TextilesShowcase() {
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4" style={{ gap: '28px' }}>
           {FEATURED.map((product, i) => (
-            <FeaturedCard key={product.id} product={product} index={i} />
+            <FeaturedCard
+              key={product.id}
+              product={product}
+              index={i}
+              pricing={pricing}
+              onViewPricing={setModalProduct}
+            />
           ))}
         </div>
 
@@ -151,12 +141,30 @@ export default function TextilesShowcase() {
 
       </div>
     </section>
+
+    <PricingModal
+      product={modalProduct}
+      pricing={pricing}
+      onClose={() => setModalProduct(null)}
+    />
+    </>
   )
 }
 
-function FeaturedCard({ product, index }: { product: typeof FEATURED[number]; index: number }) {
+function FeaturedCard({
+  product,
+  index,
+  pricing,
+  onViewPricing,
+}: {
+  product: Product
+  index: number
+  pricing: PricingConfig
+  onViewPricing: (p: Product) => void
+}) {
   const [hovered, setHovered] = useState(false)
-  const { image, collection, name, price, badge } = product
+  const { id, image, collection, name, badge } = product
+  const from = startingFrom(pricing, id)
 
   return (
     <motion.article
@@ -224,8 +232,9 @@ function FeaturedCard({ product, index }: { product: typeof FEATURED[number]; in
           transition:     'opacity 0.35s ease',
           zIndex:         1,
         }}>
-          <Link
-            href="/contact"
+          <button
+            type="button"
+            onClick={() => onViewPricing(product)}
             style={{
               fontFamily:     'var(--font-inter, sans-serif)',
               fontSize:       '11px',
@@ -235,13 +244,14 @@ function FeaturedCard({ product, index }: { product: typeof FEATURED[number]; in
               color:          '#0A0F1C',
               background:     'linear-gradient(135deg, #F0D77A 0%, #C9A84C 100%)',
               padding:        '13px 36px',
-              textDecoration: 'none',
+              border:         'none',
+              cursor:         'pointer',
               borderRadius:   '2px',
               whiteSpace:     'nowrap',
             }}
           >
-            Enquire
-          </Link>
+            View Pricing
+          </button>
           <Link
             href="/studio"
             style={{
@@ -293,7 +303,7 @@ function FeaturedCard({ product, index }: { product: typeof FEATURED[number]; in
           fontWeight: 400,
           fontStyle:  'italic',
         }}>
-          {price}
+          {from ? `From ${formatKes(from.amount)}` : 'On request'}
         </p>
       </div>
     </motion.article>

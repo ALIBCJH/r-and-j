@@ -264,7 +264,7 @@ export default function CartDrawer() {
                           color:       '#2A3A48',
                           marginTop:   '4px',
                         }}>
-                          {fmt(item.priceKsh)} per panel
+                          From {fmt(item.priceKsh)} per window
                         </p>
                       </div>
                     </div>
