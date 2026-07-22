@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Loader2, Lock, LogOut, RefreshCw, ClipboardList, Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, Lock, LogOut, RefreshCw, ClipboardList, Trash2, Tag } from 'lucide-react'
 import { API_URL } from '@/app/lib/api'
 
 type Reservation = {
@@ -145,6 +146,9 @@ export default function AdminClient() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '28px' }}>
         <h1 style={{ fontFamily: 'var(--font-playfair, Georgia, serif)', fontSize: '28px', color: '#FFFFFF', fontWeight: 400, margin: 0 }}>Reservations</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
+          <Link href="/admin/pricing" style={{ ...ghostBtn, textDecoration: 'none' }}>
+            <Tag size={14} /> Pricing
+          </Link>
           <button onClick={load} style={ghostBtn}>
             <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : undefined} /> Refresh
           </button>

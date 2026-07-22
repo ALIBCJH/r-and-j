@@ -1,19 +1,24 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Star, Tag } from 'lucide-react'
 import LandingNavbar from '@/app/components/landing/Navbar'
 import LandingFooter from '@/app/components/landing/Footer'
-import { PRODUCTS, getRelatedProducts } from '@/app/lib/products'
+import { getRelatedProducts } from '@/app/lib/products'
 import type { Product } from '@/app/lib/products'
 import { CAMPAIGN } from '@/app/lib/campaign'
+import PricingModal from '@/app/components/pricing/PricingModal'
+import { type PricingConfig, startingFrom, formatKes } from '@/app/lib/pricing'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-export default function ProductPageClient({ product }: { product: Product }) {
+export default function ProductPageClient({ product, pricing }: { product: Product; pricing: PricingConfig }) {
   const related = getRelatedProducts(product, 3)
+  const from    = startingFrom(pricing, product.id)
+  const [modalProduct, setModalProduct] = useState<Product | null>(null)
 
   return (
     <div style={{ background: '#0D1B2E', minHeight: '100vh' }}>
@@ -186,7 +191,7 @@ export default function ProductPageClient({ product }: { product: Product }) {
               ))}
             </div>
 
-            {/* Price block */}
+            {/* Price block — starting-from + full pricing */}
             <div style={{
               background:   'rgba(201,168,76,0.04)',
               border:       '1px solid rgba(201,168,76,0.15)',
@@ -195,6 +200,16 @@ export default function ProductPageClient({ product }: { product: Product }) {
               marginBottom: '32px',
             }}>
               <p style={{
+                fontFamily:    'var(--font-inter, sans-serif)',
+                fontSize:      '10px',
+                color:         '#6A7A88',
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+                marginBottom:  '6px',
+              }}>
+                Starting From
+              </p>
+              <p style={{
                 fontFamily:   'var(--font-playfair, Georgia, serif)',
                 fontSize:     '32px',
                 color:        '#F0EBE0',
@@ -202,15 +217,41 @@ export default function ProductPageClient({ product }: { product: Product }) {
                 lineHeight:   1,
                 marginBottom: '6px',
               }}>
-                {product.price}
+                {from ? formatKes(from.amount) : 'On request'}
               </p>
               <p style={{
-                fontFamily: 'var(--font-inter, sans-serif)',
-                fontSize:   '12px',
-                color:      '#5A6A7A',
+                fontFamily:   'var(--font-inter, sans-serif)',
+                fontSize:     '12px',
+                color:        '#5A6A7A',
+                marginBottom: '18px',
               }}>
-                {product.priceNote}
+                {from ? `${from.sizeLabel} Window · ${from.packageName} Package · all-in` : 'Priced by window size & package'}
               </p>
+              <button
+                type="button"
+                onClick={() => setModalProduct(product)}
+                style={{
+                  display:       'inline-flex',
+                  alignItems:    'center',
+                  gap:           '8px',
+                  background:    'transparent',
+                  border:        '1px solid rgba(201,168,76,0.45)',
+                  color:         '#C9A84C',
+                  padding:       '11px 22px',
+                  borderRadius:  '4px',
+                  cursor:        'pointer',
+                  fontFamily:    'var(--font-inter, sans-serif)',
+                  fontSize:      '12px',
+                  fontWeight:    600,
+                  letterSpacing: '1.5px',
+                  textTransform: 'uppercase',
+                  transition:    'all 0.25s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.08)'; e.currentTarget.style.borderColor = '#C9A84C' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.45)' }}
+              >
+                <Tag size={14} /> View Sizes &amp; Packages
+              </button>
             </div>
 
             {/* Pre-launch note */}
@@ -336,7 +377,7 @@ export default function ProductPageClient({ product }: { product: Product }) {
 
             <div className="related-grid">
               {related.map((p, i) => (
-                <RelatedCard key={p.id} product={p} index={i} />
+                <RelatedCard key={p.id} product={p} index={i} pricing={pricing} />
               ))}
             </div>
 
@@ -372,11 +413,18 @@ export default function ProductPageClient({ product }: { product: Product }) {
       `}</style>
 
       <LandingFooter />
+
+      <PricingModal
+        product={modalProduct}
+        pricing={pricing}
+        onClose={() => setModalProduct(null)}
+      />
     </div>
   )
 }
 
-function RelatedCard({ product, index }: { product: Product; index: number }) {
+function RelatedCard({ product, index, pricing }: { product: Product; index: number; pricing: PricingConfig }) {
+  const from = startingFrom(pricing, product.id)
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -430,7 +478,7 @@ function RelatedCard({ product, index }: { product: Product; index: number }) {
               color:      '#F0EBE0',
               fontWeight: 400,
             }}>
-              {product.price}
+              {from ? `From ${formatKes(from.amount)}` : 'On request'}
             </p>
           </div>
         </div>
